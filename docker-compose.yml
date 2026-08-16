@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: domain_expansion_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secure_password
+      POSTGRES_DB: domain_expansion_tasks
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: domain_expansion_app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres_secure_password@postgres:5432/domain_expansion_tasks?schema=public"
+      AUTH_SECRET: "domain-expansion-super-secure-production-auth-secret-key-32chars"
+      JWT_SECRET: "domain-expansion-super-secure-production-jwt-key-32chars"
+      NEXT_PUBLIC_APP_URL: "https://tasks.domainexpansion.in"
+      NODE_ENV: "production"
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

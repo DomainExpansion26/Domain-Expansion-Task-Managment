@@ -1,0 +1,370 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ListTodo,
+  Plus,
+  Play,
+  CheckCircle2,
+  Calendar,
+  Layers,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
+import { getPriorityColor, getStatusColor, getTypeIcon, formatDate } from "@/lib/utils";
+
+interface BacklogViewProps {
+  tasks: any[];
+  projects: any[];
+  sprints: any[];
+  onSelectTask: (key: string) => void;
+  onOpenCreateTask: (projectId?: string, sprintId?: string) => void;
+  onRefreshData: () => void;
+}
+
+export function BacklogView({
+  tasks,
+  projects,
+  sprints,
+  onSelectTask,
+  onOpenCreateTask,
+  onRefreshData,
+}: BacklogViewProps) {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || "");
+  const [newSprintName, setNewSprintName] = useState("");
+  const [newSprintGoal, setNewSprintGoal] = useState("");
+  const [showCreateSprint, setShowCreateSprint] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const activeProject = projects.find((p) => p.id === (selectedProjectId || projects[0]?.id));
+  const projectSprints = sprints.filter((s) => s.projectId === activeProject?.id);
+
+  // Backlog tasks = tasks with no sprint or sprintId === null
+  const backlogTasks = tasks.filter(
+    (t) => t.projectId === activeProject?.id && (!t.sprintId || t.sprintId === "null")
+  );
+
+  const handleCreateSprint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSprintName.trim() || !activeProject) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/sprints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: activeProject.id,
+          name: newSprintName.trim(),
+          goal: newSprintGoal.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNewSprintName("");
+        setNewSprintGoal("");
+        setShowCreateSprint(false);
+        onRefreshData();
+      }
+    } catch (err) {
+      console.error("Create sprint error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSprintStatus = async (sprintId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/sprints/${sprintId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        onRefreshData();
+      }
+    } catch (err) {
+      console.error("Update sprint error:", err);
+    }
+  };
+
+  const handleMoveTaskToSprint = async (taskId: string, sprintId: string | null) => {
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sprintId }),
+      });
+      onRefreshData();
+    } catch (err) {
+      console.error("Move task to sprint error:", err);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto animate-fade-in">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2.5">
+            <ListTodo className="w-5 h-5 text-[#FF6200]" />
+            <span>Scrum Backlog & Sprints</span>
+          </h1>
+          <p className="text-xs text-[#888898] mt-1">
+            Prioritize backlog user stories, plan sprints, and set milestone goals
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Project Picker */}
+          <select
+            value={selectedProjectId}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            className="bg-[#141414] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-[#FF6200]"
+          >
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.key})
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => setShowCreateSprint(!showCreateSprint)}
+            className="px-3.5 py-2 rounded-xl bg-[#252525] border border-[#2E2E2E] hover:bg-[#303030] text-xs font-bold text-white transition-colors"
+          >
+            + New Sprint
+          </button>
+        </div>
+      </div>
+
+      {/* New Sprint Modal / Inline Form */}
+      {showCreateSprint && (
+        <form
+          onSubmit={handleCreateSprint}
+          className="p-5 rounded-2xl bg-[#141414] border border-[#FF6200]/40 shadow-xl space-y-4 animate-fade-in"
+        >
+          <div className="text-sm font-bold text-white">Create New Sprint for {activeProject?.name}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              placeholder="Sprint Name (e.g. Sprint 3 - Performance & AI)"
+              value={newSprintName}
+              onChange={(e) => setNewSprintName(e.target.value)}
+              className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            />
+            <input
+              type="text"
+              placeholder="Sprint Goal (e.g. Reduce latency, deliver MVP auth)"
+              value={newSprintGoal}
+              onChange={(e) => setNewSprintGoal(e.target.value)}
+              className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCreateSprint(false)}
+              className="px-3 py-1.5 rounded-lg text-xs text-[#888898] hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !newSprintName.trim()}
+              className="px-4 py-1.5 rounded-lg bg-[#FF6200] text-white text-xs font-bold hover:bg-[#FF8C42]"
+            >
+              Create Sprint
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Sprints Sections */}
+      <div className="space-y-6">
+        {projectSprints.map((sprint) => {
+          const sprintTasks = tasks.filter((t) => t.sprintId === sprint.id);
+          const completedCount = sprintTasks.filter((t) => t.status === "DONE").length;
+
+          return (
+            <div
+              key={sprint.id}
+              className="rounded-2xl bg-[#141414] border border-[#2E2E2E] overflow-hidden space-y-3 p-5"
+            >
+              {/* Sprint Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2E2E2E] pb-4">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-bold text-sm text-white">{sprint.name}</span>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase ${
+                        sprint.status === "ACTIVE"
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : sprint.status === "COMPLETED"
+                          ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      }`}
+                    >
+                      {sprint.status}
+                    </span>
+                    <span className="text-xs text-[#888898]">{sprintTasks.length} issues</span>
+                  </div>
+                  {sprint.goal && (
+                    <div className="text-xs text-[#ACACB8] mt-1 font-medium italic">&ldquo;{sprint.goal}&rdquo;</div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {sprint.status === "PLANNED" && (
+                    <button
+                      onClick={() => handleUpdateSprintStatus(sprint.id, "ACTIVE")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 text-xs font-bold transition-colors"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                      <span>Start Sprint</span>
+                    </button>
+                  )}
+                  {sprint.status === "ACTIVE" && (
+                    <button
+                      onClick={() => handleUpdateSprintStatus(sprint.id, "COMPLETED")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 text-xs font-bold transition-colors"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Complete Sprint</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onOpenCreateTask(activeProject?.id, sprint.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#252525] hover:bg-[#333] text-xs font-semibold text-white"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Task</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Sprint Tasks List */}
+              <div className="space-y-2">
+                {sprintTasks.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-[#888898]">No tasks in this sprint yet.</div>
+                ) : (
+                  sprintTasks.map((task) => {
+                    const pColor = getPriorityColor(task.priority);
+                    const sColor = getStatusColor(task.status);
+                    const typeInfo = getTypeIcon(task.taskType);
+
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => onSelectTask(task.taskKey)}
+                        className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/40 transition-all flex items-center justify-between gap-4 cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="font-mono text-xs font-bold text-[#FF8C42]">{task.taskKey}</span>
+                          <span className="text-xs text-white font-medium group-hover:text-[#FF8C42] transition-colors truncate">
+                            {task.title}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 text-[10px]">
+                          <span className={`px-2 py-0.5 rounded-full border ${sColor.bg}`}>{sColor.label}</span>
+                          <span className={`px-2 py-0.5 rounded-full border ${pColor.bg}`}>{pColor.label}</span>
+                          {task.assignees?.[0] && (
+                            <img
+                              src={task.assignees[0].avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80"}
+                              alt={task.assignees[0].name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMoveTaskToSprint(task.id, null);
+                            }}
+                            className="text-[10px] text-[#888898] hover:text-white px-2 py-1 bg-[#252525] rounded"
+                            title="Move to Backlog"
+                          >
+                            To Backlog &rarr;
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Backlog Section */}
+        <div className="rounded-2xl bg-[#141414] border border-[#2E2E2E] p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-[#2E2E2E] pb-3">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-white">Backlog (Unassigned Sprints)</span>
+              <span className="text-xs text-[#888898] font-mono bg-[#252525] px-2 py-0.5 rounded-full">
+                {backlogTasks.length} issues
+              </span>
+            </div>
+            <button
+              onClick={() => onOpenCreateTask(activeProject?.id)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-xs font-bold text-white transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Task</span>
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {backlogTasks.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#888898]">Backlog is empty.</div>
+            ) : (
+              backlogTasks.map((task) => {
+                const pColor = getPriorityColor(task.priority);
+                const sColor = getStatusColor(task.status);
+
+                return (
+                  <div
+                    key={task.id}
+                    onClick={() => onSelectTask(task.taskKey)}
+                    className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/40 transition-all flex items-center justify-between gap-4 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono text-xs font-bold text-[#FF8C42]">{task.taskKey}</span>
+                      <span className="text-xs text-white font-medium group-hover:text-[#FF8C42] transition-colors truncate">
+                        {task.title}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[10px]">
+                      <span className={`px-2 py-0.5 rounded-full border ${sColor.bg}`}>{sColor.label}</span>
+                      <span className={`px-2 py-0.5 rounded-full border ${pColor.bg}`}>{pColor.label}</span>
+                      {projectSprints.length > 0 && (
+                        <select
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => handleMoveTaskToSprint(task.id, e.target.value)}
+                          className="bg-[#252525] border border-[#2E2E2E] rounded px-2 py-1 text-white text-[10px] focus:outline-none"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>
+                            Move to Sprint...
+                          </option>
+                          {projectSprints.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
