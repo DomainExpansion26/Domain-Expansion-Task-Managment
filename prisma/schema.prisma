@@ -13,7 +13,7 @@ model User {
   email            String      @unique
   passwordHash     String
   avatarUrl        String?
-  role             String      @default("TEAM_MEMBER") // SUPER_ADMIN, PROJECT_MANAGER, TEAM_MEMBER
+  role             String      @default("MEMBER") // SUPER_ADMIN, HR_ADMIN, MANAGER, TEAM_LEAD, MEMBER, QA
   jobTitle         String?
   department       String?
   isEmailVerified  Boolean     @default(true)
@@ -21,8 +21,23 @@ model User {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
-  // Relations
+  // Hierarchy
+  managerId        String?
+  manager          User?       @relation("UserManager", fields: [managerId], references: [id], onDelete: SetNull)
+  managedUsers     User[]      @relation("UserManager")
+  teamLeadId       String?
+  teamLead         User?       @relation("UserTeamLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
+  teamMembers      User[]      @relation("UserTeamLead")
+
+  // HRMS Relations
+  hrProfile        HRProfile?
+  attendances      Attendance[]
+  leaves           Leave[]
+
+  // Project & Task Relations
   ledProjects      Project[]   @relation("ProjectLead")
+  managedProjects  Project[]   @relation("ProjectManager")
+  ledAsTeamLeadProjects Project[] @relation("ProjectTeamLead")
   projectMembers   ProjectMember[]
   reportedTasks    Task[]      @relation("TaskReporter")
   assignedTasks    TaskAssignee[]
@@ -36,13 +51,71 @@ model User {
   sentInvitations  Invitation[] @relation("InvitedBy")
   subtasksAssigned Subtask[]
   attachments      Attachment[]
+
+  // QA Relations
+  qaTicketsAssigned QATicket[] @relation("QATicketAssignee")
+  qaTicketsCreated  QATicket[] @relation("QATicketReporter")
+  qaBugsAssigned    QABug[]    @relation("QABugAssignee")
+  qaBugsCreated     QABug[]    @relation("QABugReporter")
+}
+
+model HRProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId       String?   @unique
+  dateOfBirth      DateTime?
+  joiningDate      DateTime? @default(now())
+  phone            String?
+  emergencyContact String?
+  address          String?
+  designation      String?
+  department       String?
+  status           String    @default("ACTIVE") // ACTIVE, ON_LEAVE, PROBATION, TERMINATED
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Attendance {
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                  DateTime  // YYYY-MM-DD 00:00:00 UTC
+  punchIn               DateTime?
+  punchOut              DateTime?
+  breakDurationMinutes  Int       @default(0)
+  totalWorkingHours     Float     @default(0)
+  status                String    @default("NOT_RECORDED") // FULL_DAY, HALF_DAY, PRESENT, ABSENT, LEAVE, HOLIDAY, NOT_RECORDED
+  notes                 String?
+  correctedById         String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([userId, date])
+}
+
+model Leave {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType       String    // CASUAL, SICK, PAID, UNPAID, EMERGENCY
+  startDate       DateTime
+  endDate         DateTime
+  daysCount       Float     @default(1)
+  reason          String
+  status          String    @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  approverId      String?
+  approverComment String?
+  actionAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Invitation {
   id          String   @id @default(cuid())
   email       String
   name        String
-  role        String   @default("TEAM_MEMBER")
+  role        String   @default("MEMBER")
   token       String   @unique
   status      String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED
   expiresAt   DateTime
@@ -66,9 +139,13 @@ model Project {
   description String?
   leadId      String?
   lead        User?           @relation("ProjectLead", fields: [leadId], references: [id], onDelete: SetNull)
+  managerId   String?
+  manager     User?           @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  teamLeadId  String?
+  teamLead    User?           @relation("ProjectTeamLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
   startDate   DateTime?
   endDate     DateTime?
-  status      String          @default("ACTIVE") // ACTIVE, ON_HOLD, COMPLETED, ARCHIVED
+  status      String          @default("ACTIVE") // ACTIVE, ON_HOLD, COMPLETED, CANCELLED, ARCHIVED
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -78,6 +155,8 @@ model Project {
   labels      Label[]
   activities  Activity[]
   attachments Attachment[]
+  qaTickets   QATicket[]
+  qaBugs      QABug[]
 }
 
 model ProjectMember {
@@ -122,12 +201,14 @@ model Task {
   childTasks         Task[]         @relation("SubTasks")
   
   taskType           String         @default("TASK") // TASK, BUG, STORY, FEATURE, IMPROVEMENT, SUBTASK
-  status             String         @default("TODO") // TODO, IN_PROGRESS, IN_REVIEW, BLOCKED, DONE
+  status             String         @default("TODO") // TODO, IN_PROGRESS, READY_FOR_TESTING, TEST_FAILED, COMPLETED, CLOSED, IN_REVIEW, BLOCKED, DONE
   priority           String         @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
   
   reporterId         String?
   reporter           User?          @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  startDate          DateTime?
   dueDate            DateTime?
+  endDate            DateTime?
   estimatedHours     Float?         @default(0)
   loggedHours        Float?         @default(0)
   position           Int            @default(0)
@@ -139,6 +220,66 @@ model Task {
   comments           Comment[]
   attachments        Attachment[]
   activities         Activity[]
+  qaTickets          QATicket[]
+
+  relationsAsSource  TaskRelation[] @relation("SourceTask")
+  relationsAsTarget  TaskRelation[] @relation("TargetTask")
+}
+
+model TaskRelation {
+  id           String   @id @default(cuid())
+  sourceTaskId String
+  sourceTask   Task     @relation("SourceTask", fields: [sourceTaskId], references: [id], onDelete: Cascade)
+  targetTaskId String
+  targetTask   Task     @relation("TargetTask", fields: [targetTaskId], references: [id], onDelete: Cascade)
+  relationType String   // PARENT_CHILD, RELATES_TO, BLOCKS, BLOCKED_BY, DUPLICATES
+  createdAt    DateTime @default(now())
+
+  @@unique([sourceTaskId, targetTaskId, relationType])
+}
+
+model QATicket {
+  id            String    @id @default(cuid())
+  ticketKey     String    @unique // e.g. QA-101
+  title         String
+  description   String
+  startDate     DateTime
+  endDate       DateTime
+  status        String    @default("TODO") // TODO, IN_PROGRESS, READY_FOR_TESTING, TEST_FAILED, CLOSED
+  priority      String    @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  relatedTaskId String?
+  relatedTask   Task?     @relation(fields: [relatedTaskId], references: [id], onDelete: SetNull)
+  assignedToId  String
+  assignedTo    User      @relation("QATicketAssignee", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById   String
+  createdBy     User      @relation("QATicketReporter", fields: [createdById], references: [id], onDelete: Cascade)
+  bugs          QABug[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model QABug {
+  id           String    @id @default(cuid())
+  bugKey       String    @unique // e.g. BUG-001
+  title        String
+  description  String
+  priority     String    @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  severity     String    @default("MEDIUM") // CRITICAL, MAJOR, MEDIUM, MINOR, TRIVIAL
+  status       String    @default("OPEN") // OPEN, IN_PROGRESS, READY_FOR_TESTING, TEST_FAILED, FIXED, CLOSED
+  startDate    DateTime?
+  endDate      DateTime?
+  ticketId     String
+  ticket       QATicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedToId String?
+  assignedTo   User?     @relation("QABugAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdById  String
+  createdBy    User      @relation("QABugReporter", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model TaskAssignee {
@@ -211,7 +352,7 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
-  type      String   @default("SYSTEM") // TASK_ASSIGNED, TASK_UPDATED, MENTION, COMMENT, DUE_DATE, OVERDUE, INVITATION, SYSTEM
+  type      String   @default("SYSTEM") // TASK_ASSIGNED, TASK_UPDATED, MENTION, COMMENT, DUE_DATE, OVERDUE, INVITATION, LEAVE_UPDATE, QA_UPDATE, SYSTEM
   link      String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -243,7 +384,7 @@ model Activity {
   project      Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action       String   // CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, ATTACHMENT_ADDED, SUBTASK_ADDED
+  action       String   // CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, ATTACHMENT_ADDED, SUBTASK_ADDED, QA_TICKET_CREATED, QA_BUG_LOGGED
   fieldChanged String?
   oldValue     String?
   newValue     String?
@@ -255,7 +396,7 @@ model AuditLog {
   id          String   @id @default(cuid())
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action      String   // LOGIN, LOGOUT, INVITE_SENT, ROLE_CHANGED, AI_ACTION_EXECUTED, SETTING_CHANGED
+  action      String   // LOGIN, LOGOUT, INVITE_SENT, ROLE_CHANGED, PASSWORD_RESET, TASK_ASSIGNED, LEAVE_APPROVED, LEAVE_REJECTED, ATTENDANCE_CORRECTED, QA_BUG_CREATED, AI_ACTION_EXECUTED, SETTING_CHANGED
   entityType  String
   entityId    String?
   detailsJson String?  // Stringified JSON
@@ -266,10 +407,10 @@ model AuditLog {
 
 model AIProviderConfig {
   id              String   @id @default(cuid())
-  provider        String   @unique // OPENAI, ANTHROPIC, GEMINI, OPENROUTER
+  provider        String   @unique // OPENROUTER
   apiKeyEncrypted String?
-  defaultModel    String   @default("gpt-4o")
-  isEnabled       Boolean  @default(false)
+  defaultModel    String   @default("meta-llama/llama-3.3-70b-instruct")
+  isEnabled       Boolean  @default(true)
   monthlyBudget   Float    @default(100.0)
   requestLimit    Int      @default(1000)
   currentUsageCost Float   @default(0.0)
@@ -318,7 +459,7 @@ model AIUsage {
 model AutomationRule {
   id                String   @id @default(cuid())
   name              String
-  triggerType       String   // TASK_ASSIGNED, STATUS_CHANGED, TASK_OVERDUE, USER_MENTIONED, TASK_IN_REVIEW
+  triggerType       String   // TASK_ASSIGNED, STATUS_CHANGED, TASK_OVERDUE, USER_MENTIONED, TASK_IN_REVIEW, LEAVE_APPLIED
   conditionsJson    String   @default("{}")
   actionType        String   // NOTIFY_USER, NOTIFY_PM, SEND_EMAIL, UPDATE_FIELD
   actionPayloadJson String   @default("{}")

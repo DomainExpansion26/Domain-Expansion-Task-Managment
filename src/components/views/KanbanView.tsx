@@ -14,8 +14,13 @@ import {
   Layers,
   ChevronRight,
   ChevronLeft,
+  MoreVertical,
+  Network,
+  Trash2,
+  Eye,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate } from "@/lib/utils";
+import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 
 interface KanbanViewProps {
   tasks: any[];
@@ -47,6 +52,10 @@ export function KanbanView({
   const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [draggedTaskKey, setDraggedTaskKey] = useState<string | null>(null);
+
+  // Relations modal
+  const [relationsTaskKey, setRelationsTaskKey] = useState<string | null>(null);
+  const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
 
   // Filter tasks
   const filteredTasks = tasks.filter((t) => {
@@ -82,11 +91,10 @@ export function KanbanView({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] space-y-4 animate-fade-in">
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] space-y-4 animate-fade-in" onClick={() => setActiveMenuKey(null)}>
       {/* Kanban Header & Filters Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#141414] border border-[#2E2E2E]">
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Project Selector */}
           <select
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -100,7 +108,6 @@ export function KanbanView({
             ))}
           </select>
 
-          {/* Only My Tasks Toggle */}
           <button
             onClick={() => setOnlyMyTasks(!onlyMyTasks)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -112,7 +119,6 @@ export function KanbanView({
             Only My Tasks
           </button>
 
-          {/* Priority Filter */}
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
@@ -126,7 +132,6 @@ export function KanbanView({
           </select>
         </div>
 
-        {/* Search & New Task */}
         <div className="flex items-center gap-2.5">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -196,9 +201,9 @@ export function KanbanView({
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.taskKey)}
                         onClick={() => onSelectTask(task.taskKey)}
-                        className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/50 hover:shadow-[0_0_20px_rgba(255,98,0,0.1)] transition-all cursor-grab active:cursor-grabbing space-y-2.5 group"
+                        className="relative p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/50 hover:shadow-[0_0_20px_rgba(255,98,0,0.1)] transition-all cursor-grab active:cursor-grabbing space-y-2.5 group"
                       >
-                        {/* Top: Key & Type */}
+                        {/* Top: Key & Type & Three-Dot Menu */}
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-[11px] font-bold text-[#FF8C42] bg-[#FF6200]/10 px-2 py-0.5 rounded border border-[#FF6200]/20">
                             {task.taskKey}
@@ -210,15 +215,72 @@ export function KanbanView({
                             <span className="text-[10px] text-[#888898] font-mono">
                               {typeInfo.symbol}
                             </span>
+
+                            {/* Three Dot Action Menu Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuKey(activeMenuKey === task.taskKey ? null : task.taskKey);
+                              }}
+                              className="p-1 rounded hover:bg-[#252525] text-[#888898] hover:text-white"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
+
+                        {/* Three-Dot Menu Dropdown */}
+                        {activeMenuKey === task.taskKey && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-3 top-10 w-44 p-1.5 rounded-xl bg-[#1E1E1E] border border-[#2E2E2E] shadow-2xl z-30 space-y-1 text-xs animate-fade-in"
+                          >
+                            <button
+                              onClick={() => {
+                                onSelectTask(task.taskKey);
+                                setActiveMenuKey(null);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-[#2A2A2A] flex items-center gap-2"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-[#888898]" />
+                              <span>View Details</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setRelationsTaskKey(task.taskKey);
+                                setActiveMenuKey(null);
+                              }}
+                              className="w-full text-left px-2.5 py-1.5 rounded-lg text-[#FF8C42] hover:bg-[#2A2A2A] flex items-center gap-2 font-semibold"
+                            >
+                              <Network className="w-3.5 h-3.5 text-[#FF6200]" />
+                              <span>Relations & Lineage</span>
+                            </button>
+
+                            <div className="border-t border-[#2E2E2E] my-1" />
+
+                            <div className="px-2.5 py-1 text-[10px] text-[#888898] uppercase">Move Status:</div>
+                            {COLUMNS.filter((c) => c.id !== task.status).map((c) => (
+                              <button
+                                key={c.id}
+                                onClick={() => {
+                                  onStatusChange(task.taskKey, c.id);
+                                  setActiveMenuKey(null);
+                                }}
+                                className="w-full text-left px-2.5 py-1 rounded text-[11px] text-slate-300 hover:bg-[#2A2A2A]"
+                              >
+                                ↳ {c.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Title */}
                         <div className="text-xs font-bold text-white group-hover:text-[#FF8C42] transition-colors leading-snug line-clamp-2">
                           {task.title}
                         </div>
 
-                        {/* Subtasks Progress Bar if any */}
+                        {/* Subtasks Progress */}
                         {task.subtasks?.length > 0 && (
                           <div className="space-y-1">
                             <div className="flex justify-between text-[10px] text-[#888898]">
@@ -241,7 +303,7 @@ export function KanbanView({
                           </div>
                         )}
 
-                        {/* Bottom: Assignees, Due Date & Move Changers */}
+                        {/* Bottom Metadata */}
                         <div className="flex items-center justify-between pt-1 border-t border-[#2E2E2E]/60 text-[10px] text-[#888898]">
                           <div className="flex items-center gap-2">
                             {task.assignees?.length > 0 ? (
@@ -271,7 +333,7 @@ export function KanbanView({
                             )}
                           </div>
 
-                          {/* Quick Column Advance */}
+                          {/* Move Left/Right */}
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {column.id !== "TODO" && (
                               <button
@@ -310,6 +372,16 @@ export function KanbanView({
           );
         })}
       </div>
+
+      {/* Task Relations Modal */}
+      {relationsTaskKey && (
+        <TaskRelationsModal
+          taskKey={relationsTaskKey}
+          isOpen={Boolean(relationsTaskKey)}
+          onClose={() => setRelationsTaskKey(null)}
+          onSelectTask={(key) => onSelectTask(key)}
+        />
+      )}
     </div>
   );
 }

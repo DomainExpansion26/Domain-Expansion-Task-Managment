@@ -1,6 +1,30 @@
-export type Role = "SUPER_ADMIN" | "PROJECT_MANAGER" | "TEAM_MEMBER";
+export type Role =
+  | "SUPER_ADMIN"
+  | "HR_ADMIN"
+  | "MANAGER"
+  | "TEAM_LEAD"
+  | "MEMBER"
+  | "QA"
+  // Backward compatibility aliases
+  | "PROJECT_MANAGER"
+  | "TEAM_MEMBER";
 
 export type Permission =
+  | "superadmin.access"
+  | "admin.members.manage"
+  | "admin.roles.manage"
+  | "admin.hierarchy.manage"
+  | "admin.settings.manage"
+  | "admin.audit.view"
+  | "settings.manage"
+  | "hrms.access"
+  | "hrms.punch"
+  | "hrms.leave.apply"
+  | "hrms.leave.approve"
+  | "hrms.attendance.view"
+  | "hrms.attendance.manage"
+  | "hrms.reports.view"
+  | "hradmin.access"
   | "project.view"
   | "project.create"
   | "project.update"
@@ -10,16 +34,39 @@ export type Permission =
   | "task.update"
   | "task.delete"
   | "task.assign"
+  | "task.relations.manage"
   | "comment.create"
   | "sprint.manage"
+  | "qa.ticket.view"
+  | "qa.ticket.create"
+  | "qa.ticket.update"
+  | "qa.ticket.delete"
+  | "qa.bug.view"
+  | "qa.bug.create"
+  | "qa.bug.update"
+  | "qa.bug.delete"
   | "user.invite"
   | "user.manage"
   | "ai.use"
-  | "ai.manage"
-  | "settings.manage";
+  | "ai.manage";
 
-export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   SUPER_ADMIN: [
+    "superadmin.access",
+    "admin.members.manage",
+    "admin.roles.manage",
+    "admin.hierarchy.manage",
+    "admin.settings.manage",
+    "admin.audit.view",
+    "settings.manage",
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.leave.approve",
+    "hrms.attendance.view",
+    "hrms.attendance.manage",
+    "hrms.reports.view",
+    "hradmin.access",
     "project.view",
     "project.create",
     "project.update",
@@ -29,15 +76,43 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "task.update",
     "task.delete",
     "task.assign",
+    "task.relations.manage",
     "comment.create",
     "sprint.manage",
+    "qa.ticket.view",
+    "qa.ticket.create",
+    "qa.ticket.update",
+    "qa.ticket.delete",
+    "qa.bug.view",
+    "qa.bug.create",
+    "qa.bug.update",
+    "qa.bug.delete",
     "user.invite",
     "user.manage",
     "ai.use",
     "ai.manage",
-    "settings.manage",
   ],
-  PROJECT_MANAGER: [
+  HR_ADMIN: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.leave.approve",
+    "hrms.attendance.view",
+    "hrms.attendance.manage",
+    "hrms.reports.view",
+    "hradmin.access",
+    "project.view",
+    "task.view",
+    "comment.create",
+    "user.invite",
+    "ai.use",
+  ],
+  MANAGER: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.leave.approve",
+    "hrms.attendance.view",
     "project.view",
     "project.create",
     "project.update",
@@ -46,23 +121,139 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "task.update",
     "task.delete",
     "task.assign",
+    "task.relations.manage",
     "comment.create",
     "sprint.manage",
+    "qa.ticket.view",
+    "qa.ticket.create",
+    "qa.bug.view",
     "user.invite",
     "ai.use",
   ],
-  TEAM_MEMBER: [
+  PROJECT_MANAGER: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.leave.approve",
+    "hrms.attendance.view",
+    "project.view",
+    "project.create",
+    "project.update",
+    "task.view",
+    "task.create",
+    "task.update",
+    "task.delete",
+    "task.assign",
+    "task.relations.manage",
+    "comment.create",
+    "sprint.manage",
+    "qa.ticket.view",
+    "qa.ticket.create",
+    "qa.bug.view",
+    "user.invite",
+    "ai.use",
+  ],
+  TEAM_LEAD: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.leave.approve",
+    "hrms.attendance.view",
+    "project.view",
+    "task.view",
+    "task.create",
+    "task.update",
+    "task.assign",
+    "task.relations.manage",
+    "comment.create",
+    "sprint.manage",
+    "qa.ticket.view",
+    "qa.ticket.create",
+    "qa.ticket.update",
+    "qa.bug.view",
+    "qa.bug.create",
+    "ai.use",
+  ],
+  QA: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.attendance.view",
+    "project.view",
+    "task.view",
+    "comment.create",
+    "qa.ticket.view",
+    "qa.ticket.create",
+    "qa.ticket.update",
+    "qa.bug.view",
+    "qa.bug.create",
+    "qa.bug.update",
+    "ai.use",
+  ],
+  MEMBER: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.attendance.view",
     "project.view",
     "task.view",
     "task.create",
     "task.update",
     "comment.create",
+    "qa.ticket.view",
+    "qa.bug.view",
+    "ai.use",
+  ],
+  TEAM_MEMBER: [
+    "hrms.access",
+    "hrms.punch",
+    "hrms.leave.apply",
+    "hrms.attendance.view",
+    "project.view",
+    "task.view",
+    "task.create",
+    "task.update",
+    "comment.create",
+    "qa.ticket.view",
+    "qa.bug.view",
     "ai.use",
   ],
 };
 
+export function normalizeRole(role?: string): Role {
+  if (!role) return "MEMBER";
+  const r = role.toUpperCase();
+  if (r === "PROJECT_MANAGER") return "MANAGER";
+  if (r === "TEAM_MEMBER") return "MEMBER";
+  return r as Role;
+}
+
 export function hasPermission(role: string, permission: Permission): boolean {
-  const allowed = ROLE_PERMISSIONS[role as Role];
-  if (!allowed) return false;
-  return allowed.includes(permission);
+  const normalized = normalizeRole(role);
+  const permissions = ROLE_PERMISSIONS[normalized] || ROLE_PERMISSIONS[role] || [];
+  return permissions.includes(permission);
+}
+
+export function isSuperAdmin(role?: string): boolean {
+  return normalizeRole(role) === "SUPER_ADMIN";
+}
+
+export function isHRAdmin(role?: string): boolean {
+  const norm = normalizeRole(role);
+  return norm === "HR_ADMIN" || norm === "SUPER_ADMIN";
+}
+
+export function isManager(role?: string): boolean {
+  const norm = normalizeRole(role);
+  return norm === "MANAGER" || norm === "SUPER_ADMIN";
+}
+
+export function isTeamLead(role?: string): boolean {
+  const norm = normalizeRole(role);
+  return norm === "TEAM_LEAD" || norm === "MANAGER" || norm === "SUPER_ADMIN";
+}
+
+export function isQA(role?: string): boolean {
+  const norm = normalizeRole(role);
+  return norm === "QA" || norm === "SUPER_ADMIN";
 }

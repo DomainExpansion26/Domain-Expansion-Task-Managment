@@ -15,6 +15,10 @@ import { ProjectsView } from "@/components/views/ProjectsView";
 import { KanbanView } from "@/components/views/KanbanView";
 import { BacklogView } from "@/components/views/BacklogView";
 import { TeamView } from "@/components/views/TeamView";
+import { QAView } from "@/components/views/QAView";
+import { HRMSView } from "@/components/views/HRMSView";
+import { HRAdminView } from "@/components/views/HRAdminView";
+import { SuperAdminView } from "@/components/views/SuperAdminView";
 import { AdminSettingsView } from "@/components/views/AdminSettingsView";
 import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
 
@@ -116,7 +120,10 @@ export default function Home() {
           data.event === "task_status_changed" ||
           data.event === "task_created" ||
           data.event === "task_comment_added" ||
-          data.event === "notification"
+          data.event === "notification" ||
+          data.event === "qa_ticket_created" ||
+          data.event === "qa_bug_created" ||
+          data.event === "leave_applied"
         ) {
           fetchAppData();
         }
@@ -132,7 +139,6 @@ export default function Home() {
 
   // 4. Quick Actions
   const handleStatusChange = async (taskKey: string, newStatus: string) => {
-    // Optimistic Update
     setTasks((prev) =>
       prev.map((t) => (t.taskKey === taskKey ? { ...t, status: newStatus } : t))
     );
@@ -170,16 +176,6 @@ export default function Home() {
     router.push("/login");
   };
 
-  const handleSwitchUser = async (email: string) => {
-    await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: "password123" }),
-    });
-    const user = await checkAuth();
-    if (user) fetchAppData();
-  };
-
   if (authLoading || !currentUser) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#0D0D0D] text-white text-xs">
@@ -213,7 +209,6 @@ export default function Home() {
       onOpenDevMailbox={() => setIsDevMailboxOpen(true)}
       onToggleAI={() => setIsAIOpen(!isAIOpen)}
       onLogout={handleLogout}
-      onSwitchUser={handleSwitchUser}
     >
       {/* Dynamic Views */}
       {currentTab === "dashboard" && (
@@ -277,12 +272,39 @@ export default function Home() {
         />
       )}
 
+      {currentTab === "qa" && (
+        <QAView
+          currentUser={currentUser}
+          projects={projects}
+          users={users}
+          tasks={tasks}
+        />
+      )}
+
+      {currentTab === "hrms" && (
+        <HRMSView
+          currentUser={currentUser}
+        />
+      )}
+
       {currentTab === "team" && (
         <TeamView
           users={users}
           currentUser={currentUser}
           onSelectTask={(key) => setSelectedTaskKey(key)}
           onRefreshData={fetchAppData}
+        />
+      )}
+
+      {currentTab === "hradmin" && (
+        <HRAdminView
+          currentUser={currentUser}
+        />
+      )}
+
+      {currentTab === "superadmin" && (
+        <SuperAdminView
+          currentUser={currentUser}
         />
       )}
 

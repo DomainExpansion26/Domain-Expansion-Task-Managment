@@ -1,0 +1,161 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUserFromRequest } from "@/lib/auth";
+import { isHRAdmin, isSuperAdmin } from "@/lib/permissions";
+import { calculateMonthlyStats, calculateWorkingHours } from "@/lib/hrms";
+
+export async function GET(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userIdParam = searchParams.get("userId");
+    const month = searchParams.get("month"); // 1 - 12
+    const year = searchParams.get("year");   // e.g. 2026
+
+    const targetUserId = userIdParam && (isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role))
+      ? userIdParam
+      : currentUser.id;
+
+    const targetYear = year ? parseInt(year, 10) : new Date().getFullYear();
+    const targetMonth = month ? parseInt(month, 10) - 1 : new Date().getMonth();
+
+    const startOfMonth = new Date(Date.UTC(targetYear, targetMonth, 1));
+    const endOfMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0, 23, 59, 59, 999));
+
+    const [attendances, leaves] = await Promise.all([
+      prisma.attendance.findMany({
+        where: {
+          userId: targetUserId,
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+        orderBy: { date: "asc" },
+      }),
+      prisma.leave.findMany({
+        where: {
+          userId: targetUserId,
+          status: "APPROVED",
+          startDate: { lte: endOfMonth },
+          endDate: { gte: startOfMonth },
+        },
+      }),
+    ]);
+
+    const stats = calculateMonthlyStats(attendances, leaves);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        attendances,
+        stats,
+        month: targetMonth + 1,
+        year: targetYear,
+      },
+    });
+  } catch (error: any) {
+    console.error("Attendance API error:", error);
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch attendance" } }, { status: 500 });
+  }
+}
+
+// Attendance Correction (HR_ADMIN / SUPER_ADMIN)
+export async function PATCH(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser || (!isHRAdmin(currentUser.role) && !isSuperAdmin(currentUser.role))) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "HR Admin or Super Admin permission required for attendance correction" } },
+        { status: 403 }
+      );
+    }
+
+    const { attendanceId, userId, date, punchIn, punchOut, breakDurationMinutes, status, notes } = await request.json();
+
+    let targetDate = date ? new Date(date) : new Date();
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    let calculatedStatus = status;
+    let totalWorkingHours = 0;
+
+    if (punchIn && punchOut) {
+      const calc = calculateWorkingHours(punchIn, punchOut, breakDurationMinutes || 0);
+      totalWorkingHours = calc.totalWorkingHours;
+      if (!status) calculatedStatus = calc.status;
+    }
+
+    let record;
+    if (attendanceId) {
+      record = await prisma.attendance.update({
+        where: { id: attendanceId },
+        data: {
+          ...(punchIn ? { punchIn: new Date(punchIn) } : {}),
+          ...(punchOut ? { punchOut: new Date(punchOut) } : {}),
+          ...(breakDurationMinutes !== undefined ? { breakDurationMinutes: Number(breakDurationMinutes) } : {}),
+          ...(totalWorkingHours > 0 ? { totalWorkingHours } : {}),
+          ...(calculatedStatus ? { status: calculatedStatus } : {}),
+          ...(notes !== undefined ? { notes } : {}),
+          correctedById: currentUser.id,
+        },
+      });
+    } else if (userId && date) {
+      record = await prisma.attendance.upsert({
+        where: {
+          userId_date: {
+            userId,
+            date: targetDate,
+          },
+        },
+        create: {
+          userId,
+          date: targetDate,
+          punchIn: punchIn ? new Date(punchIn) : null,
+          punchOut: punchOut ? new Date(punchOut) : null,
+          breakDurationMinutes: Number(breakDurationMinutes) || 0,
+          totalWorkingHours,
+          status: calculatedStatus || "PRESENT",
+          notes: notes || null,
+          correctedById: currentUser.id,
+        },
+        update: {
+          punchIn: punchIn ? new Date(punchIn) : undefined,
+          punchOut: punchOut ? new Date(punchOut) : undefined,
+          breakDurationMinutes: breakDurationMinutes !== undefined ? Number(breakDurationMinutes) : undefined,
+          totalWorkingHours: totalWorkingHours > 0 ? totalWorkingHours : undefined,
+          status: calculatedStatus || undefined,
+          notes: notes !== undefined ? notes : undefined,
+          correctedById: currentUser.id,
+        },
+      });
+    }
+
+    // Record audit log
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: "ATTENDANCE_CORRECTED",
+        entityType: "ATTENDANCE",
+        entityId: record?.id,
+        detailsJson: JSON.stringify({
+          correctedBy: currentUser.name,
+          date: targetDate.toISOString(),
+          newStatus: calculatedStatus,
+        }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: record,
+      message: "Attendance corrected successfully",
+    });
+  } catch (error: any) {
+    console.error("Attendance correction error:", error);
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to correct attendance" } }, { status: 500 });
+  }
+}

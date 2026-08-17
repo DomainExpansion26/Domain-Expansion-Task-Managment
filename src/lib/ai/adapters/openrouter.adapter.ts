@@ -4,10 +4,12 @@ export class OpenRouterAdapter implements AIProvider {
   public readonly name = "OPENROUTER";
   private apiKey: string;
   private defaultModel: string;
+  private baseUrl: string;
 
-  constructor(apiKey?: string, defaultModel = "meta-llama/llama-3.3-70b-instruct") {
+  constructor(apiKey?: string, defaultModel?: string) {
     this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || "";
-    this.defaultModel = defaultModel;
+    this.defaultModel = defaultModel || process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct";
+    this.baseUrl = (process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, "");
   }
 
   isConfigured(): boolean {
@@ -16,7 +18,7 @@ export class OpenRouterAdapter implements AIProvider {
 
   async chat(request: AIChatRequest): Promise<AIChatResult> {
     if (!this.isConfigured()) {
-      throw new Error("Provider OpenRouter is not configured. Please add OPENROUTER_API_KEY in Settings -> AI Providers or .env.");
+      throw new Error("Provider OpenRouter is not configured. Please add OPENROUTER_API_KEY in .env.");
     }
 
     const startTime = Date.now();
@@ -27,7 +29,7 @@ export class OpenRouterAdapter implements AIProvider {
       messages.unshift({ role: "system", content: request.systemPrompt });
     }
 
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,7 +71,7 @@ export class OpenRouterAdapter implements AIProvider {
 
   async streamChat(request: AIChatRequest): Promise<ReadableStream<string>> {
     if (!this.isConfigured()) {
-      throw new Error("Provider OpenRouter is not configured. Please add OPENROUTER_API_KEY in Settings or .env.");
+      throw new Error("Provider OpenRouter is not configured. Please add OPENROUTER_API_KEY in .env.");
     }
 
     const modelName = request.model || this.defaultModel;
@@ -78,7 +80,7 @@ export class OpenRouterAdapter implements AIProvider {
       messages.unshift({ role: "system", content: request.systemPrompt });
     }
 
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,7 +148,7 @@ export class OpenRouterAdapter implements AIProvider {
 
     const startTime = Date.now();
     try {
-      const res = await fetch("https://openrouter.ai/api/v1/models", {
+      const res = await fetch(`${this.baseUrl}/models`, {
         headers: { Authorization: `Bearer ${this.apiKey}` },
       });
       if (res.ok) {

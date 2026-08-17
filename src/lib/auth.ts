@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "./prisma";
-import { hasPermission, Permission } from "./permissions";
+import { hasPermission, normalizeRole, Permission, Role, isSuperAdmin, isHRAdmin, isManager, isTeamLead, isQA } from "./permissions";
 
 const JWT_SECRET = process.env.JWT_SECRET || "domain-expansion-super-secret-jwt-key-2026-production";
 const COOKIE_NAME = "dx_session_token";
@@ -29,7 +29,7 @@ export function signSessionToken(user: { id: string; email: string; name: string
       userId: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     JWT_SECRET,
     { expiresIn: "7d" }
@@ -80,12 +80,20 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
       avatarUrl: true,
       isActive: true,
       isEmailVerified: true,
+      managerId: true,
+      teamLeadId: true,
+      manager: { select: { id: true, name: true, email: true } },
+      teamLead: { select: { id: true, name: true, email: true } },
+      hrProfile: true,
       createdAt: true,
     },
   });
 
   if (!user || !user.isActive) return null;
-  return user;
+  return {
+    ...user,
+    role: normalizeRole(user.role),
+  };
 }
 
 export async function requireAuth(request?: NextRequest) {
@@ -99,6 +107,32 @@ export async function requireAuth(request?: NextRequest) {
 export async function requireUserPermission(permission: Permission, request?: NextRequest) {
   const user = await requireAuth(request);
   if (!hasPermission(user.role, permission)) {
+    throw new Error("FORBIDDEN");
+  }
+  return user;
+}
+
+export async function requireRole(allowedRoles: Role[], request?: NextRequest) {
+  const user = await requireAuth(request);
+  const normalized = normalizeRole(user.role);
+  if (normalized === "SUPER_ADMIN") return user; // Super admin has global bypass
+  if (!allowedRoles.includes(normalized)) {
+    throw new Error("FORBIDDEN");
+  }
+  return user;
+}
+
+export async function requireSuperAdmin(request?: NextRequest) {
+  const user = await requireAuth(request);
+  if (!isSuperAdmin(user.role)) {
+    throw new Error("FORBIDDEN");
+  }
+  return user;
+}
+
+export async function requireHRAdmin(request?: NextRequest) {
+  const user = await requireAuth(request);
+  if (!isHRAdmin(user.role)) {
     throw new Error("FORBIDDEN");
   }
   return user;

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, User, Mail, Lock, Briefcase, Building2, Shield, ArrowRight, AlertCircle } from "lucide-react";
+import { User, Mail, Lock, Briefcase, Building2, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -12,7 +12,6 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [department, setDepartment] = useState("");
-  const [role, setRole] = useState("TEAM_MEMBER");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +40,6 @@ export default function SignUpPage() {
           password,
           jobTitle: jobTitle.trim() || "Software Engineer",
           department: department.trim() || "Engineering",
-          role,
         }),
       });
 
@@ -110,7 +108,7 @@ export default function SignUpPage() {
                 <input
                   type="email"
                   required
-                  placeholder="sanjay@example.com"
+                  placeholder="sanjay@domainexpansion.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]/60"
@@ -160,22 +158,6 @@ export default function SignUpPage() {
                     className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-9 pr-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]/60"
                   />
                 </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Account Role</label>
-              <div className="relative">
-                <Shield className="w-4 h-4 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-9 pr-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60 text-xs"
-                >
-                  <option value="TEAM_MEMBER">Team Member (Work on assigned tasks & bugs)</option>
-                  <option value="PROJECT_MANAGER">Project Manager (Create tasks, manage sprints & projects)</option>
-                  <option value="SUPER_ADMIN">Super Admin (Full organization control & AI settings)</option>
-                </select>
               </div>
             </div>
 

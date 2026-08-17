@@ -19,8 +19,10 @@ import {
   User,
   Tag,
   Layers,
+  Network,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, formatDateTime } from "@/lib/utils";
+import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 
 interface TaskDetailModalProps {
   taskKey: string;
@@ -50,6 +52,7 @@ export function TaskDetailModal({
   const [descInput, setDescInput] = useState("");
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isRelationsOpen, setIsRelationsOpen] = useState(false);
 
   const fetchTaskDetails = async () => {
     if (!taskKey) return;
@@ -89,7 +92,7 @@ export function TaskDetailModal({
       if (json.success) {
         setTask((prev: any) => ({ ...prev, ...json.data }));
         if (onTaskUpdated) onTaskUpdated();
-        fetchTaskDetails(); // Refresh activities
+        fetchTaskDetails();
       }
     } catch (err) {
       console.error("Failed to update task field:", err);
@@ -201,6 +204,15 @@ export function TaskDetailModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* View Relations Button */}
+            <button
+              onClick={() => setIsRelationsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] hover:bg-[#303030] text-slate-300 hover:text-white text-xs font-semibold transition-colors"
+            >
+              <Network className="w-3.5 h-3.5 text-[#FF8C42]" />
+              <span>Relations & Lineage</span>
+            </button>
+
             {/* AI Summarize Button */}
             <button
               onClick={handleAISummarize}
@@ -217,7 +229,7 @@ export function TaskDetailModal({
           </div>
         </div>
 
-        {/* AI Summary Banner if generated */}
+        {/* AI Summary Banner */}
         {aiSummary && (
           <div className="p-4 bg-purple-950/30 border-b border-purple-500/30 text-xs text-purple-200 flex items-start justify-between gap-3 animate-fade-in">
             <div className="flex items-start gap-2.5">
@@ -230,11 +242,11 @@ export function TaskDetailModal({
           </div>
         )}
 
-        {/* Modal Main Body (2 Columns) */}
+        {/* Main Body */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Column: Description, Acceptance Criteria, Subtasks, Comments, Activity */}
+          {/* Left Column */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 border-r border-[#2E2E2E]">
-            {/* Title Section */}
+            {/* Title */}
             <div>
               {isEditingTitle ? (
                 <div className="flex items-center gap-2">
@@ -419,7 +431,6 @@ export function TaskDetailModal({
               {/* Tab 1: Comments */}
               {activeTab === "COMMENTS" && (
                 <div className="space-y-4">
-                  {/* Comments Stream */}
                   <div className="space-y-3">
                     {task.comments?.map((comment: any) => (
                       <div key={comment.id} className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-2">
@@ -444,7 +455,6 @@ export function TaskDetailModal({
                     ))}
                   </div>
 
-                  {/* Add Comment Input */}
                   <form onSubmit={handleAddComment} className="flex gap-2 pt-2">
                     <input
                       type="text"
@@ -483,9 +493,8 @@ export function TaskDetailModal({
             </div>
           </div>
 
-          {/* Right Column: Metadata Sidebar (Status, Priority, Assignee, Sprint, Due Date, Hours) */}
+          {/* Right Column: Metadata Sidebar */}
           <div className="w-80 bg-[#141414] p-6 space-y-5 text-xs">
-            {/* Status Selector */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5">
                 Status
@@ -503,7 +512,6 @@ export function TaskDetailModal({
               </select>
             </div>
 
-            {/* Priority Selector */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5">
                 Priority
@@ -520,7 +528,6 @@ export function TaskDetailModal({
               </select>
             </div>
 
-            {/* Assignees */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5">
                 Assignee
@@ -539,7 +546,6 @@ export function TaskDetailModal({
               </select>
             </div>
 
-            {/* Reporter */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1">
                 Reporter
@@ -554,7 +560,6 @@ export function TaskDetailModal({
               </div>
             </div>
 
-            {/* Due Date */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5">
                 Due Date
@@ -567,7 +572,6 @@ export function TaskDetailModal({
               />
             </div>
 
-            {/* Sprint */}
             <div>
               <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5">
                 Sprint
@@ -586,7 +590,6 @@ export function TaskDetailModal({
               </select>
             </div>
 
-            {/* Time Tracking (Estimated & Logged) */}
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#2E2E2E]">
               <div>
                 <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1">
@@ -609,6 +612,15 @@ export function TaskDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Task Relations Modal */}
+      {isRelationsOpen && (
+        <TaskRelationsModal
+          taskKey={task.taskKey}
+          isOpen={isRelationsOpen}
+          onClose={() => setIsRelationsOpen(false)}
+        />
+      )}
     </div>
   );
 }

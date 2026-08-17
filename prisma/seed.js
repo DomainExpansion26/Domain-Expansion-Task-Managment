@@ -4,9 +4,9 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding Domain Expansion Task Management Platform...");
+  console.log("🌱 Seeding Domain Expansion Enterprise Task Management + QA + HRMS Platform...");
 
-  // Clean existing data
+  // Clean existing data in dependency order
   await prisma.activity.deleteMany({});
   await prisma.auditLog.deleteMany({});
   await prisma.notification.deleteMany({});
@@ -15,12 +15,18 @@ async function main() {
   await prisma.attachment.deleteMany({});
   await prisma.subtask.deleteMany({});
   await prisma.taskAssignee.deleteMany({});
+  await prisma.taskRelation.deleteMany({});
+  await prisma.qABug.deleteMany({});
+  await prisma.qATicket.deleteMany({});
   await prisma.task.deleteMany({});
   await prisma.sprint.deleteMany({});
   await prisma.label.deleteMany({});
   await prisma.projectMember.deleteMany({});
   await prisma.project.deleteMany({});
   await prisma.invitation.deleteMany({});
+  await prisma.attendance.deleteMany({});
+  await prisma.leave.deleteMany({});
+  await prisma.hRProfile.deleteMany({});
   await prisma.aIUsage.deleteMany({});
   await prisma.aIMessage.deleteMany({});
   await prisma.aIConversation.deleteMany({});
@@ -31,18 +37,35 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("password123", 10);
 
-  // 1. Create Users
+  // Tomorrow's date for birthday demo
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowDOB = new Date(Date.UTC(1995, tomorrow.getMonth(), tomorrow.getDate(), 0, 0, 0));
+
+  // 1. Create Users with 6 RBAC Roles & Hierarchy
+  // Super Admin
   const admin = await prisma.user.create({
     data: {
       name: "Ishwar Mule",
       email: "admin@domainexpansion.in",
       passwordHash,
       role: "SUPER_ADMIN",
-      jobTitle: "Founder & CEO",
-      department: "Leadership",
+      jobTitle: "Founder & Chief Architect",
+      department: "Executive Leadership",
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
+      hrProfile: {
+        create: {
+          employeeId: "EMP-1001",
+          dateOfBirth: new Date("1988-04-12"),
+          joiningDate: new Date("2024-01-01"),
+          phone: "+91 98765 43210",
+          designation: "Chief Executive Officer",
+          department: "Leadership",
+          status: "ACTIVE",
+        },
+      },
       notificationPref: {
         create: {
           emailTaskAssigned: true,
@@ -62,127 +85,200 @@ async function main() {
     },
   });
 
+  // HR Admin
+  const pooja = await prisma.user.create({
+    data: {
+      name: "Pooja Sharma",
+      email: "pooja@domainexpansion.in",
+      passwordHash,
+      role: "HR_ADMIN",
+      jobTitle: "Head of People & HR Operations",
+      department: "Human Resources",
+      avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+      isEmailVerified: true,
+      isActive: true,
+      managerId: admin.id,
+      hrProfile: {
+        create: {
+          employeeId: "EMP-1002",
+          dateOfBirth: new Date("1992-06-18"),
+          joiningDate: new Date("2024-03-01"),
+          phone: "+91 98765 43211",
+          designation: "HR Director",
+          department: "Human Resources",
+          status: "ACTIVE",
+        },
+      },
+    },
+  });
+
+  // Manager
   const rahul = await prisma.user.create({
     data: {
       name: "Rahul Sharma",
       email: "rahul@domainexpansion.in",
       passwordHash,
-      role: "PROJECT_MANAGER",
-      jobTitle: "Engineering Lead",
+      role: "MANAGER",
+      jobTitle: "Engineering Manager",
       department: "Engineering",
       avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
-      notificationPref: {
+      managerId: admin.id,
+      hrProfile: {
         create: {
-          emailTaskAssigned: true,
-          emailTaskUpdated: true,
-          emailMention: true,
-          emailComment: true,
-          emailDueDate: true,
-          emailOverdue: true,
+          employeeId: "EMP-1003",
+          dateOfBirth: new Date("1990-11-25"),
+          joiningDate: new Date("2024-02-15"),
+          phone: "+91 98765 43212",
+          designation: "Engineering Manager",
+          department: "Engineering",
+          status: "ACTIVE",
         },
       },
     },
   });
 
+  // Team Lead
   const priya = await prisma.user.create({
     data: {
       name: "Priya Nair",
       email: "priya@domainexpansion.in",
       passwordHash,
-      role: "PROJECT_MANAGER",
-      jobTitle: "Product Manager",
-      department: "Product",
+      role: "TEAM_LEAD",
+      jobTitle: "Technical Team Lead",
+      department: "Engineering",
       avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
-      notificationPref: {
+      managerId: rahul.id,
+      hrProfile: {
         create: {
-          emailTaskAssigned: true,
-          emailTaskUpdated: true,
-          emailMention: true,
-          emailComment: true,
-          emailDueDate: true,
-          emailOverdue: true,
+          employeeId: "EMP-1004",
+          dateOfBirth: new Date("1993-08-30"),
+          joiningDate: new Date("2024-04-01"),
+          phone: "+91 98765 43213",
+          designation: "Team Lead - Development",
+          department: "Engineering",
+          status: "ACTIVE",
         },
       },
     },
   });
 
+  // QA Engineer (With Birthday Tomorrow for Instant Banner Demonstration!)
+  const neha = await prisma.user.create({
+    data: {
+      name: "Neha Gupta",
+      email: "neha@domainexpansion.in",
+      passwordHash,
+      role: "QA",
+      jobTitle: "Lead QA Automation Engineer",
+      department: "Quality Assurance",
+      avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+      isEmailVerified: true,
+      isActive: true,
+      managerId: rahul.id,
+      teamLeadId: priya.id,
+      hrProfile: {
+        create: {
+          employeeId: "EMP-1005",
+          dateOfBirth: tomorrowDOB, // 🎉 Tomorrow's Birthday!
+          joiningDate: new Date("2024-05-10"),
+          phone: "+91 98765 43214",
+          designation: "Lead QA Engineer",
+          department: "Quality Assurance",
+          status: "ACTIVE",
+        },
+      },
+    },
+  });
+
+  // Member 1
   const amit = await prisma.user.create({
     data: {
       name: "Amit Verma",
       email: "amit@domainexpansion.in",
       passwordHash,
-      role: "TEAM_MEMBER",
+      role: "MEMBER",
       jobTitle: "Frontend Architect",
       department: "Engineering",
       avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
-      notificationPref: {
+      managerId: rahul.id,
+      teamLeadId: priya.id,
+      hrProfile: {
         create: {
-          emailTaskAssigned: true,
-          emailTaskUpdated: true,
-          emailMention: true,
-          emailComment: true,
-          emailDueDate: true,
-          emailOverdue: true,
+          employeeId: "EMP-1006",
+          dateOfBirth: new Date("1996-01-15"),
+          joiningDate: new Date("2024-06-01"),
+          phone: "+91 98765 43215",
+          designation: "Frontend Engineer",
+          department: "Engineering",
+          status: "ACTIVE",
         },
       },
     },
   });
 
+  // Member 2
   const sneha = await prisma.user.create({
     data: {
       name: "Sneha Patel",
       email: "sneha@domainexpansion.in",
       passwordHash,
-      role: "TEAM_MEMBER",
+      role: "MEMBER",
       jobTitle: "UI/UX Designer",
       department: "Design",
       avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
-      notificationPref: {
+      managerId: rahul.id,
+      teamLeadId: priya.id,
+      hrProfile: {
         create: {
-          emailTaskAssigned: true,
-          emailTaskUpdated: true,
-          emailMention: true,
-          emailComment: true,
-          emailDueDate: true,
-          emailOverdue: true,
+          employeeId: "EMP-1007",
+          dateOfBirth: new Date("1997-09-20"),
+          joiningDate: new Date("2024-06-15"),
+          phone: "+91 98765 43216",
+          designation: "Product Designer",
+          department: "Design",
+          status: "ACTIVE",
         },
       },
     },
   });
 
+  // Member 3
   const vikram = await prisma.user.create({
     data: {
       name: "Vikram Singh",
       email: "vikram@domainexpansion.in",
       passwordHash,
-      role: "TEAM_MEMBER",
+      role: "MEMBER",
       jobTitle: "Backend Engineer",
       department: "Engineering",
       avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
       isEmailVerified: true,
       isActive: true,
-      notificationPref: {
+      managerId: rahul.id,
+      teamLeadId: priya.id,
+      hrProfile: {
         create: {
-          emailTaskAssigned: true,
-          emailTaskUpdated: true,
-          emailMention: true,
-          emailComment: true,
-          emailDueDate: true,
-          emailOverdue: true,
+          employeeId: "EMP-1008",
+          dateOfBirth: new Date("1994-12-05"),
+          joiningDate: new Date("2024-07-01"),
+          phone: "+91 98765 43217",
+          designation: "Backend Specialist",
+          department: "Engineering",
+          status: "ACTIVE",
         },
       },
     },
   });
 
-  console.log("✅ Users created (password: password123)");
+  console.log("✅ 6 Roles & Users created with Manager & Team Lead hierarchy!");
 
   // 2. Create Projects
   const projectWeb = await prisma.project.create({
@@ -191,6 +287,8 @@ async function main() {
       key: "WEB",
       description: "Core high-performance web platform architecture, customer portal, and responsive design system.",
       leadId: rahul.id,
+      managerId: rahul.id,
+      teamLeadId: priya.id,
       startDate: new Date("2026-08-01"),
       endDate: new Date("2026-09-30"),
       status: "ACTIVE",
@@ -198,6 +296,8 @@ async function main() {
         create: [
           { userId: admin.id, role: "LEAD" },
           { userId: rahul.id, role: "LEAD" },
+          { userId: priya.id, role: "LEAD" },
+          { userId: neha.id, role: "MEMBER" },
           { userId: amit.id, role: "MEMBER" },
           { userId: sneha.id, role: "MEMBER" },
           { userId: vikram.id, role: "MEMBER" },
@@ -207,9 +307,9 @@ async function main() {
         create: [
           { name: "Frontend", color: "#FF6200" },
           { name: "Backend", color: "#6D28D9" },
-          { name: "UI/UX", color: "#EC4899" },
+          { name: "QA & Testing", color: "#3B82F6" },
           { name: "Security", color: "#EF4444" },
-          { name: "Performance", color: "#10B981" },
+          { name: "HRMS", color: "#EC4899" },
         ],
       },
     },
@@ -217,10 +317,12 @@ async function main() {
 
   const projectDXAI = await prisma.project.create({
     data: {
-      name: "DX AI Expansion Engine",
+      name: "DX AI OpenRouter Copilot",
       key: "DXAI",
-      description: "Intelligent autonomous task assistant, tool calling engine, multi-provider gateway, and workflow automation.",
+      description: "Intelligent OpenRouter-powered task assistant, tool calling engine, and AI requirement breakdown.",
       leadId: rahul.id,
+      managerId: rahul.id,
+      teamLeadId: priya.id,
       startDate: new Date("2026-08-10"),
       endDate: new Date("2026-10-15"),
       status: "ACTIVE",
@@ -232,92 +334,44 @@ async function main() {
           { userId: sneha.id, role: "MEMBER" },
         ],
       },
-      labels: {
-        create: [
-          { name: "AI Core", color: "#8B5CF6" },
-          { name: "LLM Gateway", color: "#3B82F6" },
-          { name: "Tool Calling", color: "#06B6D4" },
-        ],
-      },
     },
   });
-
-  const projectMobile = await prisma.project.create({
-    data: {
-      name: "Mobile Native Experience",
-      key: "APP",
-      description: "Cross-platform mobile companion app for team task tracking, real-time push alerts, and quick comments.",
-      leadId: priya.id,
-      startDate: new Date("2026-08-15"),
-      endDate: new Date("2026-11-01"),
-      status: "ACTIVE",
-      members: {
-        create: [
-          { userId: admin.id, role: "LEAD" },
-          { userId: priya.id, role: "LEAD" },
-          { userId: amit.id, role: "MEMBER" },
-          { userId: vikram.id, role: "MEMBER" },
-        ],
-      },
-      labels: {
-        create: [
-          { name: "React Native", color: "#06B6D4" },
-          { name: "Push Notifications", color: "#F59E0B" },
-        ],
-      },
-    },
-  });
-
-  console.log("✅ Projects created: WEB, DXAI, APP");
 
   // 3. Create Sprints
   const sprint1 = await prisma.sprint.create({
     data: {
       projectId: projectWeb.id,
-      name: "Sprint 1 - Core MVP & Workflow",
-      goal: "Complete authentication, interactive Kanban board, and task assignment notifications.",
+      name: "Sprint 1 - Core RBAC & Enterprise Portal",
+      goal: "Complete 6-role RBAC, Super Admin centralized management, QA testing suite, and HRMS 8-hour rule attendance.",
       startDate: new Date("2026-08-10"),
       endDate: new Date("2026-08-24"),
       status: "ACTIVE",
     },
   });
 
-  const sprint2 = await prisma.sprint.create({
-    data: {
-      projectId: projectWeb.id,
-      name: "Sprint 2 - AI Integration & Automation",
-      goal: "Integrate multi-provider DX AI assistant, requirements breakdown, and custom status automations.",
-      startDate: new Date("2026-08-25"),
-      endDate: new Date("2026-09-08"),
-      status: "PLANNED",
-    },
-  });
-
-  // 4. Create Tasks
+  // 4. Create Core Tasks
   const task1 = await prisma.task.create({
     data: {
       taskKey: "WEB-101",
-      title: "Design and implement OAuth & JWT Authentication",
-      description: "Implement secure session tokens, password hashing with bcrypt, email verification tokens, and role-based permissions for Super Admin, Project Manager, and Team Members.",
-      acceptanceCriteria: "- Secure bcrypt password hashing\n- JWT token rotation and secure session cookies\n- Invitation token redemption\n- RBAC middleware protection",
+      title: "Design and implement 6-Role RBAC Authorization Engine",
+      description: "Implement strictly validated permissions for Super Admin, HR Admin, Manager, Team Lead, Member, and QA with route-level security.",
+      acceptanceCriteria: "- Strict backend route authorization\n- Super Admin global override\n- Public signup limited to Member\n- Hierarchy based access scopes",
       projectId: projectWeb.id,
       sprintId: sprint1.id,
       taskType: "FEATURE",
       status: "DONE",
       priority: "HIGH",
       reporterId: admin.id,
-      dueDate: new Date("2026-08-14"),
-      estimatedHours: 12,
-      loggedHours: 12,
+      dueDate: new Date("2026-08-18"),
+      estimatedHours: 16,
+      loggedHours: 16,
       position: 0,
-      assignees: {
-        create: [{ userId: rahul.id }],
-      },
+      assignees: { create: [{ userId: rahul.id }, { userId: amit.id }] },
       subtasks: {
         create: [
-          { title: "Define JWT payload schema", completed: true, assigneeId: rahul.id },
-          { title: "Implement bcrypt password validator", completed: true, assigneeId: rahul.id },
-          { title: "Add invitation token acceptance endpoint", completed: true, assigneeId: rahul.id },
+          { title: "Define 6-role matrix in permissions.ts", completed: true, assigneeId: rahul.id },
+          { title: "Secure backend endpoints with requireRole()", completed: true, assigneeId: rahul.id },
+          { title: "Sanitize public /signup endpoint", completed: true, assigneeId: amit.id },
         ],
       },
     },
@@ -326,27 +380,25 @@ async function main() {
   const task2 = await prisma.task.create({
     data: {
       taskKey: "WEB-102",
-      title: "Build Jira-Style Kanban Drag and Drop Board",
-      description: "Create an interactive drag-and-drop board supporting To Do, In Progress, In Review, Blocked, and Done columns with immediate backend synchronization and activity tracking.",
-      acceptanceCriteria: "- Drag card smoothly between columns\n- Instant optimistic update with rollback on failure\n- Record activity log on status change\n- Live column card counters and quick filters",
+      title: "Build HRMS Daily Attendance with 8-Hour Rule Calculator",
+      description: "Compute daily working hours as (Punch Out - Punch In - Break Duration). If >= 8.0h -> FULL_DAY, if < 8.0h -> HALF_DAY.",
+      acceptanceCriteria: "- Real-time punch in/out buttons\n- Automatic calculation on server\n- Interactive calendar with details modal\n- Monthly statistics cards",
       projectId: projectWeb.id,
       sprintId: sprint1.id,
-      taskType: "TASK",
+      taskType: "FEATURE",
       status: "IN_PROGRESS",
-      priority: "HIGH",
-      reporterId: rahul.id,
-      dueDate: new Date("2026-08-16"),
-      estimatedHours: 16,
-      loggedHours: 8,
+      priority: "CRITICAL",
+      reporterId: pooja.id,
+      dueDate: new Date("2026-08-20"),
+      estimatedHours: 20,
+      loggedHours: 12,
       position: 1,
-      assignees: {
-        create: [{ userId: amit.id }],
-      },
+      assignees: { create: [{ userId: amit.id }] },
       subtasks: {
         create: [
-          { title: "Configure Drag and Drop wrapper", completed: true, assigneeId: amit.id },
-          { title: "Connect status update API endpoint", completed: true, assigneeId: amit.id },
-          { title: "Add micro-animations and drop target highlight", completed: false, assigneeId: amit.id },
+          { title: "Create Attendance model & 8-hour utility", completed: true, assigneeId: amit.id },
+          { title: "Build interactive calendar grid", completed: true, assigneeId: amit.id },
+          { title: "Add birthday celebration banner", completed: true, assigneeId: amit.id },
         ],
       },
     },
@@ -355,303 +407,247 @@ async function main() {
   const task3 = await prisma.task.create({
     data: {
       taskKey: "WEB-103",
-      title: "Implement Domain Expansion Dark Futuristic Design Tokens",
-      description: "Craft bespoke Tailwind tokens incorporating Obsidian dark tones (#0D0D0D), Brand Orange (#FF6200), Purple accents (#6D28D9), and glassmorphism borders for maximum visual polish.",
-      acceptanceCriteria: "- Harmonious dark palette matching domainexpansion.in\n- Crisp typography using Inter and Outfit\n- Subtle glow effects on active elements\n- Accessible contrast ratios",
+      title: "Implement QA Ticket & Multi-Bug Defect Triage Lifecycle",
+      description: "Mandatory field validation for QA tickets (Title, Description, Dates, Assignee). Link multiple defects per QA ticket with status progression.",
+      acceptanceCriteria: "- Mandatory field checks on submission\n- Open, In Progress, Ready For Testing, Test Failed, Closed transitions\n- OpenRouter AI bug reproduction helper",
       projectId: projectWeb.id,
       sprintId: sprint1.id,
-      taskType: "STORY",
-      status: "IN_REVIEW",
-      priority: "MEDIUM",
-      reporterId: rahul.id,
-      dueDate: new Date("2026-08-15"),
-      estimatedHours: 10,
-      loggedHours: 9,
-      position: 2,
-      assignees: {
-        create: [{ userId: sneha.id }],
-      },
-      subtasks: {
-        create: [
-          { title: "Define color variables in CSS", completed: true, assigneeId: sneha.id },
-          { title: "Create glassmorphic card component", completed: true, assigneeId: sneha.id },
-          { title: "Review contrast with accessibility team", completed: true, assigneeId: sneha.id },
-        ],
-      },
-    },
-  });
-
-  const task4 = await prisma.task.create({
-    data: {
-      taskKey: "WEB-104",
-      title: "Setup Transactional Email Templates & Notification Center",
-      description: "Implement abstracted EmailService with pluggable providers (Resend, SendGrid, Dev Mailbox) and dispatch automated HTML notifications for task assignments, mentions, due dates, and status updates.",
-      acceptanceCriteria: "- Transactional email templates for 7 event types\n- Interactive dev mailbox viewer\n- In-app notification bell with unread badge counter\n- Mark all read support",
-      projectId: projectWeb.id,
-      sprintId: sprint1.id,
-      taskType: "TASK",
-      status: "TODO",
-      priority: "HIGH",
-      reporterId: admin.id,
-      dueDate: new Date("2026-08-18"),
-      estimatedHours: 14,
-      loggedHours: 0,
-      position: 3,
-      assignees: {
-        create: [{ userId: rahul.id }, { userId: vikram.id }],
-      },
-    },
-  });
-
-  const task5 = await prisma.task.create({
-    data: {
-      taskKey: "WEB-105",
-      title: "Fix search index latency during full-text query",
-      description: "Investigate database query execution plan during Ctrl+K global search when matching across tasks, projects, comments, and members.",
-      acceptanceCriteria: "- Query execution under 50ms\n- Proper composite indexing on task title and keys\n- Fuzzy search tolerance",
-      projectId: projectWeb.id,
-      sprintId: sprint1.id,
-      taskType: "BUG",
-      status: "BLOCKED",
-      priority: "CRITICAL",
-      reporterId: rahul.id,
-      dueDate: new Date("2026-08-14"), // Overdue task!
-      estimatedHours: 8,
-      loggedHours: 4,
-      position: 4,
-      assignees: {
-        create: [{ userId: vikram.id }],
-      },
-    },
-  });
-
-  const taskDX1 = await prisma.task.create({
-    data: {
-      taskKey: "DXAI-301",
-      title: "Multi-Provider AI Gateway (OpenAI, Claude, Gemini, OpenRouter)",
-      description: "Build unified AI gateway capable of seamlessly routing prompts, tool definitions, and token streaming across OpenAI, Anthropic, Google Gemini, and OpenRouter.",
-      acceptanceCriteria: "- Pluggable provider architecture\n- Admin key configuration & test connection modal\n- Token usage and cost tracker per query",
-      projectId: projectDXAI.id,
       taskType: "FEATURE",
-      status: "IN_PROGRESS",
-      priority: "CRITICAL",
-      reporterId: admin.id,
-      dueDate: new Date("2026-08-19"),
-      estimatedHours: 20,
-      loggedHours: 10,
-      position: 0,
-      assignees: {
-        create: [{ userId: amit.id }],
-      },
-    },
-  });
-
-  const taskDX2 = await prisma.task.create({
-    data: {
-      taskKey: "DXAI-302",
-      title: "Interactive AI Action Confirmation & Tool Calling Safety",
-      description: "Implement controlled tool calling where AI generates structured task creation/update proposals with preview cards, requiring explicit user approval before execution.",
-      acceptanceCriteria: "- AI tool calling for get_tasks, create_task, update_task\n- UI preview card with [Confirm Action] and [Cancel] buttons\n- Backend permission check and audit log recording",
-      projectId: projectDXAI.id,
-      taskType: "STORY",
-      status: "IN_REVIEW",
+      status: "READY_FOR_TESTING",
       priority: "HIGH",
-      reporterId: rahul.id,
-      dueDate: new Date("2026-08-20"),
-      estimatedHours: 15,
-      loggedHours: 13,
-      position: 1,
-      assignees: {
-        create: [{ userId: sneha.id }],
-      },
+      reporterId: priya.id,
+      dueDate: new Date("2026-08-22"),
+      estimatedHours: 18,
+      loggedHours: 14,
+      position: 2,
+      assignees: { create: [{ userId: neha.id }] },
     },
   });
 
-  console.log("✅ Seeded Tasks with Subtasks, Assignees, and Priorities");
-
-  // 5. Create Comments & Mentions
-  await prisma.comment.create({
+  // 5. Create Task Relations
+  await prisma.taskRelation.create({
     data: {
-      taskId: task2.id,
-      authorId: rahul.id,
-      content: "@Amit Verma Please ensure the Kanban cards display priority badges, avatar chips, and subtask progress bars clearly.",
+      sourceTaskId: task1.id,
+      targetTaskId: task2.id,
+      relationType: "RELATES_TO",
     },
   });
 
-  await prisma.comment.create({
+  // 6. Create QA Tickets & Bugs (Master Prompt Section 16-19)
+  const qaTicket1 = await prisma.qATicket.create({
     data: {
-      taskId: task2.id,
-      authorId: amit.id,
-      content: "Done! Implemented smooth drag animations with brand orange glow and column counter indicators.",
-    },
-  });
-
-  await prisma.comment.create({
-    data: {
-      taskId: task5.id,
-      authorId: vikram.id,
-      content: "Waiting on database index profiling. Currently blocked until we benchmark the SQLite/Postgres query plan.",
-    },
-  });
-
-  // 6. Create Activities
-  await prisma.activity.create({
-    data: {
-      taskId: task2.id,
+      ticketKey: "WEB-QA-101",
+      title: "Authentication & Role Security Test Plan",
+      description: "Verify that public registration rejects privileged role elevation and that /superadmin is completely inaccessible to Member tokens.",
+      startDate: new Date("2026-08-16"),
+      endDate: new Date("2026-08-22"),
+      status: "READY_FOR_TESTING",
+      priority: "CRITICAL",
       projectId: projectWeb.id,
-      userId: rahul.id,
-      action: "CREATED",
-      description: "Rahul Sharma created WEB-102: Build Jira-Style Kanban Drag and Drop Board",
+      relatedTaskId: task1.id,
+      assignedToId: neha.id,
+      createdById: priya.id,
     },
   });
 
-  await prisma.activity.create({
+  const bug1 = await prisma.qABug.create({
     data: {
-      taskId: task2.id,
+      bugKey: "BUG-001",
+      title: "Public registration must strictly register MEMBER role only",
+      description: "1. Open /signup\n2. Submit account form\nExpected: Created with role MEMBER\nActual: Verified role is MEMBER in backend.",
+      priority: "CRITICAL",
+      severity: "CRITICAL",
+      status: "FIXED",
+      ticketId: qaTicket1.id,
       projectId: projectWeb.id,
-      userId: rahul.id,
-      action: "ASSIGNED",
-      fieldChanged: "assignee",
-      oldValue: "Unassigned",
-      newValue: "Amit Verma",
-      description: "Rahul Sharma assigned WEB-102 to Amit Verma",
+      assignedToId: amit.id,
+      createdById: neha.id,
     },
   });
 
-  await prisma.activity.create({
+  const bug2 = await prisma.qABug.create({
     data: {
-      taskId: task2.id,
+      bugKey: "BUG-002",
+      title: "8-hour calculation logic discrepancy under 15m break window",
+      description: "Verify that 8h 15m elapsed with 15m break computes to exact 8.00h Full Day status.",
+      priority: "HIGH",
+      severity: "MAJOR",
+      status: "OPEN",
+      ticketId: qaTicket1.id,
       projectId: projectWeb.id,
-      userId: amit.id,
-      action: "STATUS_CHANGED",
-      fieldChanged: "status",
-      oldValue: "TODO",
-      newValue: "IN_PROGRESS",
-      description: "Amit Verma moved WEB-102 from To Do to In Progress",
+      assignedToId: amit.id,
+      createdById: neha.id,
     },
   });
 
-  // 7. Create Notifications
-  await prisma.notification.create({
+  const qaTicket2 = await prisma.qATicket.create({
+    data: {
+      ticketKey: "WEB-QA-102",
+      title: "HRMS Daily Attendance 8-Hour Rule Test Suite",
+      description: "Comprehensive test matrix for Punch In, Punch Out, Break Duration deduction, and Monthly Calendar stats.",
+      startDate: new Date("2026-08-17"),
+      endDate: new Date("2026-08-24"),
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      projectId: projectWeb.id,
+      relatedTaskId: task2.id,
+      assignedToId: neha.id,
+      createdById: rahul.id,
+    },
+  });
+
+  // 7. Create Sample Attendance Records (8-Hour Rule Demonstration)
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+  // Full Day Demo (>= 8h): 09:00 to 17:30 with 30m break = 8.0h -> FULL_DAY
+  const inToday = new Date(today);
+  inToday.setUTCHours(9, 0, 0, 0);
+  const outToday = new Date(today);
+  outToday.setUTCHours(17, 30, 0, 0);
+
+  await prisma.attendance.create({
     data: {
       userId: amit.id,
-      title: "New Task Assigned",
-      message: "Rahul Sharma assigned WEB-102: Build Jira-Style Kanban Drag and Drop Board to you",
-      type: "TASK_ASSIGNED",
-      link: "/tasks/WEB-102",
-      isRead: false,
+      date: today,
+      punchIn: inToday,
+      punchOut: outToday,
+      breakDurationMinutes: 30,
+      totalWorkingHours: 8.0,
+      status: "FULL_DAY",
+      notes: "Sprint 1 Feature Implementation",
     },
   });
 
-  await prisma.notification.create({
+  // Half Day Demo (< 8h): 09:30 to 14:30 = 5.0h -> HALF_DAY
+  const inYest = new Date(yesterday);
+  inYest.setUTCHours(9, 30, 0, 0);
+  const outYest = new Date(yesterday);
+  outYest.setUTCHours(14, 30, 0, 0);
+
+  await prisma.attendance.create({
     data: {
       userId: amit.id,
-      title: "Mentioned in Comment",
-      message: "Rahul Sharma mentioned you in a comment on WEB-102",
-      type: "MENTION",
-      link: "/tasks/WEB-102",
-      isRead: false,
+      date: yesterday,
+      punchIn: inYest,
+      punchOut: outYest,
+      breakDurationMinutes: 0,
+      totalWorkingHours: 5.0,
+      status: "HALF_DAY",
+      notes: "Doctor appointment in afternoon",
     },
   });
 
-  await prisma.notification.create({
+  // Full Day for Vikram
+  await prisma.attendance.create({
     data: {
       userId: vikram.id,
-      title: "Task Overdue Alert",
-      message: "WEB-105: Fix search index latency is overdue (was due yesterday)",
-      type: "OVERDUE",
-      link: "/tasks/WEB-105",
-      isRead: false,
+      date: today,
+      punchIn: inToday,
+      punchOut: outToday,
+      breakDurationMinutes: 30,
+      totalWorkingHours: 8.0,
+      status: "FULL_DAY",
     },
   });
 
-  // 8. Create Automation Rules
-  await prisma.automationRule.create({
+  // 8. Create Leave Applications & Approvals
+  await prisma.leave.create({
     data: {
-      name: "Notify Assignee on Task Assignment",
-      triggerType: "TASK_ASSIGNED",
-      conditionsJson: JSON.stringify({ isAssigned: true }),
-      actionType: "SEND_EMAIL_AND_NOTIFICATION",
-      actionPayloadJson: JSON.stringify({ template: "TASK_ASSIGNED" }),
+      userId: amit.id,
+      leaveType: "CASUAL",
+      startDate: new Date("2026-08-25"),
+      endDate: new Date("2026-08-26"),
+      daysCount: 2,
+      reason: "Family wedding ceremony attendance",
+      status: "PENDING",
+    },
+  });
+
+  await prisma.leave.create({
+    data: {
+      userId: sneha.id,
+      leaveType: "SICK",
+      startDate: new Date("2026-08-12"),
+      endDate: new Date("2026-08-13"),
+      daysCount: 2,
+      reason: "Viral flu and doctor advised rest",
+      status: "APPROVED",
+      approverId: rahul.id,
+      approverComment: "Approved. Take care Sneha.",
+      actionAt: new Date("2026-08-12"),
+    },
+  });
+
+  // 9. Create Notifications
+  await prisma.notification.create({
+    data: {
+      userId: amit.id,
+      title: "Welcome to Domain Expansion Portal",
+      message: "Your enterprise account is ready. Explore tasks, QA defects, and HRMS attendance.",
+      type: "SYSTEM",
+      link: "/",
+    },
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: neha.id,
+      title: "QA Ticket Assigned: WEB-QA-101",
+      message: "Priya Nair assigned QA Ticket WEB-QA-101: Authentication & Role Security Test Plan to you.",
+      type: "QA_UPDATE",
+      link: "/qa?ticket=WEB-QA-101",
+    },
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: rahul.id,
+      title: "New Leave Application Pending",
+      message: "Amit Verma applied for 2 day(s) CASUAL leave.",
+      type: "LEAVE_UPDATE",
+      link: "/hradmin",
+    },
+  });
+
+  // 10. OpenRouter AI Configuration (Exclusive Provider)
+  await prisma.aIProviderConfig.upsert({
+    where: { provider: "OPENROUTER" },
+    create: {
+      provider: "OPENROUTER",
+      defaultModel: "meta-llama/llama-3.3-70b-instruct",
       isEnabled: true,
-      createdById: admin.id,
+      monthlyBudget: 100.0,
+      requestLimit: 5000,
+      currentUsageCost: 0.0,
     },
-  });
-
-  await prisma.automationRule.create({
-    data: {
-      name: "Alert Project Lead when Task is Moved to Done",
-      triggerType: "STATUS_CHANGED",
-      conditionsJson: JSON.stringify({ toStatus: "DONE" }),
-      actionType: "NOTIFY_PM",
-      actionPayloadJson: JSON.stringify({ template: "TASK_COMPLETED" }),
+    update: {
       isEnabled: true,
-      createdById: admin.id,
+      defaultModel: "meta-llama/llama-3.3-70b-instruct",
     },
   });
 
-  await prisma.automationRule.create({
+  // 11. Initial Audit Log
+  await prisma.auditLog.create({
     data: {
-      name: "Flag Overdue Tasks Automatically",
-      triggerType: "TASK_OVERDUE",
-      conditionsJson: JSON.stringify({ overdueDays: 1 }),
-      actionType: "NOTIFY_USER",
-      actionPayloadJson: JSON.stringify({ priority: "CRITICAL" }),
-      isEnabled: true,
-      createdById: admin.id,
+      userId: admin.id,
+      action: "SYSTEM_INITIALIZED",
+      entityType: "SYSTEM",
+      detailsJson: JSON.stringify({
+        version: "2.0-ENTERPRISE",
+        roles: ["SUPER_ADMIN", "HR_ADMIN", "MANAGER", "TEAM_LEAD", "MEMBER", "QA"],
+        modules: ["TASKS", "KANBAN", "QA", "HRMS", "SUPER_ADMIN", "HR_ADMIN"],
+      }),
     },
   });
 
-  // 9. Create AI Provider Configurations
-  await prisma.aIProviderConfig.createMany({
-    data: [
-      {
-        provider: "OPENAI",
-        defaultModel: "gpt-4o",
-        isEnabled: true,
-        monthlyBudget: 150.0,
-        requestLimit: 2500,
-        currentUsageCost: 14.25,
-      },
-      {
-        provider: "ANTHROPIC",
-        defaultModel: "claude-3-5-sonnet-20241022",
-        isEnabled: true,
-        monthlyBudget: 200.0,
-        requestLimit: 3000,
-        currentUsageCost: 28.5,
-      },
-      {
-        provider: "GEMINI",
-        defaultModel: "gemini-1.5-pro-latest",
-        isEnabled: true,
-        monthlyBudget: 100.0,
-        requestLimit: 5000,
-        currentUsageCost: 6.8,
-      },
-      {
-        provider: "OPENROUTER",
-        defaultModel: "meta-llama/llama-3.3-70b-instruct",
-        isEnabled: true,
-        monthlyBudget: 50.0,
-        requestLimit: 1000,
-        currentUsageCost: 2.1,
-      },
-    ],
-  });
-
-  // 10. Sample Sent Email Log
-  await prisma.sentEmailLog.create({
-    data: {
-      toEmail: "amit@domainexpansion.in",
-      subject: "You have been assigned WEB-102: Build Jira-Style Kanban Drag and Drop Board",
-      template: "TASK_ASSIGNED",
-      htmlBody: "<div style='font-family:sans-serif; background:#0D0D0D; color:#fff; padding:20px;'><h2 style='color:#FF6200;'>Domain Expansion Task Assignment</h2><p>You have been assigned to <strong>WEB-102: Build Jira-Style Kanban Drag and Drop Board</strong> by Rahul Sharma.</p><p>Priority: High | Due: Tomorrow</p></div>",
-      status: "SENT",
-    },
-  });
-
-  console.log("🚀 Database seeded successfully with complete enterprise demo data!");
+  console.log("🚀 Complete Domain Expansion Enterprise Database Seeded Successfully!");
 }
 
 main()
