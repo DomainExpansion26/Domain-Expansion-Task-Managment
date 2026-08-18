@@ -18,8 +18,15 @@ import {
   Network,
   Trash2,
   Eye,
+  Clock,
+  AlertTriangle,
+  Users,
+  SlidersHorizontal,
+  LayoutGrid,
+  ListFilter,
+  Flame,
 } from "lucide-react";
-import { getPriorityColor, getStatusColor, getTypeIcon, formatDate } from "@/lib/utils";
+import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 
 interface KanbanViewProps {
@@ -50,12 +57,21 @@ export function KanbanView({
   const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
   const [onlyMyTasks, setOnlyMyTasks] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
+  const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [dueFilter, setDueFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [cardDensity, setCardDensity] = useState<"detailed" | "compact">("detailed");
   const [draggedTaskKey, setDraggedTaskKey] = useState<string | null>(null);
+  const [showWorkload, setShowWorkload] = useState(false);
 
   // Relations modal
   const [relationsTaskKey, setRelationsTaskKey] = useState<string | null>(null);
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
+
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+  const endOfWeek = new Date(now);
+  endOfWeek.setDate(now.getDate() + 7);
 
   // Filter tasks
   const filteredTasks = tasks.filter((t) => {
@@ -63,6 +79,19 @@ export function KanbanView({
     if (onlyMyTasks && !t.assignees?.some((a: any) => a.id === currentUser?.id || a.email === currentUser?.email))
       return false;
     if (priorityFilter !== "ALL" && t.priority !== priorityFilter) return false;
+    if (typeFilter !== "ALL" && t.taskType !== typeFilter) return false;
+
+    if (dueFilter !== "ALL" && t.dueDate) {
+      const taskDue = new Date(t.dueDate);
+      const dueStr = taskDue.toISOString().split("T")[0];
+      if (dueFilter === "OVERDUE" && (dueStr < todayStr && t.status !== "DONE")) return true;
+      if (dueFilter === "TODAY" && dueStr === todayStr) return true;
+      if (dueFilter === "THIS_WEEK" && taskDue <= endOfWeek && taskDue >= now) return true;
+      return false;
+    } else if (dueFilter !== "ALL" && !t.dueDate) {
+      return false;
+    }
+
     if (
       searchQuery &&
       !t.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -71,6 +100,28 @@ export function KanbanView({
       return false;
     return true;
   });
+
+  // Calculate Board Metrics
+  const totalCards = filteredTasks.length;
+  const inProgressCount = filteredTasks.filter((t) => t.status === "IN_PROGRESS").length;
+  const inReviewCount = filteredTasks.filter((t) => t.status === "IN_REVIEW").length;
+  const blockedCount = filteredTasks.filter((t) => t.status === "BLOCKED").length;
+  const doneCount = filteredTasks.filter((t) => t.status === "DONE").length;
+  const totalHoursLogged = filteredTasks.reduce((acc, t) => acc + (t.loggedHours || 0), 0);
+  const totalHoursEstimated = filteredTasks.reduce((acc, t) => acc + (t.estimatedHours || 0), 0);
+
+  // Calculate Team Workload
+  const memberWorkloadMap: Record<string, { name: string; avatarUrl?: string; count: number; hours: number }> = {};
+  filteredTasks.forEach((t) => {
+    t.assignees?.forEach((a: any) => {
+      if (!memberWorkloadMap[a.id]) {
+        memberWorkloadMap[a.id] = { name: a.name, avatarUrl: a.avatarUrl, count: 0, hours: 0 };
+      }
+      memberWorkloadMap[a.id].count += 1;
+      memberWorkloadMap[a.id].hours += t.loggedHours || 0;
+    });
+  });
+  const memberWorkloads = Object.values(memberWorkloadMap);
 
   const handleDragStart = (e: React.DragEvent, taskKey: string) => {
     e.dataTransfer.setData("text/plain", taskKey);
@@ -91,14 +142,66 @@ export function KanbanView({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] space-y-4 animate-fade-in" onClick={() => setActiveMenuKey(null)}>
-      {/* Kanban Header & Filters Bar */}
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] space-y-3 animate-fade-in" onClick={() => setActiveMenuKey(null)}>
+      {/* Top Metrics Summary Banner */}
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5 p-3 rounded-2xl bg-[#141414] border border-[#2E2E2E] text-xs">
+        <div className="flex items-center gap-2 px-2 border-r border-[#2E2E2E]">
+          <LayoutGrid className="w-3.5 h-3.5 text-[#FF6200]" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">Total</span>
+            <span className="font-bold text-white font-mono">{totalCards} issues</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-2 border-r border-[#2E2E2E]">
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">In Progress</span>
+            <span className="font-bold text-blue-400 font-mono">{inProgressCount}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-2 border-r border-[#2E2E2E]">
+          <div className="w-2 h-2 rounded-full bg-purple-500" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">In Review</span>
+            <span className="font-bold text-purple-400 font-mono">{inReviewCount}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-2 border-r border-[#2E2E2E]">
+          <Flame className="w-3.5 h-3.5 text-rose-500" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">Blocked</span>
+            <span className="font-bold text-rose-400 font-mono">{blockedCount}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-2 border-r border-[#2E2E2E]">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">Done</span>
+            <span className="font-bold text-emerald-400 font-mono">{doneCount}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-2">
+          <Clock className="w-3.5 h-3.5 text-[#FF8C42]" />
+          <div>
+            <span className="text-[10px] text-[#888898] uppercase block">Time Logged</span>
+            <span className="font-bold text-[#FF8C42] font-mono">{totalHoursLogged}h / {totalHoursEstimated}h</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Kanban Filters & Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#141414] border border-[#2E2E2E]">
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Project Selector */}
           <select
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
           >
             <option value="ALL">All Projects</option>
             {projects.map((p) => (
@@ -108,6 +211,7 @@ export function KanbanView({
             ))}
           </select>
 
+          {/* Only My Tasks Toggle */}
           <button
             onClick={() => setOnlyMyTasks(!onlyMyTasks)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -119,10 +223,11 @@ export function KanbanView({
             Only My Tasks
           </button>
 
+          {/* Priority Filter */}
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
           >
             <option value="ALL">All Priorities</option>
             <option value="CRITICAL">🔴 Critical</option>
@@ -130,19 +235,80 @@ export function KanbanView({
             <option value="MEDIUM">🟡 Medium</option>
             <option value="LOW">🟢 Low</option>
           </select>
+
+          {/* Type Filter */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+          >
+            <option value="ALL">All Types</option>
+            <option value="TASK">📌 Tasks</option>
+            <option value="BUG">🐛 Bugs</option>
+            <option value="STORY">📖 Stories</option>
+            <option value="FEATURE">✨ Features</option>
+            <option value="IMPROVEMENT">⚡ Improvements</option>
+          </select>
+
+          {/* Due Date Filter */}
+          <select
+            value={dueFilter}
+            onChange={(e) => setDueFilter(e.target.value)}
+            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+          >
+            <option value="ALL">All Due Dates</option>
+            <option value="OVERDUE">⚠️ Overdue</option>
+            <option value="TODAY">📅 Due Today</option>
+            <option value="THIS_WEEK">🗓️ Due This Week</option>
+          </select>
+
+          {/* Workload Toggle Button */}
+          <button
+            onClick={() => setShowWorkload(!showWorkload)}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-all ${
+              showWorkload
+                ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                : "bg-[#1A1A1A] text-[#888898] border-[#2E2E2E] hover:text-white"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Team Load</span>
+          </button>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          {/* Density Switcher */}
+          <div className="flex items-center bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg p-0.5 text-xs">
+            <button
+              onClick={() => setCardDensity("detailed")}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                cardDensity === "detailed" ? "bg-[#252525] text-white" : "text-[#888898] hover:text-white"
+              }`}
+            >
+              Detailed
+            </button>
+            <button
+              onClick={() => setCardDensity("compact")}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-all ${
+                cardDensity === "compact" ? "bg-[#252525] text-white" : "text-[#888898] hover:text-white"
+              }`}
+            >
+              Compact
+            </button>
+          </div>
+
+          {/* Search Box */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Filter cards..."
+              placeholder="Search cards..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]/60 w-44"
+              className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]/60 w-36 sm:w-44"
             />
           </div>
+
           <button
             onClick={() => onOpenCreateTask("TODO")}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-colors shadow-[0_0_10px_rgba(255,98,0,0.2)]"
@@ -153,8 +319,47 @@ export function KanbanView({
         </div>
       </div>
 
-      {/* 5-Column Kanban Board */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3.5 overflow-x-auto pb-4">
+      {/* Team Workload Widget (Optional Dropdown/Drawer) */}
+      {showWorkload && (
+        <div className="p-3.5 rounded-2xl bg-[#141414] border border-purple-500/30 text-xs space-y-2 animate-fade-in">
+          <div className="flex items-center justify-between text-purple-300 font-bold">
+            <span className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              <span>Team Workload Distribution</span>
+            </span>
+            <span className="text-[10px] text-[#888898] font-normal">{memberWorkloads.length} active assignees</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 pt-1">
+            {memberWorkloads.map((mw) => (
+              <div key={mw.name} className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center gap-2">
+                {mw.avatarUrl ? (
+                  <img
+                    src={mw.avatarUrl}
+                    alt={mw.name}
+                    className="w-6 h-6 rounded-full object-cover border border-[#2E2E2E]"
+                  />
+                ) : (
+                  <div
+                    className={`w-6 h-6 rounded-full bg-gradient-to-tr ${getAvatarGradient(mw.name)} flex items-center justify-center text-[9px] font-bold text-white uppercase border border-[#2E2E2E] flex-shrink-0`}
+                  >
+                    {getInitials(mw.name)}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-bold truncate text-[11px]">{mw.name}</div>
+                  <div className="text-[10px] text-[#888898] font-mono">
+                    {mw.count} tasks &bull; {mw.hours}h
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5-Column Kanban Board with Mobile Horizontal Swipe */}
+      <div className="flex-1 flex md:grid md:grid-cols-5 gap-3.5 overflow-x-auto pb-4 snap-x snap-mandatory min-w-0">
         {COLUMNS.map((column) => {
           const colTasks = filteredTasks.filter((t) => t.status === column.id);
 
@@ -163,7 +368,7 @@ export function KanbanView({
               key={column.id}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
-              className="flex flex-col h-full rounded-2xl bg-[#141414] border border-[#2E2E2E] overflow-hidden group/col"
+              className="flex flex-col h-full w-[82vw] sm:w-80 md:w-auto flex-shrink-0 snap-center rounded-2xl bg-[#141414] border border-[#2E2E2E] overflow-hidden group/col shadow-lg"
             >
               {/* Column Header */}
               <div className="p-3 border-b border-[#2E2E2E] flex items-center justify-between bg-[#1A1A1A]">
@@ -194,6 +399,7 @@ export function KanbanView({
                   colTasks.map((task) => {
                     const pColor = getPriorityColor(task.priority);
                     const typeInfo = getTypeIcon(task.taskType);
+                    const isOverdue = task.dueDate && new Date(task.dueDate).toISOString().split("T")[0] < todayStr && task.status !== "DONE";
 
                     return (
                       <div
@@ -201,9 +407,15 @@ export function KanbanView({
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.taskKey)}
                         onClick={() => onSelectTask(task.taskKey)}
-                        className="relative p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/50 hover:shadow-[0_0_20px_rgba(255,98,0,0.1)] transition-all cursor-grab active:cursor-grabbing space-y-2.5 group"
+                        className={`relative rounded-xl bg-[#1A1A1A] border transition-all cursor-grab active:cursor-grabbing group ${
+                          cardDensity === "compact" ? "p-2.5 space-y-1.5" : "p-3.5 space-y-2.5"
+                        } ${
+                          isOverdue
+                            ? "border-red-500/50 hover:border-red-500"
+                            : "border-[#2E2E2E] hover:border-[#FF6200]/50 hover:shadow-[0_0_20px_rgba(255,98,0,0.1)]"
+                        }`}
                       >
-                        {/* Top: Key & Type & Three-Dot Menu */}
+                        {/* Top: Key & Type & Menu */}
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-[11px] font-bold text-[#FF8C42] bg-[#FF6200]/10 px-2 py-0.5 rounded border border-[#FF6200]/20">
                             {task.taskKey}
@@ -280,8 +492,8 @@ export function KanbanView({
                           {task.title}
                         </div>
 
-                        {/* Subtasks Progress */}
-                        {task.subtasks?.length > 0 && (
+                        {/* Subtasks Progress (In detailed mode) */}
+                        {cardDensity === "detailed" && task.subtasks?.length > 0 && (
                           <div className="space-y-1">
                             <div className="flex justify-between text-[10px] text-[#888898]">
                               <span>Subtasks</span>
@@ -308,27 +520,41 @@ export function KanbanView({
                           <div className="flex items-center gap-2">
                             {task.assignees?.length > 0 ? (
                               <div className="flex -space-x-1.5 overflow-hidden">
-                                {task.assignees.map((a: any) => (
-                                  <img
-                                    key={a.id}
-                                    src={
-                                      a.avatarUrl ||
-                                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80"
-                                    }
-                                    alt={a.name}
-                                    title={a.name}
-                                    className="w-5 h-5 rounded-full object-cover border border-[#1A1A1A]"
-                                  />
-                                ))}
+                                {task.assignees.map((a: any) =>
+                                  a.avatarUrl ? (
+                                    <img
+                                      key={a.id}
+                                      src={a.avatarUrl}
+                                      alt={a.name}
+                                      title={a.name}
+                                      className="w-5 h-5 rounded-full object-cover border border-[#1A1A1A]"
+                                    />
+                                  ) : (
+                                    <div
+                                      key={a.id}
+                                      title={a.name}
+                                      className={`w-5 h-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(a.name)} flex items-center justify-center text-[8px] font-black text-white border border-[#1A1A1A] uppercase flex-shrink-0`}
+                                    >
+                                      {getInitials(a.name)}
+                                    </div>
+                                  )
+                                )}
                               </div>
                             ) : (
                               <span className="text-[#888898] italic">Unassigned</span>
                             )}
 
                             {task.dueDate && (
-                              <span className="flex items-center gap-0.5">
+                              <span className={`flex items-center gap-0.5 ${isOverdue ? "text-red-400 font-bold" : ""}`}>
                                 <Calendar className="w-2.5 h-2.5" />
                                 <span>{formatDate(task.dueDate)}</span>
+                              </span>
+                            )}
+
+                            {task.loggedHours > 0 && (
+                              <span className="flex items-center gap-0.5 text-[#FF8C42] font-mono">
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>{task.loggedHours}h</span>
                               </span>
                             )}
                           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Calendar,
@@ -20,8 +20,14 @@ import {
   Tag,
   Layers,
   Network,
+  Upload,
+  Download,
+  File,
+  FileText,
+  Image as ImageIcon,
+  Timer,
 } from "lucide-react";
-import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, formatDateTime } from "@/lib/utils";
+import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 
 interface TaskDetailModalProps {
@@ -50,9 +56,22 @@ export function TaskDetailModal({
   const [titleInput, setTitleInput] = useState("");
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [descInput, setDescInput] = useState("");
+  const [isEditingEstimate, setIsEditingEstimate] = useState(false);
+  const [estimateInput, setEstimateInput] = useState("");
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isRelationsOpen, setIsRelationsOpen] = useState(false);
+
+  // Time Logging Modal State
+  const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
+  const [logHoursInput, setLogHoursInput] = useState("1");
+  const [logNoteInput, setLogNoteInput] = useState("");
+  const [isLoggingTime, setIsLoggingTime] = useState(false);
+
+  // Attachment Upload State
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchTaskDetails = async () => {
     if (!taskKey) return;
@@ -64,6 +83,7 @@ export function TaskDetailModal({
         setTask(json.data);
         setTitleInput(json.data.title);
         setDescInput(json.data.description || "");
+        setEstimateInput(String(json.data.estimatedHours || 0));
       }
     } catch (err) {
       console.error("Failed to load task details:", err);
@@ -96,6 +116,66 @@ export function TaskDetailModal({
       }
     } catch (err) {
       console.error("Failed to update task field:", err);
+    }
+  };
+
+  const handleLogWork = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const hoursNum = parseFloat(logHoursInput);
+    if (isNaN(hoursNum) || hoursNum <= 0) return;
+
+    setIsLoggingTime(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskKey}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          addLoggedHours: hoursNum,
+          worklogNote: logNoteInput.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setIsLogTimeOpen(false);
+        setLogHoursInput("1");
+        setLogNoteInput("");
+        if (onTaskUpdated) onTaskUpdated();
+        fetchTaskDetails();
+      }
+    } catch (err) {
+      console.error("Log work error:", err);
+    } finally {
+      setIsLoggingTime(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !task) return;
+
+    setIsUploadingFile(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("taskId", task.id);
+      formData.append("projectId", task.projectId);
+
+      const res = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchTaskDetails();
+      } else {
+        setUploadError(json.error?.message || "Failed to upload file");
+      }
+    } catch (err: any) {
+      setUploadError(err.message || "File upload failed");
+    } finally {
+      setIsUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -159,7 +239,7 @@ export function TaskDetailModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: `Summarize task ${task.taskKey}: ${task.title}. Provide key context, blocked status, subtasks progress, and current assignee.`,
+          prompt: `Summarize task ${task.taskKey}: ${task.title}. Provide key context, blocked status, subtasks progress, logged hours (${task.loggedHours || 0}h of ${task.estimatedHours || 0}h), and current assignee.`,
         }),
       });
       const json = await res.json();
@@ -187,6 +267,11 @@ export function TaskDetailModal({
   const priority = getPriorityColor(task.priority);
   const status = getStatusColor(task.status);
   const typeInfo = getTypeIcon(task.taskType);
+
+  const estimated = task.estimatedHours || 0;
+  const logged = task.loggedHours || 0;
+  const progressPercent = estimated > 0 ? Math.min(Math.round((logged / estimated) * 100), 100) : 0;
+  const isOverEstimate = estimated > 0 && logged > estimated;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -400,7 +485,7 @@ export function TaskDetailModal({
               </div>
             </div>
 
-            {/* Bottom Tabs: Comments & Activity History */}
+            {/* Bottom Tabs: Comments, Activity History & Attachments */}
             <div className="pt-4 border-t border-[#2E2E2E] space-y-4">
               <div className="flex items-center gap-3 border-b border-[#2E2E2E] pb-2 text-xs font-semibold">
                 <button
@@ -413,6 +498,18 @@ export function TaskDetailModal({
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Comments ({task.comments?.length || 0})</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("ATTACHMENTS")}
+                  className={`flex items-center gap-1.5 pb-2 transition-colors ${
+                    activeTab === "ATTACHMENTS"
+                      ? "text-[#FF8C42] border-b-2 border-b-[#FF6200]"
+                      : "text-[#888898] hover:text-white"
+                  }`}
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  <span>Attachments ({task.attachments?.length || 0})</span>
                 </button>
 
                 <button
@@ -436,15 +533,20 @@ export function TaskDetailModal({
                       <div key={comment.id} className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={
-                                comment.author?.avatarUrl ||
-                                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
-                              }
-                              alt={comment.author?.name}
-                              className="w-5 h-5 rounded-full object-cover border border-[#2E2E2E]"
-                            />
-                            <span className="font-bold text-white">{comment.author?.name}</span>
+                            {comment.author?.avatarUrl ? (
+                              <img
+                                src={comment.author.avatarUrl}
+                                alt={comment.author.name}
+                                className="w-5 h-5 rounded-full object-cover border border-[#2E2E2E]"
+                              />
+                            ) : (
+                              <div
+                                className={`w-5 h-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(comment.author?.name)} flex items-center justify-center text-[8px] font-black text-white border border-[#2E2E2E] uppercase flex-shrink-0`}
+                              >
+                                {getInitials(comment.author?.name)}
+                              </div>
+                            )}
+                            <span className="font-bold text-white">{comment.author?.name || "Member"}</span>
                           </div>
                           <span className="text-[10px] text-[#888898]">{formatDateTime(comment.createdAt)}</span>
                         </div>
@@ -475,7 +577,80 @@ export function TaskDetailModal({
                 </div>
               )}
 
-              {/* Tab 2: Activity History */}
+              {/* Tab 2: Attachments */}
+              {activeTab === "ATTACHMENTS" && (
+                <div className="space-y-4">
+                  {/* Upload Box */}
+                  <div className="p-4 rounded-xl border border-dashed border-[#2E2E2E] bg-[#1A1A1A]/40 flex flex-col items-center justify-center text-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      id="task-file-input"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="task-file-input"
+                      className={`cursor-pointer px-4 py-2 rounded-xl bg-[#252525] hover:bg-[#303030] text-xs font-bold text-white flex items-center gap-2 transition-all ${
+                        isUploadingFile ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                    >
+                      <Upload className="w-4 h-4 text-[#FF8C42]" />
+                      <span>{isUploadingFile ? "Uploading File..." : "Choose File to Attach"}</span>
+                    </label>
+                    <span className="text-[10px] text-[#888898]">Supports images, PDFs, docs, logs up to 10MB</span>
+                    {uploadError && <span className="text-[11px] text-red-400 font-semibold">{uploadError}</span>}
+                  </div>
+
+                  {/* Attachment Items */}
+                  <div className="space-y-2">
+                    {(!task.attachments || task.attachments.length === 0) ? (
+                      <div className="py-6 text-center text-xs text-[#888898]">No attachments added yet.</div>
+                    ) : (
+                      task.attachments.map((att: any) => (
+                        <div
+                          key={att.id}
+                          className="flex items-center justify-between p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/30 transition-all text-xs"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            {att.fileType?.startsWith("image/") ? (
+                              <ImageIcon className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                            ) : (
+                              <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                            )}
+                            <div className="truncate">
+                              <a
+                                href={att.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-bold text-white hover:text-[#FF8C42] transition-colors truncate block"
+                              >
+                                {att.fileName}
+                              </a>
+                              <span className="text-[10px] text-[#888898]">
+                                {(att.fileSize / 1024).toFixed(1)} KB &bull; Uploaded by {att.uploadedBy?.name || "Member"} &bull; {formatDate(att.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <a
+                            href={att.fileUrl}
+                            download={att.fileName}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2 rounded-lg bg-[#252525] hover:bg-[#333] text-slate-300 hover:text-white"
+                            title="Download file"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Activity History */}
               {activeTab === "ACTIVITY" && (
                 <div className="space-y-2.5">
                   {task.activities?.map((act: any) => (
@@ -551,11 +726,19 @@ export function TaskDetailModal({
                 Reporter
               </label>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-                <img
-                  src={task.reporter?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
-                  alt={task.reporter?.name}
-                  className="w-5 h-5 rounded-full object-cover"
-                />
+                {task.reporter?.avatarUrl ? (
+                  <img
+                    src={task.reporter.avatarUrl}
+                    alt={task.reporter.name}
+                    className="w-5 h-5 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-5 h-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(task.reporter?.name)} flex items-center justify-center text-[8px] font-black text-white uppercase flex-shrink-0`}
+                  >
+                    {getInitials(task.reporter?.name)}
+                  </div>
+                )}
                 <span className="text-white font-medium">{task.reporter?.name || "System"}</span>
               </div>
             </div>
@@ -590,28 +773,151 @@ export function TaskDetailModal({
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#2E2E2E]">
-              <div>
-                <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1">
-                  Estimated
-                </label>
-                <div className="font-mono text-white text-xs bg-[#1A1A1A] p-2 rounded-lg border border-[#2E2E2E]">
-                  {task.estimatedHours || 0}h
-                </div>
+            {/* Time Tracking & Worklog Widget */}
+            <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[#888898] uppercase tracking-wider flex items-center gap-1.5">
+                  <Timer className="w-3.5 h-3.5 text-[#FF6200]" />
+                  <span>Time Tracking</span>
+                </span>
+                <button
+                  onClick={() => setIsLogTimeOpen(true)}
+                  className="text-[11px] font-bold text-[#FF8C42] hover:underline"
+                >
+                  + Log Work
+                </button>
               </div>
 
-              <div>
-                <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1">
-                  Logged
-                </label>
-                <div className="font-mono text-[#FF8C42] text-xs bg-[#1A1A1A] p-2 rounded-lg border border-[#2E2E2E]">
-                  {task.loggedHours || 0}h
+              {/* Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-white font-mono font-bold">{logged}h logged</span>
+                  <span className="text-[#888898] font-mono">{estimated}h estimate</span>
                 </div>
+                <div className="w-full h-1.5 rounded-full bg-[#252525] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      isOverEstimate ? "bg-red-500" : progressPercent >= 80 ? "bg-amber-500" : "bg-[#FF6200]"
+                    }`}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                {estimated > 0 && (
+                  <div className="flex justify-between text-[10px] text-[#888898]">
+                    <span>{progressPercent}% completed</span>
+                    {isOverEstimate ? (
+                      <span className="text-red-400 font-semibold">+{(logged - estimated).toFixed(1)}h over</span>
+                    ) : (
+                      <span>{(estimated - logged).toFixed(1)}h remaining</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Estimate inline */}
+              <div className="pt-2 border-t border-[#2E2E2E]/60 flex items-center justify-between text-[11px]">
+                <span className="text-[#888898]">Set Estimate:</span>
+                {isEditingEstimate ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={estimateInput}
+                      onChange={(e) => setEstimateInput(e.target.value)}
+                      className="w-14 bg-[#141414] border border-[#FF6200] rounded px-1.5 py-0.5 text-xs text-white text-right focus:outline-none"
+                    />
+                    <span className="text-[#888898]">h</span>
+                    <button
+                      onClick={() => {
+                        handleUpdateField({ estimatedHours: parseFloat(estimateInput) || 0 });
+                        setIsEditingEstimate(false);
+                      }}
+                      className="p-1 rounded bg-[#FF6200] text-white"
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsEditingEstimate(true)}
+                    className="font-mono text-white font-semibold hover:text-[#FF8C42] cursor-pointer"
+                  >
+                    {estimated} hours ✎
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Log Work Modal */}
+      {isLogTimeOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <form
+            onSubmit={handleLogWork}
+            className="w-full max-w-sm rounded-2xl bg-[#1A1A1A] border border-[#FF6200]/50 p-5 space-y-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#FF6200]" />
+                <span>Log Work Time on {task.taskKey}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsLogTimeOpen(false)}
+                className="p-1 rounded hover:bg-[#252525] text-[#888898] hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#888898] mb-1">Hours Spent (e.g. 1.5):</label>
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0.25"
+                  required
+                  value={logHoursInput}
+                  onChange={(e) => setLogHoursInput(e.target.value)}
+                  className="w-full bg-[#141414] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#888898] mb-1">Work Description / Note (Optional):</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Completed JWT validation and middleware unit tests..."
+                  value={logNoteInput}
+                  onChange={(e) => setLogNoteInput(e.target.value)}
+                  className="w-full bg-[#141414] border border-[#2E2E2E] rounded-lg p-2.5 text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsLogTimeOpen(false)}
+                className="px-3 py-1.5 rounded-lg text-xs text-[#888898] hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoggingTime || !logHoursInput}
+                className="px-4 py-1.5 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-all shadow-[0_0_10px_rgba(255,98,0,0.3)] disabled:opacity-50"
+              >
+                {isLoggingTime ? "Logging..." : "Save Logged Time"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Task Relations Modal */}
       {isRelationsOpen && (

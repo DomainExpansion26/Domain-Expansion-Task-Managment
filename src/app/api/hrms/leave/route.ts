@@ -167,6 +167,34 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
+    // If approved, update attendance records for the leave date range
+    if (status === "APPROVED") {
+      const curDate = new Date(leave.startDate);
+      const endDate = new Date(leave.endDate);
+      while (curDate <= endDate) {
+        const dateUtc = new Date(Date.UTC(curDate.getUTCFullYear(), curDate.getUTCMonth(), curDate.getUTCDate()));
+        await prisma.attendance.upsert({
+          where: {
+            userId_date: {
+              userId: leave.userId,
+              date: dateUtc,
+            },
+          },
+          create: {
+            userId: leave.userId,
+            date: dateUtc,
+            status: "LEAVE",
+            notes: `${leave.leaveType} Leave (Approved by ${currentUser.name})`,
+          },
+          update: {
+            status: "LEAVE",
+            notes: `${leave.leaveType} Leave (Approved by ${currentUser.name})`,
+          },
+        });
+        curDate.setDate(curDate.getDate() + 1);
+      }
+    }
+
     // Notify employee of decision
     await prisma.notification.create({
       data: {

@@ -156,11 +156,11 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#2E2E2E] pb-2 text-xs font-semibold overflow-x-auto">
+      {/* Tabs (Responsive scroll on mobile) */}
+      <div className="flex items-center gap-2 border-b border-[#2E2E2E] pb-2 text-xs font-semibold overflow-x-auto max-w-full">
         <button
           onClick={() => setActiveTab("AI_PROVIDERS")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AI_PROVIDERS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
               : "text-[#888898] hover:text-white"
@@ -172,7 +172,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
         <button
           onClick={() => setActiveTab("AI_USAGE")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AI_USAGE"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
               : "text-[#888898] hover:text-white"
@@ -184,7 +184,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
         <button
           onClick={() => setActiveTab("AUTOMATIONS")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AUTOMATIONS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
               : "text-[#888898] hover:text-white"
@@ -196,7 +196,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
         <button
           onClick={() => setActiveTab("PERMISSIONS")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "PERMISSIONS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
               : "text-[#888898] hover:text-white"

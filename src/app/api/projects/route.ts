@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isSuperAdmin, normalizeProjectRole, ProjectRole } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,12 +13,28 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Requirement #12: Project Visibility Control
+    // Super Admin sees all projects. Normal employees/leads/managers ONLY see projects they are assigned to.
+    const isSuper = isSuperAdmin(currentUser.role);
+    const whereClause: any = {};
+
+    if (!isSuper) {
+      whereClause.members = {
+        some: {
+          userId: currentUser.id,
+        },
+      };
+    }
+
     const projects = await prisma.project.findMany({
+      where: whereClause,
       include: {
         lead: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        manager: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        teamLead: { select: { id: true, name: true, email: true, avatarUrl: true } },
         members: {
           include: {
-            user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
           },
         },
         tasks: {
@@ -33,10 +49,12 @@ export async function GET(request: NextRequest) {
 
     const formatted = projects.map((p) => {
       const total = p.tasks.length;
-      const done = p.tasks.filter((t) => t.status === "DONE").length;
+      const done = p.tasks.filter((t) => t.status === "DONE" || t.status === "COMPLETED" || t.status === "CLOSED").length;
       const inProgress = p.tasks.filter((t) => t.status === "IN_PROGRESS").length;
       const blocked = p.tasks.filter((t) => t.status === "BLOCKED").length;
       const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      const myMembership = p.members.find((m) => m.userId === currentUser.id);
 
       return {
         id: p.id,
@@ -47,7 +65,15 @@ export async function GET(request: NextRequest) {
         startDate: p.startDate,
         endDate: p.endDate,
         lead: p.lead,
-        members: p.members.map((m) => m.user),
+        manager: p.manager,
+        teamLead: p.teamLead,
+        myProjectRole: myMembership ? normalizeProjectRole(myMembership.role) : (isSuper ? "PROJECT_MANAGER" : null),
+        members: p.members.map((m) => ({
+          ...m.user,
+          globalRole: m.user.role,
+          projectRole: normalizeProjectRole(m.role),
+          joinedAt: m.joinedAt,
+        })),
         sprints: p.sprints,
         stats: {
           totalTasks: total,
@@ -83,7 +109,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, key, description, leadId, startDate, endDate, memberIds = [] } = await request.json();
+    const {
+      name,
+      key,
+      description,
+      leadId,
+      managerId,
+      teamLeadId,
+      startDate,
+      endDate,
+      members = [], // Array of { userId: string, role?: string } or array of userIds
+    } = await request.json();
 
     if (!name || !key) {
       return NextResponse.json(
@@ -103,20 +139,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build member assignments map
+    const memberMap = new Map<string, ProjectRole>();
+
+    // Add creator / super admin
+    memberMap.set(currentUser.id, "PROJECT_MANAGER");
+
+    if (leadId) memberMap.set(leadId, "TEAM_LEAD");
+    if (managerId) memberMap.set(managerId, "PROJECT_MANAGER");
+    if (teamLeadId) memberMap.set(teamLeadId, "TEAM_LEAD");
+
+    // Add selected members with their project-specific roles (Requirement #10 & #11)
+    for (const item of members) {
+      if (typeof item === "string") {
+        if (!memberMap.has(item)) memberMap.set(item, "MEMBER");
+      } else if (item && item.userId) {
+        memberMap.set(item.userId, normalizeProjectRole(item.role));
+      }
+    }
+
+    const memberCreateData = Array.from(memberMap.entries()).map(([uId, pRole]) => ({
+      userId: uId,
+      role: pRole,
+    }));
+
     const project = await prisma.project.create({
       data: {
-        name,
+        name: name.trim(),
         key: formattedKey,
-        description,
+        description: description?.trim() || null,
         leadId: leadId || currentUser.id,
+        managerId: managerId || null,
+        teamLeadId: teamLeadId || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         status: "ACTIVE",
         members: {
-          create: Array.from(new Set([currentUser.id, leadId || currentUser.id, ...memberIds])).map((uId) => ({
-            userId: uId as string,
-            role: uId === (leadId || currentUser.id) ? "LEAD" : "MEMBER",
-          })),
+          create: memberCreateData,
         },
         labels: {
           create: [
@@ -124,12 +183,29 @@ export async function POST(request: NextRequest) {
             { name: "Backend", color: "#6D28D9" },
             { name: "Bug", color: "#EF4444" },
             { name: "Design", color: "#EC4899" },
+            { name: "QA", color: "#06B6D4" },
           ],
         },
       },
       include: {
         lead: true,
         members: { include: { user: true } },
+      },
+    });
+
+    // Record audit log
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: "PROJECT_CREATED",
+        entityType: "PROJECT",
+        entityId: project.id,
+        detailsJson: JSON.stringify({
+          name: project.name,
+          key: project.key,
+          membersCount: memberCreateData.length,
+          memberRoles: memberCreateData,
+        }),
       },
     });
 
@@ -146,7 +222,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: project,
-      message: "Project created successfully",
+      message: "Project created successfully with assigned members and roles.",
     });
   } catch (error: any) {
     console.error("Create project error:", error);

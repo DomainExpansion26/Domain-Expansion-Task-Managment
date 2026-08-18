@@ -54,6 +54,17 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Project membership scoping: Non-superadmins only see tasks in assigned projects
+    if (currentUser.role !== "SUPER_ADMIN") {
+      where.project = {
+        members: {
+          some: {
+            userId: currentUser.id,
+          },
+        },
+      };
+    }
+
     const tasks = await prisma.task.findMany({
       where,
       include: {

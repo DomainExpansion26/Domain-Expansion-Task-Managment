@@ -234,16 +234,19 @@ export function hasPermission(role: string, permission: Permission): boolean {
   return permissions.includes(permission);
 }
 
-export function isSuperAdmin(role?: string): boolean {
+export function isSuperAdmin(roleOrUser?: string | { role?: string } | null): boolean {
+  const role = typeof roleOrUser === "object" ? roleOrUser?.role : roleOrUser;
   return normalizeRole(role) === "SUPER_ADMIN";
 }
 
-export function isHRAdmin(role?: string): boolean {
+export function isHRAdmin(roleOrUser?: string | { role?: string } | null): boolean {
+  const role = typeof roleOrUser === "object" ? roleOrUser?.role : roleOrUser;
   const norm = normalizeRole(role);
   return norm === "HR_ADMIN" || norm === "SUPER_ADMIN";
 }
 
-export function isManager(role?: string): boolean {
+export function isManager(roleOrUser?: string | { role?: string } | null): boolean {
+  const role = typeof roleOrUser === "object" ? roleOrUser?.role : roleOrUser;
   const norm = normalizeRole(role);
   return norm === "MANAGER" || norm === "SUPER_ADMIN";
 }
@@ -256,4 +259,52 @@ export function isTeamLead(role?: string): boolean {
 export function isQA(role?: string): boolean {
   const norm = normalizeRole(role);
   return norm === "QA" || norm === "SUPER_ADMIN";
+}
+
+export type ProjectRole =
+  | "PROJECT_MANAGER"
+  | "TEAM_LEAD"
+  | "DEVELOPER"
+  | "DESIGNER"
+  | "TESTER"
+  | "MEMBER"
+  | "OTHER";
+
+export const PROJECT_ROLES: ProjectRole[] = [
+  "PROJECT_MANAGER",
+  "TEAM_LEAD",
+  "DEVELOPER",
+  "DESIGNER",
+  "TESTER",
+  "MEMBER",
+  "OTHER",
+];
+
+export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
+  PROJECT_MANAGER: "Project Manager",
+  TEAM_LEAD: "Team Lead",
+  DEVELOPER: "Developer",
+  DESIGNER: "Designer",
+  TESTER: "Tester / QA",
+  MEMBER: "Member",
+  OTHER: "Contributor",
+};
+
+export function normalizeProjectRole(role?: string): ProjectRole {
+  if (!role) return "MEMBER";
+  const r = role.toUpperCase();
+  if (r === "LEAD") return "TEAM_LEAD";
+  if (PROJECT_ROLES.includes(r as ProjectRole)) return r as ProjectRole;
+  return "MEMBER";
+}
+
+/**
+ * Checks if a user has active HRMS access
+ */
+export function isHRMSActive(user: any): boolean {
+  if (!user) return false;
+  if (isSuperAdmin(user.role) || isHRAdmin(user.role)) return true;
+  if (!user.hrProfile) return false;
+  const status = user.hrProfile.status?.toUpperCase();
+  return status === "ACTIVE" || status === "PROBATION";
 }

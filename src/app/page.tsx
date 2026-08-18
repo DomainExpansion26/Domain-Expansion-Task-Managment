@@ -21,6 +21,7 @@ import { HRAdminView } from "@/components/views/HRAdminView";
 import { SuperAdminView } from "@/components/views/SuperAdminView";
 import { AdminSettingsView } from "@/components/views/AdminSettingsView";
 import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
+import { DocumentsView } from "@/components/views/DocumentsView";
 
 export default function Home() {
   const router = useRouter();
@@ -284,6 +285,13 @@ export default function Home() {
       {currentTab === "hrms" && (
         <HRMSView
           currentUser={currentUser}
+        />
+      )}
+
+      {currentTab === "documents" && (
+        <DocumentsView
+          currentUser={currentUser}
+          onRefreshData={fetchAppData}
         />
       )}
 

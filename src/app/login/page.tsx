@@ -3,13 +3,14 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Lock, Mail, ArrowRight, AlertCircle, UserPlus, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle, UserPlus, CheckCircle2, Shield, Clock } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
   const emailParam = searchParams.get("email");
+  const reasonParam = searchParams.get("reason");
 
   const [email, setEmail] = useState(emailParam || "");
   const [password, setPassword] = useState("");
@@ -22,11 +23,10 @@ function LoginForm() {
     }
   }, [emailParam]);
 
-  const handleLogin = async (overrideEmail?: string, overridePass?: string) => {
-    const loginEmail = overrideEmail || email;
-    const loginPass = overridePass || password;
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-    if (!loginEmail || !loginPass) {
+    if (!email.trim() || !password) {
       setError("Please enter your email and password.");
       return;
     }
@@ -38,17 +38,21 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password: loginPass }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          portal: "MAIN",
+        }),
       });
 
       const json = await res.json();
       if (json.success) {
-        router.push("/");
+        router.push("/dashboard");
       } else {
-        setError(json.error?.message || "Invalid credentials");
+        setError(json.error?.message || "Invalid credentials.");
       }
     } catch (err) {
-      setError("Network error logging in");
+      setError("Network error logging in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,6 +60,7 @@ function LoginForm() {
 
   return (
     <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] shadow-2xl space-y-5">
+      {/* Registration success notice */}
       {registered && (
         <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
@@ -63,6 +68,15 @@ function LoginForm() {
         </div>
       )}
 
+      {/* Inactivity notice */}
+      {reasonParam === "inactivity" && (
+        <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>You were logged out due to inactivity. Please sign in again.</span>
+        </div>
+      )}
+
+      {/* Error alert */}
       {error && (
         <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -70,13 +84,7 @@ function LoginForm() {
         </div>
       )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleLogin();
-        }}
-        className="space-y-4 text-xs"
-      >
+      <form onSubmit={handleLogin} className="space-y-4 text-xs">
         <div>
           <label className="block text-[#ACACB8] font-semibold mb-1.5">Work Email</label>
           <div className="relative">
@@ -119,11 +127,11 @@ function LoginForm() {
         </button>
       </form>
 
-      {/* Direct Sign Up Link */}
+      {/* Create Account Link */}
       <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-xs">
         <span className="text-[#888898]">Don&apos;t have an account?</span>
         <Link
-          href="/signup"
+          href="/create-account"
           className="flex items-center gap-1 text-[#FF8C42] font-bold hover:underline"
         >
           <UserPlus className="w-3.5 h-3.5" />
@@ -151,7 +159,7 @@ export default function LoginPage() {
             DOMAIN <span className="text-[#FF6200]">EXPANSION</span>
           </h1>
           <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
-            Think Outside The Box &bull; Task Platform
+            Think Outside The Box &bull; Main Portal
           </p>
         </div>
 
@@ -165,6 +173,28 @@ export default function LoginPage() {
         >
           <LoginForm />
         </Suspense>
+
+        {/* Portal Gateway Links */}
+        <div className="p-4 rounded-2xl bg-[#141414]/60 border border-[#222] text-xs text-center space-y-2 text-[#888898]">
+          <div className="font-semibold text-white/80">Other Portals:</div>
+          <div className="flex items-center justify-center gap-4">
+            <Link
+              href="/superadmin/login"
+              className="flex items-center gap-1.5 text-red-400 hover:text-red-300 font-medium transition-colors"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span>Super Admin</span>
+            </Link>
+            <span>&bull;</span>
+            <Link
+              href="/hrms/login"
+              className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>HRMS Portal</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

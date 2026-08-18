@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         department: department?.trim() || "General",
         managerId: managerId || null,
         teamLeadId: teamLeadId || null,
-        avatarUrl: `https://images.unsplash.com/photo-${1534528741775 + (cleanEmail.length % 500)}?w=150&auto=format&fit=crop&q=80`,
+        avatarUrl: null,
         isActive: true,
         hrProfile: {
           create: {

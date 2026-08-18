@@ -14,6 +14,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+import { getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface TeamViewProps {
   users: any[];
@@ -107,11 +108,19 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
               {/* Member Profile */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120"}
-                    alt={user.name}
-                    className="w-12 h-12 rounded-2xl object-cover border border-[#2E2E2E] shadow-sm"
-                  />
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="w-12 h-12 rounded-2xl object-cover border border-[#2E2E2E] shadow-sm"
+                    />
+                  ) : (
+                    <div
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-sm font-bold text-white uppercase border border-[#2E2E2E] shadow-sm flex-shrink-0`}
+                    >
+                      {getInitials(user.name)}
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-sm font-bold text-white group-hover:text-[#FF8C42] transition-colors">
                       {user.name}
@@ -155,11 +164,19 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
           <div className="relative w-full max-w-2xl max-h-[85vh] bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
               <div className="flex items-center gap-3">
-                <img
-                  src={selectedUser.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
-                  alt={selectedUser.name}
-                  className="w-9 h-9 rounded-xl object-cover"
-                />
+                {selectedUser.avatarUrl ? (
+                  <img
+                    src={selectedUser.avatarUrl}
+                    alt={selectedUser.name}
+                    className="w-9 h-9 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-9 h-9 rounded-xl bg-gradient-to-tr ${getAvatarGradient(selectedUser.name)} flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0`}
+                  >
+                    {getInitials(selectedUser.name)}
+                  </div>
+                )}
                 <div>
                   <h2 className="text-sm font-bold text-white">{selectedUser.name}</h2>
                   <p className="text-xs text-[#888898]">{selectedUser.jobTitle} &bull; {selectedUser.email}</p>

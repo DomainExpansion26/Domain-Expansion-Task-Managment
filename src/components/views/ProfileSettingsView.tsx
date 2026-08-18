@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { User, Bell, Mail, Shield, Check, Save } from "lucide-react";
+import { getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface ProfileSettingsViewProps {
   currentUser: any;
@@ -86,11 +87,19 @@ export function ProfileSettingsView({ currentUser, onUserUpdated }: ProfileSetti
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Account Details</h3>
 
           <div className="flex items-center gap-4">
-            <img
-              src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120"}
-              alt={currentUser?.name}
-              className="w-16 h-16 rounded-2xl object-cover border border-[#2E2E2E]"
-            />
+            {currentUser?.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                className="w-16 h-16 rounded-2xl object-cover border border-[#2E2E2E]"
+              />
+            ) : (
+              <div
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(currentUser?.name)} flex items-center justify-center text-xl font-black text-white uppercase border border-[#2E2E2E] shadow-sm flex-shrink-0`}
+              >
+                {getInitials(currentUser?.name)}
+              </div>
+            )}
             <div>
               <div className="text-sm font-bold text-white">{currentUser?.name}</div>
               <div className="text-xs text-[#888898] font-mono">{currentUser?.email}</div>

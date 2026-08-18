@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { ROLE_PERMISSIONS, Role } from "@/lib/permissions";
+import { ROLE_PERMISSIONS, Role, isHRMSActive } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        user,
+        user: {
+          ...user,
+          isHRMSActive: isHRMSActive(user),
+        },
         permissions,
       },
       message: "Authenticated user session retrieved",

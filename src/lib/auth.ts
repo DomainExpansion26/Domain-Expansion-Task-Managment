@@ -138,6 +138,18 @@ export async function requireHRAdmin(request?: NextRequest) {
   return user;
 }
 
+export async function requireHRMSActive(request?: NextRequest) {
+  const user = await requireAuth(request);
+  if (isSuperAdmin(user.role) || isHRAdmin(user.role)) {
+    return user;
+  }
+  const hrmsStatus = user.hrProfile?.status?.toUpperCase();
+  if (hrmsStatus !== "ACTIVE" && hrmsStatus !== "PROBATION") {
+    throw new Error("HRMS_NOT_ACTIVATED");
+  }
+  return user;
+}
+
 export function createAuthCookieResponse(response: NextResponse, token: string) {
   response.cookies.set({
     name: COOKIE_NAME,

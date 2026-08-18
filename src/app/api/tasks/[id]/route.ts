@@ -146,10 +146,34 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.dueDate !== undefined) {
       updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null;
     }
-    if (body.sprintId !== undefined) {
-      updateData.sprintId = body.sprintId || null;
+    if (body.estimatedHours !== undefined) {
+      updateData.estimatedHours = Number(body.estimatedHours);
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "estimatedHours",
+        oldValue: String(existing.estimatedHours || 0),
+        newValue: String(body.estimatedHours),
+        description: `${currentUser.name} updated estimate on ${existing.taskKey} to ${body.estimatedHours}h`,
+      });
     }
-    if (body.loggedHours !== undefined) {
+    if (body.addLoggedHours !== undefined && Number(body.addLoggedHours) > 0) {
+      const added = Number(body.addLoggedHours);
+      const newTotal = (existing.loggedHours || 0) + added;
+      updateData.loggedHours = newTotal;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "loggedHours",
+        oldValue: String(existing.loggedHours || 0),
+        newValue: String(newTotal),
+        description: `${currentUser.name} logged ${added}h on ${existing.taskKey}${body.worklogNote ? ` ("${body.worklogNote}")` : ""}`,
+      });
+    } else if (body.loggedHours !== undefined) {
       updateData.loggedHours = Number(body.loggedHours);
     }
     if (body.position !== undefined) {

@@ -11,8 +11,11 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
+  Search,
+  Clock,
+  Target,
 } from "lucide-react";
-import { getPriorityColor, getStatusColor, getTypeIcon, formatDate } from "@/lib/utils";
+import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface BacklogViewProps {
   tasks: any[];
@@ -32,6 +35,7 @@ export function BacklogView({
   onRefreshData,
 }: BacklogViewProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || "");
+  const [searchQuery, setSearchQuery] = useState("");
   const [newSprintName, setNewSprintName] = useState("");
   const [newSprintGoal, setNewSprintGoal] = useState("");
   const [showCreateSprint, setShowCreateSprint] = useState(false);
@@ -40,9 +44,21 @@ export function BacklogView({
   const activeProject = projects.find((p) => p.id === (selectedProjectId || projects[0]?.id));
   const projectSprints = sprints.filter((s) => s.projectId === activeProject?.id);
 
+  // Filter tasks
+  const projectTasks = tasks.filter((t) => {
+    if (t.projectId !== activeProject?.id) return false;
+    if (
+      searchQuery &&
+      !t.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !t.taskKey.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+      return false;
+    return true;
+  });
+
   // Backlog tasks = tasks with no sprint or sprintId === null
-  const backlogTasks = tasks.filter(
-    (t) => t.projectId === activeProject?.id && (!t.sprintId || t.sprintId === "null")
+  const backlogTasks = projectTasks.filter(
+    (t) => !t.sprintId || t.sprintId === "null"
   );
 
   const handleCreateSprint = async (e: React.FormEvent) => {
@@ -117,7 +133,7 @@ export function BacklogView({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Project Picker */}
           <select
             value={selectedProjectId}
@@ -130,6 +146,18 @@ export function BacklogView({
               </option>
             ))}
           </select>
+
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Filter backlog..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#141414] border border-[#2E2E2E] rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200] w-36 sm:w-44"
+            />
+          </div>
 
           <button
             onClick={() => setShowCreateSprint(!showCreateSprint)}
@@ -185,8 +213,11 @@ export function BacklogView({
       {/* Sprints Sections */}
       <div className="space-y-6">
         {projectSprints.map((sprint) => {
-          const sprintTasks = tasks.filter((t) => t.sprintId === sprint.id);
+          const sprintTasks = projectTasks.filter((t) => t.sprintId === sprint.id);
           const completedCount = sprintTasks.filter((t) => t.status === "DONE").length;
+          const sprintHours = sprintTasks.reduce((acc, t) => acc + (t.loggedHours || 0), 0);
+          const sprintEstimate = sprintTasks.reduce((acc, t) => acc + (t.estimatedHours || 0), 0);
+          const percentDone = sprintTasks.length > 0 ? Math.round((completedCount / sprintTasks.length) * 100) : 0;
 
           return (
             <div
@@ -210,9 +241,13 @@ export function BacklogView({
                       {sprint.status}
                     </span>
                     <span className="text-xs text-[#888898]">{sprintTasks.length} issues</span>
+                    <span className="text-xs text-[#FF8C42] font-mono font-bold">{sprintHours}h / {sprintEstimate}h</span>
                   </div>
                   {sprint.goal && (
-                    <div className="text-xs text-[#ACACB8] mt-1 font-medium italic">&ldquo;{sprint.goal}&rdquo;</div>
+                    <div className="text-xs text-[#ACACB8] mt-1 font-medium italic flex items-center gap-1.5">
+                      <Target className="w-3 h-3 text-[#FF6200]" />
+                      <span>&ldquo;{sprint.goal}&rdquo;</span>
+                    </div>
                   )}
                 </div>
 
@@ -245,8 +280,24 @@ export function BacklogView({
                 </div>
               </div>
 
+              {/* Sprint Progress Bar */}
+              {sprintTasks.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] text-[#888898]">
+                    <span>Sprint Progress</span>
+                    <span>{completedCount}/{sprintTasks.length} tasks done ({percentDone}%)</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-[#252525] overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#FF6200] to-emerald-500 transition-all duration-300"
+                      style={{ width: `${percentDone}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Sprint Tasks List */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-1">
                 {sprintTasks.length === 0 ? (
                   <div className="py-6 text-center text-xs text-[#888898]">No tasks in this sprint yet.</div>
                 ) : (
@@ -272,11 +323,20 @@ export function BacklogView({
                           <span className={`px-2 py-0.5 rounded-full border ${sColor.bg}`}>{sColor.label}</span>
                           <span className={`px-2 py-0.5 rounded-full border ${pColor.bg}`}>{pColor.label}</span>
                           {task.assignees?.[0] && (
-                            <img
-                              src={task.assignees[0].avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80"}
-                              alt={task.assignees[0].name}
-                              className="w-5 h-5 rounded-full object-cover"
-                            />
+                            task.assignees[0].avatarUrl ? (
+                              <img
+                                src={task.assignees[0].avatarUrl}
+                                alt={task.assignees[0].name}
+                                className="w-5 h-5 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                title={task.assignees[0].name}
+                                className={`w-5 h-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(task.assignees[0].name)} flex items-center justify-center text-[8px] font-black text-white uppercase flex-shrink-0`}
+                              >
+                                {getInitials(task.assignees[0].name)}
+                              </div>
+                            )
                           )}
                           <button
                             onClick={(e) => {

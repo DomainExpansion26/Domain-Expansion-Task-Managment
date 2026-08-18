@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, X, FolderKanban, CheckSquare, Users, ArrowRight } from "lucide-react";
-import { getPriorityColor, getStatusColor } from "@/lib/utils";
+import { getPriorityColor, getStatusColor, getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -189,11 +189,19 @@ export function CommandPalette({ isOpen, onClose, onSelectTask, onSelectProject 
                     className="flex items-center justify-between p-2.5 rounded-lg bg-[#1A1A1A]/40 border border-transparent"
                   >
                     <div className="flex items-center gap-2.5">
-                      <img
-                        src={u.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
-                        alt={u.name}
-                        className="w-6 h-6 rounded-full object-cover border border-[#2E2E2E]"
-                      />
+                      {u.avatarUrl ? (
+                        <img
+                          src={u.avatarUrl}
+                          alt={u.name}
+                          className="w-6 h-6 rounded-full object-cover border border-[#2E2E2E]"
+                        />
+                      ) : (
+                        <div
+                          className={`w-6 h-6 rounded-full bg-gradient-to-tr ${getAvatarGradient(u.name)} flex items-center justify-center text-[9px] font-bold text-white uppercase border border-[#2E2E2E] flex-shrink-0`}
+                        >
+                          {getInitials(u.name)}
+                        </div>
+                      )}
                       <div>
                         <div className="text-xs font-medium text-white">{u.name}</div>
                         <div className="text-[10px] text-[#888898]">{u.jobTitle || u.email}</div>

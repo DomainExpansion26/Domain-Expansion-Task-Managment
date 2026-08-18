@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description:
     "Production-ready Jira-inspired internal team management platform for Domain Expansion. Assign tasks, track sprints, Kanban boards, notifications, and AI assistance.",
   keywords: ["Jira", "Task Management", "Domain Expansion", "Kanban", "Sprints", "AI Assistant"],
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0D0D0D",
 };
 
 export default function RootLayout({

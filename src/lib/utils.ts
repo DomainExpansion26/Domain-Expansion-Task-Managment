@@ -120,3 +120,29 @@ export function getTypeIcon(type: string) {
       return { label: "Task", color: "text-amber-400", symbol: "📋" };
   }
 }
+
+export function getInitials(name?: string | null): string {
+  if (!name || !name.trim()) return "??";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function getAvatarGradient(name?: string | null): string {
+  if (!name) return "from-slate-700 to-slate-900";
+  const colors = [
+    "from-orange-500 to-amber-600",
+    "from-blue-600 to-indigo-700",
+    "from-purple-600 to-pink-600",
+    "from-emerald-600 to-teal-700",
+    "from-rose-600 to-red-700",
+    "from-cyan-600 to-blue-700",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+}
+

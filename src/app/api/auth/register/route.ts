@@ -5,11 +5,26 @@ import { emitPlatformEvent } from "@/lib/events";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, jobTitle, department } = await request.json();
+    const {
+      name,
+      email,
+      password,
+      confirmPassword,
+      jobTitle,
+      department,
+      portal = "MAIN",
+    } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: { code: "INVALID_INPUT", message: "Name, email, and password are required." } },
+        { status: 400 }
+      );
+    }
+
+    if (confirmPassword !== undefined && password !== confirmPassword) {
+      return NextResponse.json(
+        { success: false, error: { code: "PASSWORD_MISMATCH", message: "Password and Confirm Password do not match." } },
         { status: 400 }
       );
     }
@@ -36,30 +51,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Master Prompt Section 6: Public registration MUST NOT allow choosing privileged roles.
-    // First ever registered user becomes SUPER_ADMIN if db is empty; all subsequent public signups are strictly MEMBER.
     const userCount = await prisma.user.count();
-    const assignedRole = userCount === 0 ? "SUPER_ADMIN" : "MEMBER";
+    let assignedRole = "MEMBER";
+    let hrmsStatus = "PENDING_ACTIVATION";
+    let defaultDesignation = jobTitle?.trim() || "Team Member";
+    let defaultDepartment = department?.trim() || "General";
+
+    const normPortal = portal?.trim()?.toUpperCase()?.replace(/[^A-Z]/g, "_");
+    if (normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
+      assignedRole = "SUPER_ADMIN";
+      hrmsStatus = "ACTIVE";
+      defaultDesignation = jobTitle?.trim() || "Super Administrator";
+      defaultDepartment = department?.trim() || "Executive Management";
+    } else if (normPortal === "HRMS_SUPER_ADMIN" || normPortal === "HRMSSUPERADMIN") {
+      assignedRole = "HR_ADMIN";
+      hrmsStatus = "ACTIVE";
+      defaultDesignation = jobTitle?.trim() || "HR Super Administrator";
+      defaultDepartment = department?.trim() || "Human Resources";
+    } else {
+      // Normal Member registration
+      assignedRole = "MEMBER";
+      hrmsStatus = "PENDING_ACTIVATION";
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create User
+    // Create User (Never auto-assigns projects, never gives unassigned privileges)
     const user = await prisma.user.create({
       data: {
         name: cleanName,
         email: cleanEmail,
         passwordHash,
         role: assignedRole,
-        jobTitle: jobTitle?.trim() || "Software Engineer",
-        department: department?.trim() || "Engineering",
-        avatarUrl: `https://images.unsplash.com/photo-${1534528741775 + (cleanEmail.length % 500)}?w=150&auto=format&fit=crop&q=80`,
+        jobTitle: defaultDesignation,
+        department: defaultDepartment,
+        avatarUrl: null,
         isEmailVerified: true,
         isActive: true,
         hrProfile: {
           create: {
             employeeId: `EMP-${1000 + userCount + 1}`,
-            designation: jobTitle?.trim() || "Software Engineer",
-            department: department?.trim() || "Engineering",
-            status: "ACTIVE",
+            designation: defaultDesignation,
+            department: defaultDepartment,
+            status: hrmsStatus,
           },
         },
       },
@@ -87,26 +121,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Auto-join existing active projects as a MEMBER
-    const activeProjects = await prisma.project.findMany({ where: { status: "ACTIVE" } });
-    for (const project of activeProjects) {
-      await prisma.projectMember.create({
-        data: {
-          projectId: project.id,
-          userId: user.id,
-          role: assignedRole === "SUPER_ADMIN" ? "LEAD" : "MEMBER",
-        },
-      });
-    }
+    // Record Audit Log
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: "USER_REGISTERED",
+        entityType: "USER",
+        entityId: user.id,
+        detailsJson: JSON.stringify({
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          portal,
+          hrmsStatus,
+        }),
+      },
+    });
 
     // Send welcome notification
     await prisma.notification.create({
       data: {
         userId: user.id,
         title: "Welcome to Domain Expansion!",
-        message: `Your account has been created with role: ${assignedRole.replace("_", " ")}. Start by viewing your assigned tasks or checking in on HRMS.`,
+        message: `Your account has been created successfully. An administrator will assign you to projects and activate your permissions as needed.`,
         type: "SYSTEM",
-        link: "/",
+        link: "/dashboard",
       },
     });
 
@@ -116,6 +155,7 @@ export async function POST(request: NextRequest) {
       data: { userId: user.id, name: user.name, email: user.email, role: user.role },
     });
 
+    // IMPORTANT: DO NOT automatically log in after registration. Return success response.
     return NextResponse.json({
       success: true,
       data: {
@@ -129,7 +169,7 @@ export async function POST(request: NextRequest) {
           avatarUrl: user.avatarUrl,
         },
       },
-      message: "Account created successfully. Please sign in to continue.",
+      message: "Account created successfully. Please sign in with your credentials.",
     });
   } catch (error: any) {
     console.error("Registration error:", error);

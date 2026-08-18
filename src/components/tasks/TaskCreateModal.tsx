@@ -13,6 +13,7 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
+import { getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface TaskCreateModalProps {
   isOpen: boolean;
@@ -319,11 +320,19 @@ export function TaskCreateModal({
                         : "bg-[#252525] text-[#ACACB8] hover:text-white hover:bg-[#303030]"
                     }`}
                   >
-                    <img
-                      src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"}
-                      alt={user.name}
-                      className="w-4 h-4 rounded-full object-cover"
-                    />
+                    {user.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt={user.name}
+                        className="w-4 h-4 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-[7px] font-bold text-white uppercase flex-shrink-0`}
+                      >
+                        {getInitials(user.name)}
+                      </div>
+                    )}
                     <span>{user.name}</span>
                   </button>
                 );
