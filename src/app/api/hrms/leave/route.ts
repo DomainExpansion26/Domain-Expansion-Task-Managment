@@ -169,10 +169,14 @@ export async function PATCH(request: NextRequest) {
 
     // If approved, update attendance records for the leave date range
     if (status === "APPROVED") {
-      const curDate = new Date(leave.startDate);
-      const endDate = new Date(leave.endDate);
-      while (curDate <= endDate) {
-        const dateUtc = new Date(Date.UTC(curDate.getUTCFullYear(), curDate.getUTCMonth(), curDate.getUTCDate()));
+      const s = new Date(leave.startDate);
+      const e = new Date(leave.endDate);
+      const startMs = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate());
+      const endMs = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+
+      for (let t = startMs; t <= endMs; t += ONE_DAY) {
+        const dateUtc = new Date(t);
         await prisma.attendance.upsert({
           where: {
             userId_date: {
@@ -191,7 +195,6 @@ export async function PATCH(request: NextRequest) {
             notes: `${leave.leaveType} Leave (Approved by ${currentUser.name})`,
           },
         });
-        curDate.setDate(curDate.getDate() + 1);
       }
     }
 
@@ -234,6 +237,6 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Leave decision error:", error);
-    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to update leave status" } }, { status: 500 });
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error?.message || "Failed to update leave status" } }, { status: 500 });
   }
 }

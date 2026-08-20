@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Shield, Key, UserCheck, AlertCircle, Building2, Briefcase, Trash2 } from "lucide-react";
+import { X, Shield, Key, UserCheck, AlertCircle, Building2, Briefcase, Trash2, Eye, EyeOff } from "lucide-react";
 
 interface MemberManageModalProps {
   isOpen: boolean;
@@ -30,6 +30,7 @@ export function MemberManageModal({
   const [isActive, setIsActive] = useState(member?.isActive ?? true);
   const [hrmsStatus, setHrmsStatus] = useState(member?.hrmsStatus || "ACTIVE");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -180,12 +181,12 @@ export function MemberManageModal({
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full bg-[#1A1A1A] border border-[#FF6200]/50 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-[#FF6200]"
                 >
-                  <option value="SUPER_ADMIN">👑 Super Admin</option>
-                  <option value="HR_ADMIN">🏢 HR Admin</option>
-                  <option value="MANAGER">👔 Manager</option>
-                  <option value="TEAM_LEAD">⚡ Team Lead</option>
-                  <option value="QA">🧪 QA Engineer</option>
-                  <option value="MEMBER">💻 Member</option>
+                  <option value="MEMBER">💻 Normal Member (Task worker & attendance)</option>
+                  <option value="TEAM_LEAD">⚡ Team Lead (Team tasks & sprint assignments)</option>
+                  <option value="MANAGER">👔 Project Manager / Manager (Projects & teams)</option>
+                  <option value="QA">🧪 QA Engineer (Defects & verification)</option>
+                  <option value="HR_ADMIN">🏢 HR Admin (Leave approvals & attendance)</option>
+                  <option value="SUPER_ADMIN">👑 Super Admin (Full system control)</option>
                 </select>
               </div>
 
@@ -297,18 +298,29 @@ export function MemberManageModal({
               <span>Administrative Password Reset</span>
             </h3>
             <div className="flex gap-2">
-              <input
-                type="password"
-                placeholder="Enter new password (min 6 chars)"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="flex-1 bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]"
-              />
+              <div className="relative flex-1">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password (min 6 chars)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-3 pr-9 py-2 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={handleResetPassword}
                 disabled={loading || !newPassword}
-                className="px-4 py-2 rounded-lg bg-[#252525] hover:bg-[#303030] text-[#FF8C42] font-semibold transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-[#252525] hover:bg-[#303030] text-[#FF8C42] font-semibold transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Reset Password
               </button>

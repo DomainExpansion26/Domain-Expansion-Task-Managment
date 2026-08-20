@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { hasPermission, isSuperAdmin, normalizeProjectRole, ProjectRole } from "@/lib/permissions";
 
@@ -26,26 +26,28 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const projects = await prisma.project.findMany({
-      where: whereClause,
-      include: {
-        lead: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        manager: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        teamLead: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        members: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
+    const projects = await withDbRetry(() =>
+      prisma.project.findMany({
+        where: whereClause,
+        include: {
+          lead: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          manager: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          teamLead: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          members: {
+            include: {
+              user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
+            },
+          },
+          tasks: {
+            select: { id: true, status: true, priority: true, dueDate: true },
+          },
+          sprints: {
+            select: { id: true, name: true, status: true },
           },
         },
-        tasks: {
-          select: { id: true, status: true, priority: true, dueDate: true },
-        },
-        sprints: {
-          select: { id: true, name: true, status: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+      })
+    );
 
     const formatted = projects.map((p) => {
       const total = p.tasks.length;

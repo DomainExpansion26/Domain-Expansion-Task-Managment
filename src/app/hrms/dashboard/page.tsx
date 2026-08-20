@@ -18,16 +18,16 @@ export default function HRMSDashboardPage() {
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((json) => {
-        if (json.success && json.data.user) {
+        if (json.success && json.data?.user) {
           const user = json.data.user;
           setCurrentUser(user);
           const active = isHRMSActive(user);
           setIsActivated(active);
         } else {
-          router.push("/hrms/login");
+          router.replace("/hrms/login");
         }
       })
-      .catch(() => router.push("/hrms/login"))
+      .catch(() => router.replace("/hrms/login"))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -72,7 +72,7 @@ export default function HRMSDashboardPage() {
             <button
               onClick={async () => {
                 await fetch("/api/auth/logout", { method: "POST" });
-                router.push("/hrms/login");
+                window.location.replace("/hrms/login");
               }}
               className="text-xs text-[#888898] hover:text-white underline pt-1"
             >
@@ -99,7 +99,7 @@ export default function HRMSDashboardPage() {
       onToggleAI={() => {}}
       onLogout={async () => {
         await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/hrms/login");
+        window.location.replace("/hrms/login");
       }}
     >
       <HRMSView currentUser={currentUser} />

@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         isActive: status !== "TERMINATED",
         hrProfile: {
           create: {
-            employeeId: employeeId?.trim() || `EMP-${1000 + userCount + 1}`,
+            employeeId: employeeId?.trim() || `EMP-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`,
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
             joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
             phone: phone?.trim() || null,

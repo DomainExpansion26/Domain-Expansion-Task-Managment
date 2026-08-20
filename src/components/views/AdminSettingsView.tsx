@@ -15,6 +15,8 @@ import {
   Sliders,
   DollarSign,
   Activity,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
   // Edit provider modal/state
   const [editingProvider, setEditingProvider] = useState<any | null>(null);
   const [apiKeyInput, setApiKeyInput] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
   const [modelInput, setModelInput] = useState("");
   const [budgetInput, setBudgetInput] = useState(100);
 
@@ -444,13 +447,24 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
             <form onSubmit={handleSaveProvider} className="p-6 space-y-4 text-xs">
               <div>
                 <label className="block text-[#ACACB8] font-semibold mb-1">API Key</label>
-                <input
-                  type="password"
-                  placeholder="sk-... (Leave empty to keep existing)"
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
-                />
+                <div className="relative">
+                  <input
+                    type={showApiKey ? "text" : "password"}
+                    placeholder="sk-... (Leave empty to keep existing)"
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-3 pr-9 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showApiKey ? "Hide key" : "Show key"}
+                  >
+                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>

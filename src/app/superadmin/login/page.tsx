@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Shield, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, UserPlus } from "lucide-react";
+import { Shield, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, UserPlus, Eye, EyeOff } from "lucide-react";
 
 function SuperAdminLoginForm() {
   const router = useRouter();
@@ -13,8 +13,25 @@ function SuperAdminLoginForm() {
 
   const [email, setEmail] = useState(emailParam || "");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data?.user?.role === "SUPER_ADMIN") {
+          router.replace("/dashboard");
+        } else {
+          setCheckingAuth(false);
+        }
+      })
+      .catch(() => {
+        setCheckingAuth(false);
+      });
+  }, [router]);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -45,7 +62,7 @@ function SuperAdminLoginForm() {
       const json = await res.json();
       if (json.success) {
         // Successful Super Admin login -> go to dashboard
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } else {
         setError(json.error?.message || "Invalid credentials or unauthorized.");
       }
@@ -55,6 +72,15 @@ function SuperAdminLoginForm() {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="p-12 rounded-3xl bg-[#141414] border border-[#2E2E2E] flex items-center justify-center gap-3 text-xs text-[#888898]">
+        <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <span>Checking Super Admin session...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 rounded-3xl bg-[#141414] border border-red-500/30 shadow-[0_0_40px_rgba(239,68,68,0.15)] space-y-5">
@@ -101,17 +127,28 @@ function SuperAdminLoginForm() {
         </div>
 
         <div>
-          <label className="block text-[#ACACB8] font-semibold mb-1.5">Password</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[#ACACB8] font-semibold">Super Admin Password</label>
+          </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-red-500"
+              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-red-500"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 

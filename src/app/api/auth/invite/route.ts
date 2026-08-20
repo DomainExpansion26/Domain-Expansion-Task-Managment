@@ -1,22 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest, hashPassword, signSessionToken, createAuthCookieResponse } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isSuperAdmin, isHRAdmin, normalizeRole } from "@/lib/permissions";
 import { sendEmail } from "@/lib/email";
 import crypto from "crypto";
 
-// 1. Send Invitation (Admin / PM)
+// 1. Send Invitation (Super Admin / HR Admin / PM / Team Lead)
 export async function POST(request: NextRequest) {
   try {
     const currentUser = await getCurrentUserFromRequest(request);
-    if (!currentUser || !hasPermission(currentUser.role, "user.invite")) {
+    if (!currentUser) {
       return NextResponse.json(
-        { success: false, error: { code: "FORBIDDEN", message: "Only Admins and Project Managers can invite members" } },
+        { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
+        { status: 401 }
+      );
+    }
+
+    const userRole = currentUser.role;
+    const isSuper = isSuperAdmin(userRole);
+    const isHR = isHRAdmin(userRole);
+    const isPM = userRole === "MANAGER" || userRole === "PROJECT_MANAGER";
+    const isLead = userRole === "TEAM_LEAD";
+
+    if (!isSuper && !isHR && !isPM && !isLead) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Only Admins, Project Managers, and Team Leads can invite members" } },
         { status: 403 }
       );
     }
 
-    const { name, email, role = "TEAM_MEMBER" } = await request.json();
+    const { name, email, role = "MEMBER" } = await request.json();
 
     if (!name || !email) {
       return NextResponse.json(
@@ -25,10 +38,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedTargetRole = normalizeRole(role);
+
+    // Role restrictions based on hierarchy:
+    // Team Lead can only invite MEMBER or QA
+    if (isLead && normalizedTargetRole !== "MEMBER" && normalizedTargetRole !== "QA") {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Team Leads can only invite Team Members and QA Engineers" } },
+        { status: 403 }
+      );
+    }
+
+    // Project Manager can invite TEAM_LEAD, MEMBER, QA (not Super Admin)
+    if (isPM && (normalizedTargetRole === "SUPER_ADMIN" || normalizedTargetRole === "HR_ADMIN")) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Project Managers can only invite Team Leads, Members, and QA" } },
+        { status: 403 }
+      );
+    }
+
     // Check if user already exists
-    const existing = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-    });
+    const existing = await withDbRetry(() =>
+      prisma.user.findUnique({
+        where: { email: email.toLowerCase().trim() },
+      })
+    );
 
     if (existing) {
       return NextResponse.json(
@@ -41,17 +75,19 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    const invitation = await prisma.invitation.create({
-      data: {
-        name,
-        email: email.toLowerCase().trim(),
-        role,
-        token,
-        status: "PENDING",
-        expiresAt,
-        invitedById: currentUser.id,
-      },
-    });
+    const invitation = await withDbRetry(() =>
+      prisma.invitation.create({
+        data: {
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          role: normalizedTargetRole,
+          token,
+          status: "PENDING",
+          expiresAt,
+          invitedById: currentUser.id,
+        },
+      })
+    );
 
     // Send transactional invitation email
     await sendEmail({
@@ -137,9 +173,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const invitation = await prisma.invitation.findUnique({
-      where: { token },
-    });
+    const invitation = await withDbRetry(() =>
+      prisma.invitation.findUnique({
+        where: { token },
+      })
+    );
 
     if (!invitation || invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
       return NextResponse.json(
@@ -150,34 +188,59 @@ export async function PUT(request: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
-    const user = await prisma.user.create({
-      data: {
-        name: name || invitation.name,
-        email: invitation.email,
-        passwordHash,
-        role: invitation.role,
-        jobTitle: jobTitle || "Team Member",
-        department: department || "Engineering",
-        isEmailVerified: true,
-        isActive: true,
-        notificationPref: {
-          create: {
-            emailTaskAssigned: true,
-            emailTaskUpdated: true,
-            emailMention: true,
-            emailComment: true,
-            emailDueDate: true,
-            emailOverdue: true,
+    // If invited by Team Lead or Manager, auto-link hierarchy
+    let managerId: string | null = null;
+    let teamLeadId: string | null = null;
+
+    if (invitation.invitedById) {
+      const inviterId = invitation.invitedById;
+      const inviter = await withDbRetry(() =>
+        prisma.user.findUnique({ where: { id: inviterId } })
+      );
+      if (inviter) {
+        if (inviter.role === "TEAM_LEAD") {
+          teamLeadId = inviter.id;
+          managerId = inviter.managerId || null;
+        } else if (inviter.role === "MANAGER" || inviter.role === "PROJECT_MANAGER") {
+          managerId = inviter.id;
+        }
+      }
+    }
+
+    const user = await withDbRetry(() =>
+      prisma.user.create({
+        data: {
+          name: name || invitation.name,
+          email: invitation.email,
+          passwordHash,
+          role: normalizeRole(invitation.role),
+          jobTitle: jobTitle || "Team Member",
+          department: department || "Engineering",
+          managerId: managerId || undefined,
+          teamLeadId: teamLeadId || undefined,
+          isEmailVerified: true,
+          isActive: true,
+          notificationPref: {
+            create: {
+              emailTaskAssigned: true,
+              emailTaskUpdated: true,
+              emailMention: true,
+              emailComment: true,
+              emailDueDate: true,
+              emailOverdue: true,
+            },
           },
         },
-      },
-    });
+      })
+    );
 
     // Mark invitation accepted
-    await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: { status: "ACCEPTED" },
-    });
+    await withDbRetry(() =>
+      prisma.invitation.update({
+        where: { id: invitation.id },
+        data: { status: "ACCEPTED" },
+      })
+    );
 
     // Add to all active projects automatically as MEMBER
     const activeProjects = await prisma.project.findMany({ where: { status: "ACTIVE" } });

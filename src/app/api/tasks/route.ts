@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { processAutomations } from "@/lib/automations";
@@ -65,24 +65,26 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const tasks = await prisma.task.findMany({
-      where,
-      include: {
-        project: { select: { id: true, name: true, key: true } },
-        assignees: {
-          include: {
-            user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+    const tasks = await withDbRetry(() =>
+      prisma.task.findMany({
+        where,
+        include: {
+          project: { select: { id: true, name: true, key: true } },
+          assignees: {
+            include: {
+              user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            },
           },
+          reporter: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          sprint: { select: { id: true, name: true, status: true } },
+          subtasks: {
+            include: { assignee: { select: { id: true, name: true } } },
+          },
+          _count: { select: { comments: true, attachments: true } },
         },
-        reporter: { select: { id: true, name: true, email: true, avatarUrl: true } },
-        sprint: { select: { id: true, name: true, status: true } },
-        subtasks: {
-          include: { assignee: { select: { id: true, name: true } } },
-        },
-        _count: { select: { comments: true, attachments: true } },
-      },
-      orderBy: [{ position: "asc" }, { createdAt: "desc" }],
-    });
+        orderBy: [{ position: "asc" }, { createdAt: "desc" }],
+      })
+    );
 
     const formatted = tasks.map((t) => ({
       id: t.id,

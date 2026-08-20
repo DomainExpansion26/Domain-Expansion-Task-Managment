@@ -303,40 +303,38 @@ export function TaskCreateModal({
             </div>
           )}
 
-          {/* Row 7: Assignees */}
+          {/* Row 7: Assignees (Exclude Super Admin & HR Admin) */}
           <div>
             <label className="block text-[#ACACB8] font-semibold mb-1.5">Assign Team Members</label>
             <div className="flex flex-wrap gap-2 p-2.5 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-              {users.map((user) => {
-                const isSelected = assigneeIds.includes(user.id);
-                return (
-                  <button
-                    key={user.id}
-                    type="button"
-                    onClick={() => toggleAssignee(user.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all ${
-                      isSelected
-                        ? "bg-[#FF6200] text-white font-semibold shadow-[0_0_10px_rgba(255,98,0,0.3)]"
-                        : "bg-[#252525] text-[#ACACB8] hover:text-white hover:bg-[#303030]"
-                    }`}
-                  >
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt={user.name}
-                        className="w-4 h-4 rounded-full object-cover"
-                      />
-                    ) : (
+              {users
+                .filter((u) => u.role !== "SUPER_ADMIN" && u.role !== "HR_ADMIN")
+                .map((user) => {
+                  const isSelected = assigneeIds.includes(user.id);
+                  return (
+                    <button
+                      key={user.id}
+                      type="button"
+                      onClick={() => toggleAssignee(user.id)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all ${
+                        isSelected
+                          ? "bg-[#FF6200] text-white font-semibold shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                          : "bg-[#252525] text-[#ACACB8] hover:text-white hover:bg-[#303030]"
+                      }`}
+                    >
                       <div
-                        className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-[7px] font-bold text-white uppercase flex-shrink-0`}
+                        className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-[7px] font-black text-white uppercase`}
                       >
                         {getInitials(user.name)}
                       </div>
-                    )}
-                    <span>{user.name}</span>
-                  </button>
-                );
-              })}
+                      <span>{user.name}</span>
+                      <span className="text-[10px] opacity-70 font-mono">({user.role})</span>
+                    </button>
+                  );
+                })}
+              {users.filter((u) => u.role !== "SUPER_ADMIN" && u.role !== "HR_ADMIN").length === 0 && (
+                <div className="text-xs text-[#888898] italic py-1 px-2">No team members available for assignment.</div>
+              )}
             </div>
           </div>
 

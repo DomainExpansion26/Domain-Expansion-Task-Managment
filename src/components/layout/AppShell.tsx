@@ -91,22 +91,26 @@ export function AppShell({
   }, [onOpenSearch, onOpenCreateTask]);
 
   const userRole = currentUser?.role || "MEMBER";
+  const isSuper = isSuperAdmin(userRole);
+  const isHR = isHRAdmin(userRole);
+  const isManagerOrLead = userRole === "MANAGER" || userRole === "PROJECT_MANAGER" || userRole === "TEAM_LEAD" || isSuper;
+  const isQAUser = userRole === "QA" || isManagerOrLead;
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "my-work", label: "My Work", icon: CheckSquare },
-    { id: "projects", label: "Projects", icon: FolderKanban },
-    { id: "kanban", label: "Kanban Board", icon: Columns3 },
-    { id: "backlog", label: "Backlog & Sprints", icon: ListTodo },
-    { id: "qa", label: "QA & Defects", icon: Bug },
+    { id: "my-work", label: "My Work", icon: CheckSquare, hideForExecs: true },
+    { id: "projects", label: "Projects", icon: FolderKanban, hideForHR: true },
+    { id: "kanban", label: "Kanban Board", icon: Columns3, hideForHR: true },
+    { id: "backlog", label: "Backlog & Sprints", icon: ListTodo, requireManagerOrLead: true },
+    { id: "qa", label: "QA & Defects", icon: Bug, requireQAOrLead: true },
     { id: "hrms", label: "HRMS & Attendance", icon: Clock },
     { id: "documents", label: "Documents & Vault", icon: FileText },
     { id: "team", label: "Team Directory", icon: Users },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadCount },
     { id: "ai", label: "DX AI Copilot", icon: Sparkles, highlight: true },
-    { id: "hradmin", label: "HR Admin", icon: Building2, hrAdminOnly: true },
+    { id: "hradmin", label: "HR Admin", icon: Building2, hrOnly: true },
     { id: "superadmin", label: "Super Admin", icon: Shield, superAdminOnly: true },
-    { id: "admin", label: "Settings", icon: Settings, adminOnly: true },
+    { id: "admin", label: "Settings", icon: Settings, superAdminOnly: true },
   ];
 
   const handleNavClick = (tabId: string) => {
@@ -142,20 +146,22 @@ export function AppShell({
           </button>
         </div>
 
-        {/* Quick Create Task Action */}
-        <div className="px-4 py-3">
-          <button
-            onClick={() => {
-              onOpenCreateTask();
-              setMobileMenuOpen(false);
-            }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-semibold text-xs tracking-wide uppercase hover:opacity-95 shadow-[0_0_15px_rgba(255,98,0,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Task</span>
-            <kbd className="hidden sm:inline ml-auto text-[10px] bg-black/25 px-1.5 py-0.5 rounded font-mono">C</kbd>
-          </button>
-        </div>
+        {/* Quick Create Task Action (Hidden for pure HR Admin) */}
+        {(!isHR || isSuper) && (
+          <div className="px-4 py-3">
+            <button
+              onClick={() => {
+                onOpenCreateTask();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-semibold text-xs tracking-wide uppercase hover:opacity-95 shadow-[0_0_15px_rgba(255,98,0,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Task</span>
+              <kbd className="hidden sm:inline ml-auto text-[10px] bg-black/25 px-1.5 py-0.5 rounded font-mono">C</kbd>
+            </button>
+          </div>
+        )}
 
         {/* Navigation Links */}
         <nav className="px-3 py-2 space-y-1 overflow-y-auto max-h-[calc(100vh-280px)]">
@@ -163,15 +169,12 @@ export function AppShell({
             const Icon = item.icon;
             const isActive = currentTab === item.id;
 
-            if (item.superAdminOnly && !isSuperAdmin(userRole)) {
-              return null;
-            }
-            if (item.hrAdminOnly && !isHRAdmin(userRole)) {
-              return null;
-            }
-            if (item.adminOnly && !isSuperAdmin(userRole)) {
-              return null;
-            }
+            if (item.superAdminOnly && !isSuper) return null;
+            if (item.hrOnly && !(isHR || isSuper)) return null;
+            if (item.hideForHR && isHR && !isSuper) return null;
+            if (item.hideForExecs && (isSuper || isHR)) return null;
+            if (item.requireManagerOrLead && !isManagerOrLead) return null;
+            if (item.requireQAOrLead && !isQAUser) return null;
 
             return (
               <button

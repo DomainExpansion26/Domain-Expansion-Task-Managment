@@ -59,7 +59,7 @@ export default function SuperAdminGatewayPage() {
         onToggleAI={() => {}}
         onLogout={async () => {
           await fetch("/api/auth/logout", { method: "POST" });
-          router.push("/superadmin/login");
+          window.location.replace("/superadmin/login");
         }}
       >
         <SuperAdminView currentUser={currentUser} />

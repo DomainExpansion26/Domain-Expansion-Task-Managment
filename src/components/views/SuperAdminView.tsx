@@ -18,6 +18,8 @@ import {
   Activity,
   AlertTriangle,
   UserCheck,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { MemberManageModal } from "@/components/modals/MemberManageModal";
 import { ConfirmActionModal } from "@/components/modals/ConfirmActionModal";
@@ -45,6 +47,7 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newRole, setNewRole] = useState("MEMBER");
   const [newJobTitle, setNewJobTitle] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
@@ -171,6 +174,32 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
     }
   };
 
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+
+  const handleQuickRoleChange = async (memberId: string, newRole: string) => {
+    setUpdatingRoleId(memberId);
+    try {
+      const res = await fetch(`/api/admin/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setMembers((prev) =>
+          prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
+        );
+      } else {
+        alert(json.error?.message || "Failed to update role");
+      }
+    } catch (err) {
+      console.error("Error updating role:", err);
+      alert("Network error while updating role");
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
+
   return (
     <div className="p-2 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -186,7 +215,7 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
             Centralized Organization & Member Administration
           </h1>
           <p className="text-xs text-[#888898]">
-            Manage user roles, structural hierarchy, password resets, and comprehensive audit logs
+            Assign member roles (Member, Team Lead, Manager), configure reporting hierarchy, and reset credentials
           </p>
         </div>
 
@@ -243,6 +272,29 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
       {/* TAB 1: MEMBERS TABLE */}
       {activeTab === "members" && (
         <div className="space-y-4">
+          {/* Role & Hierarchy Guide Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1A1A1A] via-[#141414] to-[#1A1A1A] border border-[#2E2E2E] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 mt-0.5">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>How to Assign Roles & Hierarchy</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Super Admin Controls</span>
+                </h3>
+                <p className="text-xs text-[#888898] mt-0.5">
+                  Set any employee as <strong>Normal Member</strong>, <strong>Team Lead</strong>, or <strong>Project Manager</strong> directly using the <strong>Role dropdown</strong> in the table below, or click <strong>&ldquo;Set Role & Hierarchy&rdquo;</strong> to link reporting managers and leads.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono">
+              <span className="px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold">👔 Manager (PM)</span>
+              <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 font-bold">⚡ Team Lead</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-500/15 text-slate-300 border border-slate-500/30 font-bold">💻 Normal Member</span>
+            </div>
+          </div>
+
           {/* Filter Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#141414] p-3 rounded-2xl border border-[#2E2E2E]">
             <div className="relative w-full sm:w-80">
@@ -257,7 +309,7 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-xs text-[#888898]">Role:</span>
+              <span className="text-xs text-[#888898]">Filter by Role:</span>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
@@ -284,7 +336,7 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                   <thead>
                     <tr className="border-b border-[#2E2E2E] bg-[#1A1A1A] text-[#888898] uppercase tracking-wider font-bold text-[10px]">
                       <th className="py-3.5 px-4">Employee</th>
-                      <th className="py-3.5 px-4">Role</th>
+                      <th className="py-3.5 px-4">Set Assigned Role</th>
                       <th className="py-3.5 px-4">Department & Title</th>
                       <th className="py-3.5 px-4">Reporting Hierarchy</th>
                       <th className="py-3.5 px-4">Status</th>
@@ -316,9 +368,25 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] border ${getRoleBadge(m.role)}`}>
-                            {m.role.replace("_", " ")}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={m.role}
+                              disabled={updatingRoleId === m.id || m.id === currentUser.id}
+                              onChange={(e) => handleQuickRoleChange(m.id, e.target.value)}
+                              className="bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200] focus:border-[#FF6200] rounded-lg px-2.5 py-1.5 text-xs text-white font-bold cursor-pointer transition-all disabled:opacity-50"
+                              title={m.id === currentUser.id ? "Cannot change your own Super Admin role" : "Click to change employee role"}
+                            >
+                              <option value="MEMBER">💻 Member (Normal)</option>
+                              <option value="TEAM_LEAD">⚡ Team Lead</option>
+                              <option value="MANAGER">👔 Manager (PM)</option>
+                              <option value="QA">🧪 QA Engineer</option>
+                              <option value="HR_ADMIN">🏢 HR Admin</option>
+                              <option value="SUPER_ADMIN">👑 Super Admin</option>
+                            </select>
+                            {updatingRoleId === m.id && (
+                              <span className="w-3.5 h-3.5 border-2 border-[#FF6200] border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                            )}
+                          </div>
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -330,11 +398,11 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                           <div className="space-y-0.5 text-[11px]">
                             <div>
                               <span className="text-[#888898]">Manager: </span>
-                              <span className="text-white">{m.manager?.name || "—"}</span>
+                              <span className="text-white font-medium">{m.manager?.name || "—"}</span>
                             </div>
                             <div>
                               <span className="text-[#888898]">Team Lead: </span>
-                              <span className="text-white">{m.teamLead?.name || "—"}</span>
+                              <span className="text-white font-medium">{m.teamLead?.name || "—"}</span>
                             </div>
                           </div>
                         </td>
@@ -357,9 +425,10 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                               setSelectedMember(m);
                               setIsManageModalOpen(true);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/60 hover:text-white transition-colors text-[11px] font-semibold text-[#ACACB8]"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/70 hover:bg-[#FF6200]/10 hover:text-white transition-all text-[11px] font-bold text-[#ACACB8] shadow-sm cursor-pointer"
                           >
-                            Manage
+                            <Shield className="w-3.5 h-3.5 text-[#FF6200]" />
+                            <span>Set Role & Hierarchy</span>
                           </button>
                         </td>
                       </tr>
@@ -528,13 +597,24 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[#ACACB8] font-semibold mb-1">Initial Password *</label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-3 pr-9 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                      tabIndex={-1}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[#ACACB8] font-semibold mb-1">Role *</label>

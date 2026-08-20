@@ -713,11 +713,13 @@ export function TaskDetailModal({
                 className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none"
               >
                 <option value="">Unassigned</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
-                  </option>
-                ))}
+                {users
+                  .filter((u) => u.role !== "SUPER_ADMIN" && u.role !== "HR_ADMIN")
+                  .map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role})
+                    </option>
+                  ))}
               </select>
             </div>
 

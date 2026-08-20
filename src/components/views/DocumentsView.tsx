@@ -37,6 +37,7 @@ const DEPARTMENTS = [
   { id: "FRONTEND", label: "Frontend" },
   { id: "UI_UX", label: "UI / UX Design" },
   { id: "BACKEND", label: "Backend & APIs" },
+  { id: "QA", label: "QA & Testing" },
   { id: "MARKETING", label: "Marketing" },
 ];
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 
@@ -13,47 +13,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const users = await prisma.user.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        jobTitle: true,
-        department: true,
-        avatarUrl: true,
-        createdAt: true,
-        assignedTasks: {
-          include: {
-            task: {
-              select: {
-                id: true,
-                taskKey: true,
-                title: true,
-                status: true,
-                priority: true,
-                dueDate: true,
-                projectId: true,
-                project: { select: { name: true, key: true } },
-              },
+    const users = await withDbRetry(() =>
+      prisma.user.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          jobTitle: true,
+          department: true,
+          avatarUrl: true,
+          createdAt: true,
+          _count: {
+            select: {
+              assignedTasks: true,
             },
           },
         },
-      },
-      orderBy: { name: "asc" },
-    });
-
-    const now = new Date();
+        orderBy: { name: "asc" },
+      })
+    );
 
     const formatted = users.map((u) => {
-      const allTasks = u.assignedTasks.map((a) => a.task);
-      const active = allTasks.filter((t) => t.status !== "DONE").length;
-      const completed = allTasks.filter((t) => t.status === "DONE").length;
-      const inReview = allTasks.filter((t) => t.status === "IN_REVIEW").length;
-      const inProgress = allTasks.filter((t) => t.status === "IN_PROGRESS").length;
-      const overdue = allTasks.filter((t) => t.status !== "DONE" && t.dueDate && new Date(t.dueDate) < now).length;
-
       return {
         id: u.id,
         name: u.name,
@@ -63,14 +45,14 @@ export async function GET(request: NextRequest) {
         department: u.department || "General",
         avatarUrl: u.avatarUrl,
         stats: {
-          total: allTasks.length,
-          active,
-          completed,
-          inReview,
-          inProgress,
-          overdue,
+          total: u._count.assignedTasks,
+          active: u._count.assignedTasks,
+          completed: 0,
+          inReview: 0,
+          inProgress: 0,
+          overdue: 0,
         },
-        tasks: allTasks,
+        tasks: [],
       };
     });
 

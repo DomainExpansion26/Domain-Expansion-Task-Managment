@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "./prisma";
+import { prisma, withDbRetry } from "./prisma";
 import { hasPermission, normalizeRole, Permission, Role, isSuperAdmin, isHRAdmin, isManager, isTeamLead, isQA } from "./permissions";
 
 const JWT_SECRET = process.env.JWT_SECRET || "domain-expansion-super-secret-jwt-key-2026-production";
@@ -68,32 +68,39 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
   const session = verifySessionToken(token);
   if (!session) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      jobTitle: true,
-      department: true,
-      avatarUrl: true,
-      isActive: true,
-      isEmailVerified: true,
-      managerId: true,
-      teamLeadId: true,
-      manager: { select: { id: true, name: true, email: true } },
-      teamLead: { select: { id: true, name: true, email: true } },
-      hrProfile: true,
-      createdAt: true,
-    },
-  });
+  try {
+    const user = await withDbRetry(() =>
+      prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          jobTitle: true,
+          department: true,
+          avatarUrl: true,
+          isActive: true,
+          isEmailVerified: true,
+          managerId: true,
+          teamLeadId: true,
+          manager: { select: { id: true, name: true, email: true } },
+          teamLead: { select: { id: true, name: true, email: true } },
+          hrProfile: true,
+          createdAt: true,
+        },
+      })
+    );
 
-  if (!user || !user.isActive) return null;
-  return {
-    ...user,
-    role: normalizeRole(user.role),
-  };
+    if (!user || !user.isActive) return null;
+    return {
+      ...user,
+      role: normalizeRole(user.role),
+    };
+  } catch (err) {
+    console.error("getCurrentUserFromRequest error:", err);
+    return null;
+  }
 }
 
 export async function requireAuth(request?: NextRequest) {

@@ -45,6 +45,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
+    if (currentUser.role === "SUPER_ADMIN") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "SUPER_ADMIN_EXEMPT",
+            message: "Super Administrators oversee system administration and do not record daily employee punch logs.",
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const { action, breakMinutes = 0, notes } = await request.json(); // action: "PUNCH_IN" | "PUNCH_OUT"
 
     const today = new Date();
@@ -62,9 +75,30 @@ export async function POST(request: NextRequest) {
     });
 
     if (action === "PUNCH_IN") {
-      if (existing && existing.punchIn && !existing.punchOut) {
+      // Rule: If user has already punched in and punched out today, attendance is complete
+      if (existing && existing.punchIn && existing.punchOut) {
         return NextResponse.json(
-          { success: false, error: { code: "ALREADY_PUNCHED_IN", message: "You have already punched in today." } },
+          {
+            success: false,
+            error: {
+              code: "ALREADY_COMPLETED",
+              message: "You have already completed your attendance for today (punched in and punched out). Multiple punches are not permitted.",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      // Rule: If user has already punched in today, cannot punch in again
+      if (existing && existing.punchIn) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "ALREADY_PUNCHED_IN",
+              message: "You have already punched in for today.",
+            },
+          },
           { status: 400 }
         );
       }
@@ -87,7 +121,7 @@ export async function POST(request: NextRequest) {
           notes: notes || null,
         },
         update: {
-          punchIn: existing?.punchIn || now,
+          punchIn: now,
           punchOut: null,
           status: "PRESENT",
           notes: notes !== undefined ? notes : existing?.notes,
@@ -102,14 +136,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "PUNCH_OUT") {
+      // Rule: User must have punched in first
       if (!existing || !existing.punchIn) {
         return NextResponse.json(
-          { success: false, error: { code: "NOT_PUNCHED_IN", message: "You must punch in first before punching out." } },
+          {
+            success: false,
+            error: {
+              code: "NOT_PUNCHED_IN",
+              message: "You must punch in first before punching out.",
+            },
+          },
           { status: 400 }
         );
       }
 
-      const breakDuration = Number(breakMinutes) || existing.breakDurationMinutes || 0;
+      // Rule: If already punched out today, cannot punch out again
+      if (existing.punchOut) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "ALREADY_PUNCHED_OUT",
+              message: "You have already punched out for today. Attendance can only be recorded once per day.",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      const breakDuration = Number(breakMinutes) >= 0 ? Number(breakMinutes) : (existing.breakDurationMinutes || 0);
       const { totalWorkingHours, status } = calculateWorkingHours(existing.punchIn, now, breakDuration);
 
       const attendance = await prisma.attendance.update({

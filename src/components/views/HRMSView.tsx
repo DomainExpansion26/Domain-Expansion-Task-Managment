@@ -75,15 +75,21 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
   // Fetch initial today status & monthly logs
   const fetchAttendance = async () => {
     try {
-      const res = await fetch(`/api/hrms/attendance?month=${selectedMonth}&year=${selectedYear}`);
-      const json = await res.json();
-      if (json.success) {
-        setPunchData(json.data.today);
-        setAttendanceRecords(json.data.monthlyLogs || []);
-        setMonthlyStats(json.data.stats || null);
-        if (json.data.today?.breakDurationMinutes) {
-          setBreakMinutes(json.data.today.breakDurationMinutes);
+      const [punchRes, attRes] = await Promise.all([
+        fetch("/api/hrms/punch"),
+        fetch(`/api/hrms/attendance?month=${selectedMonth}&year=${selectedYear}`),
+      ]);
+      const [punchJson, attJson] = await Promise.all([punchRes.json(), attRes.json()]);
+
+      if (punchJson.success && punchJson.data) {
+        setPunchData(punchJson.data);
+        if (punchJson.data.breakDurationMinutes) {
+          setBreakMinutes(punchJson.data.breakDurationMinutes);
         }
+      }
+      if (attJson.success && attJson.data) {
+        setAttendanceRecords(attJson.data.attendances || []);
+        setMonthlyStats(attJson.data.stats || null);
       }
     } catch (err) {
       console.error("Failed to load attendance", err);
@@ -92,7 +98,7 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
 
   const fetchLeaves = async () => {
     try {
-      const res = await fetch("/api/hrms/leaves");
+      const res = await fetch("/api/hrms/leave");
       const json = await res.json();
       if (json.success) {
         setLeaves(json.data || []);
@@ -141,19 +147,20 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
     setLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/hrms/attendance/punch", {
+      const res = await fetch("/api/hrms/punch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type,
-          notes: punchNote || undefined,
-          breakDurationMinutes: breakMinutes,
+          action: type === "IN" ? "PUNCH_IN" : "PUNCH_OUT",
+          breakMinutes: Number(breakMinutes) || 0,
+          notes: punchNote?.trim() || undefined,
         }),
       });
       const json = await res.json();
       if (json.success) {
         setPunchData(json.data);
         setPunchNote("");
+        setErrorMsg("");
         fetchAttendance();
       } else {
         setErrorMsg(json.error?.message || "Failed to record punch");
@@ -194,6 +201,9 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
   // Calculate live hours worked today
   const calculateLiveHours = () => {
     if (!punchData?.punchIn) return "0.00";
+    if (punchData?.punchOut && punchData?.totalWorkingHours !== undefined) {
+      return Number(punchData.totalWorkingHours).toFixed(2);
+    }
     const start = new Date(punchData.punchIn).getTime();
     const end = punchData.punchOut ? new Date(punchData.punchOut).getTime() : currentTime.getTime();
     const diffMs = Math.max(0, end - start);
@@ -207,7 +217,8 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
     if (!punchData?.punchIn) return "00:00:00";
     const start = new Date(punchData.punchIn).getTime();
     const end = punchData.punchOut ? new Date(punchData.punchOut).getTime() : currentTime.getTime();
-    let diffSec = Math.max(0, Math.floor((end - start) / 1000) - (breakMinutes || 0) * 60);
+    const activeBreak = punchData.punchOut ? (punchData.breakDurationMinutes || 0) : (breakMinutes || 0);
+    let diffSec = Math.max(0, Math.floor((end - start) / 1000) - activeBreak * 60);
     const hrs = Math.floor(diffSec / 3600);
     diffSec %= 3600;
     const mins = Math.floor(diffSec / 60);
@@ -390,9 +401,10 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
                       type="number"
                       min={0}
                       max={240}
+                      disabled={isPunchedOut || loading}
                       value={breakMinutes}
                       onChange={(e) => setBreakMinutes(parseInt(e.target.value) || 0)}
-                      className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+                      className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200] disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="e.g. 45"
                     />
                   </div>
@@ -400,42 +412,59 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
                     <label className="block text-[11px] text-[#888898] mb-1 font-medium">Daily Note / Shift Handover</label>
                     <input
                       type="text"
+                      disabled={isPunchedOut || loading}
                       value={punchNote}
                       onChange={(e) => setPunchNote(e.target.value)}
-                      className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
-                      placeholder="e.g. Working on API portal & Bug fixes"
+                      className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200] disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder={isPunchedOut ? (punchData?.notes || "No notes recorded") : "e.g. Working on API portal & Bug fixes"}
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2">
-                  {!isPunchedIn && !isPunchedOut && (
-                    <button
-                      onClick={() => handlePunch("IN")}
-                      disabled={loading}
-                      className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Clock className="w-4 h-4" />
-                      <span>{loading ? "Recording..." : "Punch In Now"}</span>
-                    </button>
-                  )}
-
-                  {isPunchedIn && (
-                    <button
-                      onClick={() => handlePunch("OUT")}
-                      disabled={loading}
-                      className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Clock className="w-4 h-4" />
-                      <span>{loading ? "Recording..." : "Punch Out (Complete Day)"}</span>
-                    </button>
-                  )}
-
-                  {isPunchedOut && (
-                    <div className="flex-1 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold text-center flex items-center justify-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Day Complete! Punched out at {new Date(punchData.punchOut).toLocaleTimeString()} ({punchData.totalWorkingHours}h recorded)</span>
+                  {currentUser?.role === "SUPER_ADMIN" ? (
+                    <div className="flex-1 p-4 rounded-2xl bg-[#FF6200]/10 border border-[#FF6200]/30 text-white text-xs space-y-1">
+                      <div className="flex items-center gap-2 text-[#FF8C42] font-bold">
+                        <ShieldAlert className="w-4 h-4" />
+                        <span>Executive Administrator (Punch Clock Exempt)</span>
+                      </div>
+                      <p className="text-[11px] text-[#888898]">
+                        As Super Administrator, you oversee organization administration and are not required to punch daily attendance. Use the Super Admin portal to manage members, roles, and company settings.
+                      </p>
                     </div>
+                  ) : (
+                    <>
+                      {!isPunchedIn && !isPunchedOut && (
+                        <button
+                          onClick={() => handlePunch("IN")}
+                          disabled={loading}
+                          className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <Clock className="w-4 h-4" />
+                          <span>{loading ? "Recording..." : "Punch In Now"}</span>
+                        </button>
+                      )}
+
+                      {isPunchedIn && (
+                        <button
+                          onClick={() => handlePunch("OUT")}
+                          disabled={loading}
+                          className="flex-1 py-3 px-6 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <Clock className="w-4 h-4" />
+                          <span>{loading ? "Recording..." : "Punch Out (Complete Day)"}</span>
+                        </button>
+                      )}
+
+                      {isPunchedOut && (
+                        <div className="flex-1 p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold text-center flex items-center justify-center gap-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>
+                            Day Complete! Punched out at {new Date(punchData.punchOut).toLocaleTimeString()} ({calculateLiveHours()}h recorded &bull; {punchData.status})
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -478,12 +507,12 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
                   </div>
                   <div className="flex justify-between items-center text-[#888898]">
                     <span>Total Hours Logged</span>
-                    <span className="font-mono text-[#FF8C42] font-bold">{monthlyStats?.totalHours?.toFixed(1) || 0} hrs</span>
+                    <span className="font-mono text-[#FF8C42] font-bold">{(monthlyStats?.totalWorkingHours ?? monthlyStats?.totalHours ?? 0).toFixed(1)} hrs</span>
                   </div>
                   <div className="flex justify-between items-center text-[#888898]">
                     <span>Average Daily Hours</span>
                     <span className="font-mono text-cyan-400 font-bold">
-                      {monthlyStats?.presentDays ? (monthlyStats.totalHours / monthlyStats.presentDays).toFixed(1) : 0} hrs/day
+                      {monthlyStats?.presentDays ? ((monthlyStats.totalWorkingHours ?? monthlyStats.totalHours ?? 0) / monthlyStats.presentDays).toFixed(1) : 0} hrs/day
                     </span>
                   </div>
                 </div>
@@ -940,7 +969,7 @@ export function HRMSView({ currentUser }: HRMSViewProps) {
               </div>
               <div className="p-3 rounded-xl bg-[#141414] border border-[#2E2E2E]">
                 <span className="text-[10px] text-[#888898] block uppercase">Total Hours</span>
-                <span className="text-lg font-bold font-mono text-[#FF8C42]">{monthlyStats?.totalHours?.toFixed(1) || 0}h</span>
+                <span className="text-lg font-bold font-mono text-[#FF8C42]">{(monthlyStats?.totalWorkingHours ?? monthlyStats?.totalHours ?? 0).toFixed(1)}h</span>
               </div>
               <div className="p-3 rounded-xl bg-[#141414] border border-[#2E2E2E]">
                 <span className="text-[10px] text-[#888898] block uppercase">Approved Leaves</span>

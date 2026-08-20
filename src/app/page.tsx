@@ -22,6 +22,7 @@ import { SuperAdminView } from "@/components/views/SuperAdminView";
 import { AdminSettingsView } from "@/components/views/AdminSettingsView";
 import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
 import { DocumentsView } from "@/components/views/DocumentsView";
+import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 
 export default function Home() {
   const router = useRouter();
@@ -53,21 +54,21 @@ export default function Home() {
     try {
       const res = await fetch("/api/auth/me");
       const json = await res.json();
-      if (json.success) {
+      if (json.success && json.data?.user) {
         setCurrentUser(json.data.user);
         setPermissions(json.data.permissions || []);
         return json.data.user;
       } else {
-        router.push("/login");
+        window.location.replace("/login");
         return null;
       }
     } catch {
-      router.push("/login");
+      window.location.replace("/login");
       return null;
     } finally {
       setAuthLoading(false);
     }
-  }, [router]);
+  }, []);
 
   // 2. Fetch App Data
   const fetchAppData = useCallback(async () => {
@@ -173,8 +174,13 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network failure on logout
+    }
+    // Hard replace to clean all in-memory client state and history
+    window.location.replace("/login");
   };
 
   if (authLoading || !currentUser) {
@@ -194,6 +200,24 @@ export default function Home() {
       onSelectTab={(tab) => {
         if (tab === "ai") {
           setIsAIOpen(true);
+        } else if (tab === "superadmin" || tab === "admin") {
+          if (isSuperAdmin(currentUser?.role)) {
+            setCurrentTab(tab);
+          } else {
+            setCurrentTab("dashboard");
+          }
+        } else if (tab === "hradmin") {
+          if (isHRAdmin(currentUser?.role)) {
+            setCurrentTab(tab);
+          } else {
+            setCurrentTab("dashboard");
+          }
+        } else if (tab === "hrms") {
+          if (isHRAdmin(currentUser?.role) || currentUser?.isHRMSActive) {
+            setCurrentTab(tab);
+          } else {
+            setCurrentTab("dashboard");
+          }
         } else {
           setCurrentTab(tab);
         }

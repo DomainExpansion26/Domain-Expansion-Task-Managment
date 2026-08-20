@@ -15,13 +15,15 @@ export default function HRAdminPage() {
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((json) => {
-        if (json.success && isHRAdmin(json.data.user?.role)) {
+        if (json.success && isHRAdmin(json.data?.user?.role)) {
           setCurrentUser(json.data.user);
+        } else if (json.success) {
+          router.replace("/dashboard?error=FORBIDDEN");
         } else {
-          router.push("/?error=FORBIDDEN");
+          router.replace("/hrmssuperadmin/login");
         }
       })
-      .catch(() => router.push("/login"))
+      .catch(() => router.replace("/hrmssuperadmin/login"))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -40,18 +42,18 @@ export default function HRAdminPage() {
     <AppShell
       currentTab="hradmin"
       onSelectTab={(tab) => {
-        if (tab !== "hradmin") router.push(`/?tab=${tab}`);
+        if (tab !== "hradmin") router.push(`/dashboard?tab=${tab}`);
       }}
       currentUser={currentUser}
       unreadCount={0}
-      onOpenCreateTask={() => router.push("/?create=true")}
+      onOpenCreateTask={() => router.push("/dashboard?create=true")}
       onOpenSearch={() => {}}
       onOpenNotifications={() => {}}
       onOpenDevMailbox={() => {}}
       onToggleAI={() => {}}
       onLogout={async () => {
         await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/login");
+        window.location.replace("/hrmssuperadmin/login");
       }}
     >
       <HRAdminView currentUser={currentUser} />

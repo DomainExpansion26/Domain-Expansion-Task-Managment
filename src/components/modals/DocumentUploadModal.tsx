@@ -14,6 +14,7 @@ const DEPARTMENTS = [
   { id: "FRONTEND", label: "Frontend Team", color: "border-cyan-500/30 text-cyan-400 bg-cyan-500/10" },
   { id: "UI_UX", label: "UI / UX Design Team", color: "border-pink-500/30 text-pink-400 bg-pink-500/10" },
   { id: "BACKEND", label: "Backend & API Team", color: "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" },
+  { id: "QA", label: "Quality Assurance & Testing Team", color: "border-blue-500/30 text-blue-400 bg-blue-500/10" },
   { id: "MARKETING", label: "Marketing & Growth Team", color: "border-amber-500/30 text-amber-400 bg-amber-500/10" },
 ];
 

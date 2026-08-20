@@ -55,7 +55,7 @@ export default function HRMSSuperAdminGatewayPage() {
         onToggleAI={() => {}}
         onLogout={async () => {
           await fetch("/api/auth/logout", { method: "POST" });
-          router.push("/hrmssuperadmin/login");
+          window.location.replace("/hrmssuperadmin/login");
         }}
       >
         <HRAdminView currentUser={currentUser} />

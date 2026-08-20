@@ -21,16 +21,16 @@ export default function QAPage() {
       fetch("/api/tasks").then((r) => r.json()),
     ])
       .then(([meJson, projJson, userJson, taskJson]) => {
-        if (meJson.success) {
+        if (meJson.success && meJson.data?.user) {
           setCurrentUser(meJson.data.user);
         } else {
-          router.push("/login");
+          router.replace("/login");
         }
         if (projJson.success) setProjects(projJson.data);
         if (userJson.success) setUsers(userJson.data);
         if (taskJson.success) setTasks(taskJson.data);
       })
-      .catch(() => router.push("/login"))
+      .catch(() => router.replace("/login"))
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -49,18 +49,18 @@ export default function QAPage() {
     <AppShell
       currentTab="qa"
       onSelectTab={(tab) => {
-        if (tab !== "qa") router.push(`/?tab=${tab}`);
+        if (tab !== "qa") router.push(`/dashboard?tab=${tab}`);
       }}
       currentUser={currentUser}
       unreadCount={0}
-      onOpenCreateTask={() => router.push("/?create=true")}
+      onOpenCreateTask={() => router.push("/dashboard?create=true")}
       onOpenSearch={() => {}}
       onOpenNotifications={() => {}}
       onOpenDevMailbox={() => {}}
       onToggleAI={() => {}}
       onLogout={async () => {
         await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/login");
+        window.location.replace("/login");
       }}
     >
       <QAView

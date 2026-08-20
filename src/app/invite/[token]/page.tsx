@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CheckCircle2, AlertCircle, Lock, User, Briefcase, ArrowRight } from "lucide-react";
+import { CheckCircle2, AlertCircle, Lock, User, Briefcase, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function InviteAcceptPage() {
   const params = useParams();
@@ -12,6 +12,7 @@ export default function InviteAcceptPage() {
   const [invitation, setInvitation] = useState<any | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
   const [department, setDepartment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -141,13 +142,22 @@ export default function InviteAcceptPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     placeholder="Min 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
+                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

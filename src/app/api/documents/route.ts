@@ -8,9 +8,10 @@ import { uploadFileToStorage } from "@/lib/storage";
 function normalizeDepartment(dept?: string | null): string {
   if (!dept) return "GENERAL";
   const clean = dept.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
-  if (clean.includes("FRONTEND") || clean.includes("FRONT_END") || clean.includes("REACT") || clean.includes("WEB")) return "FRONTEND";
+  if (clean.includes("FRONTEND") || clean.includes("FRONT_END") || clean.includes("REACT") || clean.includes("WEB") || clean.includes("CLIENT")) return "FRONTEND";
   if (clean.includes("UI") || clean.includes("UX") || clean.includes("DESIGN") || clean.includes("FIGMA")) return "UI_UX";
-  if (clean.includes("BACKEND") || clean.includes("BACK_END") || clean.includes("NODE") || clean.includes("API") || clean.includes("DATABASE")) return "BACKEND";
+  if (clean.includes("BACKEND") || clean.includes("BACK_END") || clean.includes("NODE") || clean.includes("API") || clean.includes("DATABASE") || clean.includes("SERVER")) return "BACKEND";
+  if (clean.includes("QA") || clean.includes("TEST") || clean.includes("QUALITY") || clean.includes("DEFECT")) return "QA";
   if (clean.includes("MARKET") || clean.includes("SEO") || clean.includes("GROWTH") || clean.includes("SALES")) return "MARKETING";
   return clean;
 }
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     let docs: any[] = [];
-    if ((prisma as any).organizationDocument?.findMany) {
+    try {
       if (searchParam && searchParam.trim()) {
         whereClause.OR = [
           { title: { contains: searchParam.trim(), mode: "insensitive" } },
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
           { phaseName: { contains: searchParam.trim(), mode: "insensitive" } },
         ];
       }
-      docs = await (prisma as any).organizationDocument.findMany({
+      docs = await prisma.organizationDocument.findMany({
         where: whereClause,
         include: {
           uploadedBy: {
@@ -83,42 +84,18 @@ export async function GET(request: NextRequest) {
         },
         orderBy: [{ phaseNumber: "asc" }, { createdAt: "desc" }],
       });
-    } else {
-      let query = `
-        SELECT d.*, 
-               json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role, 'avatarUrl', u."avatarUrl") AS "uploadedBy"
-        FROM "OrganizationDocument" d
-        LEFT JOIN "User" u ON d."uploadedById" = u.id
-        WHERE 1=1
-      `;
-      const params: any[] = [];
-      if (departmentFilter) {
-        if (typeof departmentFilter === "string") {
-          params.push(departmentFilter);
-          query += ` AND d.department = $${params.length}`;
-        } else if (departmentFilter.in) {
-          const placeholders = departmentFilter.in.map((_: any, i: number) => `$${params.length + i + 1}`).join(",");
-          params.push(...departmentFilter.in);
-          query += ` AND d.department IN (${placeholders})`;
-        }
-      }
-      if (whereClause.phaseNumber) {
-        params.push(whereClause.phaseNumber);
-        query += ` AND d."phaseNumber" = $${params.length}`;
-      }
-      if (searchParam && searchParam.trim()) {
-        params.push(`%${searchParam.trim()}%`);
-        query += ` AND (d.title ILIKE $${params.length} OR d.description ILIKE $${params.length} OR d."fileName" ILIKE $${params.length})`;
-      }
-      query += ` ORDER BY d."phaseNumber" ASC, d."createdAt" DESC`;
-      docs = await prisma.$queryRawUnsafe(query, ...params);
+    } catch (dbErr: any) {
+      console.warn("organizationDocument.findMany error:", dbErr.message);
+      docs = [];
     }
 
     let allPhases: any[] = [];
     try {
-      allPhases = await prisma.$queryRawUnsafe(
-        `SELECT DISTINCT "phaseNumber", "phaseName" FROM "OrganizationDocument" ORDER BY "phaseNumber" ASC`
-      );
+      allPhases = await prisma.organizationDocument.findMany({
+        select: { phaseNumber: true, phaseName: true },
+        distinct: ["phaseNumber"],
+        orderBy: { phaseNumber: "asc" },
+      });
     } catch {
       allPhases = [];
     }

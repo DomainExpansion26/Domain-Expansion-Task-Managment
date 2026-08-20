@@ -7,10 +7,12 @@ export async function GET(request: NextRequest) {
     const user = await getCurrentUserFromRequest(request);
 
     if (!user) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } },
         { status: 401 }
       );
+      response.cookies.delete("dx_session_token");
+      return response;
     }
 
     const permissions = ROLE_PERMISSIONS[user.role as Role] || [];

@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { verifyPassword, signSessionToken, createAuthCookieResponse } from "@/lib/auth";
 import { isSuperAdmin, isHRAdmin, isHRMSActive, normalizeRole } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, portal = "MAIN" } = await request.json();
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: "INVALID_JSON", message: "Invalid or empty request payload" } },
+        { status: 400 }
+      );
+    }
+
+    const { email, password, portal = "MAIN" } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -16,12 +26,14 @@ export async function POST(request: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-      include: {
-        hrProfile: true,
-      },
-    });
+    const user = await withDbRetry(() =>
+      prisma.user.findUnique({
+        where: { email: cleanEmail },
+        include: {
+          hrProfile: true,
+        },
+      })
+    );
 
     if (!user) {
       return NextResponse.json(

@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   ListFilter,
   Flame,
+  Building,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
@@ -55,6 +56,7 @@ export function KanbanView({
   onOpenCreateTask,
 }: KanbanViewProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("ALL");
   const [onlyMyTasks, setOnlyMyTasks] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
@@ -80,6 +82,22 @@ export function KanbanView({
       return false;
     if (priorityFilter !== "ALL" && t.priority !== priorityFilter) return false;
     if (typeFilter !== "ALL" && t.taskType !== typeFilter) return false;
+
+    if (selectedDepartment !== "ALL") {
+      const matchAssignee = t.assignees?.some((a: any) => {
+        const d = (a.department || a.jobTitle || "").toUpperCase();
+        if (selectedDepartment === "FRONTEND" && (d.includes("FRONT") || d.includes("REACT") || d.includes("WEB"))) return true;
+        if (selectedDepartment === "BACKEND" && (d.includes("BACK") || d.includes("NODE") || d.includes("API") || d.includes("DATABASE"))) return true;
+        if (selectedDepartment === "UI_UX" && (d.includes("UI") || d.includes("UX") || d.includes("DESIGN"))) return true;
+        if (selectedDepartment === "QA" && (d.includes("QA") || d.includes("TEST") || d.includes("QUALITY"))) return true;
+        if (selectedDepartment === "MARKETING" && (d.includes("MARKET") || d.includes("SEO") || d.includes("GROWTH"))) return true;
+        return d.includes(selectedDepartment);
+      });
+      const matchDeptField = t.department && t.department.toUpperCase().includes(selectedDepartment);
+      const matchTaskType = (selectedDepartment === "QA" && (t.taskType === "BUG" || t.taskType === "QA_DEFECT")) ||
+                            (selectedDepartment === "UI_UX" && (t.taskType === "STORY" || t.title.toLowerCase().includes("design") || t.title.toLowerCase().includes("ui")));
+      if (!matchAssignee && !matchDeptField && !matchTaskType) return false;
+    }
 
     if (dueFilter !== "ALL" && t.dueDate) {
       const taskDue = new Date(t.dueDate);
@@ -316,6 +334,34 @@ export function KanbanView({
             <Plus className="w-3.5 h-3.5" />
             <span>Add Task</span>
           </button>
+        </div>
+
+        {/* Department Quick Filter Tabs */}
+        <div className="w-full pt-2 border-t border-[#2E2E2E]/60 flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          <span className="text-[10px] font-mono uppercase text-[#888898] flex-shrink-0 mr-1 flex items-center gap-1">
+            <Building className="w-3 h-3 text-[#FF6200]" />
+            <span>Dept:</span>
+          </span>
+          {[
+            { id: "ALL", label: "All Departments" },
+            { id: "FRONTEND", label: "Frontend" },
+            { id: "BACKEND", label: "Backend" },
+            { id: "UI_UX", label: "UI / UX" },
+            { id: "QA", label: "QA & Testing" },
+            { id: "MARKETING", label: "Marketing" },
+          ].map((d) => (
+            <button
+              key={d.id}
+              onClick={() => setSelectedDepartment(d.id)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex-shrink-0 cursor-pointer ${
+                selectedDepartment === d.id
+                  ? "bg-[#FF6200] text-white shadow-md shadow-[#FF6200]/20 font-bold"
+                  : "bg-[#1A1A1A] text-[#888898] hover:text-white border border-[#2E2E2E]"
+              }`}
+            >
+              {d.label}
+            </button>
+          ))}
         </div>
       </div>
 

@@ -1,0 +1,102 @@
+require("dotenv").config({ path: ".env.local" });
+require("dotenv").config({ path: ".env" });
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_UqW4Otx6eaPs@ep-bold-feather-at6voxuk-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+    },
+  },
+});
+
+async function cleanAllDummyData() {
+  console.log("==========================================================================");
+  console.log("🧹 PURGING ALL DUMMY DATA (TASKS, PROJECTS, HRMS, MEMBERS, LOGS, ETC.)");
+  console.log("==========================================================================\n");
+
+  const countsBefore = {
+    users: await prisma.user.count(),
+    projects: await prisma.project.count(),
+    tasks: await prisma.task.count(),
+    sprints: await prisma.sprint.count(),
+    subtasks: await prisma.subtask.count(),
+    taskAssignees: await prisma.taskAssignee.count(),
+    taskRelations: await prisma.taskRelation.count(),
+    qaTickets: await prisma.qATicket.count(),
+    qaBugs: await prisma.qABug.count(),
+    comments: await prisma.comment.count(),
+    attachments: await prisma.attachment.count(),
+    labels: await prisma.label.count(),
+    activities: await prisma.activity.count(),
+    notifications: await prisma.notification.count(),
+    attendances: await prisma.attendance.count(),
+    leaves: await prisma.leave.count(),
+    hrProfiles: await prisma.hRProfile.count(),
+    orgDocs: await prisma.organizationDocument.count(),
+    invitations: await prisma.invitation.count(),
+    auditLogs: await prisma.auditLog.count(),
+    aiUsages: await prisma.aIUsage.count(),
+    aiMessages: await prisma.aIMessage.count(),
+    aiConversations: await prisma.aIConversation.count(),
+  };
+
+  console.log("Current Database Record Counts:", JSON.stringify(countsBefore, null, 2));
+
+  console.log("\nDeleting all records in strict dependency order...");
+
+  // 1. Delete QA bugs & tickets
+  await prisma.qABug.deleteMany({});
+  await prisma.qATicket.deleteMany({});
+
+  // 2. Delete task children & relations
+  await prisma.taskRelation.deleteMany({});
+  await prisma.taskAssignee.deleteMany({});
+  await prisma.subtask.deleteMany({});
+  await prisma.comment.deleteMany({});
+  await prisma.attachment.deleteMany({});
+  await prisma.activity.deleteMany({});
+
+  // 3. Delete tasks, sprints, labels, project members, projects
+  await prisma.task.deleteMany({});
+  await prisma.sprint.deleteMany({});
+  await prisma.label.deleteMany({});
+  await prisma.projectMember.deleteMany({});
+  await prisma.organizationDocument.deleteMany({});
+  await prisma.project.deleteMany({});
+
+  // 4. Delete HRMS records
+  await prisma.attendance.deleteMany({});
+  await prisma.leave.deleteMany({});
+  await prisma.hRProfile.deleteMany({});
+
+  // 5. Delete user relations & logs
+  await prisma.notification.deleteMany({});
+  await prisma.notificationPreference.deleteMany({});
+  await prisma.invitation.deleteMany({});
+  await prisma.passwordResetToken.deleteMany({});
+  await prisma.auditLog.deleteMany({});
+  await prisma.sentEmailLog.deleteMany({});
+
+  // 6. Delete AI conversations & usage
+  await prisma.aIMessage.deleteMany({});
+  await prisma.aIConversation.deleteMany({});
+  await prisma.aIUsage.deleteMany({});
+  await prisma.aIProviderConfig.deleteMany({});
+  await prisma.automationRule.deleteMany({});
+
+  // 7. Delete all users
+  await prisma.user.deleteMany({});
+
+  console.log("\n✅ ALL DUMMY DATA HAS BEEN COMPLETELY REMOVED!");
+  console.log("The database is now 100% clean and ready for fresh registration and real data.\n");
+}
+
+cleanAllDummyData()
+  .catch((e) => {
+    console.error("❌ Cleanup failed:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

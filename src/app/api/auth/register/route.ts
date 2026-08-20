@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import { emitPlatformEvent } from "@/lib/events";
 
 export async function POST(request: NextRequest) {
   try {
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: { code: "INVALID_JSON", message: "Invalid or empty request payload." } },
+        { status: 400 }
+      );
+    }
+
     const {
       name,
       email,
@@ -13,7 +23,7 @@ export async function POST(request: NextRequest) {
       jobTitle,
       department,
       portal = "MAIN",
-    } = await request.json();
+    } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -39,10 +49,12 @@ export async function POST(request: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
 
-    // Check if user already exists
-    const existing = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-    });
+    // Check if user already exists with retry
+    const existing = await withDbRetry(() =>
+      prisma.user.findUnique({
+        where: { email: cleanEmail },
+      })
+    );
 
     if (existing) {
       return NextResponse.json(
@@ -51,7 +63,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userCount = await prisma.user.count();
+    const userCount = await withDbRetry(() => prisma.user.count());
     let assignedRole = "MEMBER";
     let hrmsStatus = "PENDING_ACTIVATION";
     let defaultDesignation = jobTitle?.trim() || "Team Member";
@@ -75,79 +87,100 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const uniqueEmpId = `EMP-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
 
-    // Create User (Never auto-assigns projects, never gives unassigned privileges)
-    const user = await prisma.user.create({
-      data: {
-        name: cleanName,
-        email: cleanEmail,
-        passwordHash,
-        role: assignedRole,
-        jobTitle: defaultDesignation,
-        department: defaultDepartment,
-        avatarUrl: null,
-        isEmailVerified: true,
-        isActive: true,
-        hrProfile: {
-          create: {
-            employeeId: `EMP-${1000 + userCount + 1}`,
-            designation: defaultDesignation,
-            department: defaultDepartment,
-            status: hrmsStatus,
+    // Create User with retry
+    const user = await withDbRetry(() =>
+      prisma.user.create({
+        data: {
+          name: cleanName,
+          email: cleanEmail,
+          passwordHash,
+          role: assignedRole,
+          jobTitle: defaultDesignation,
+          department: defaultDepartment,
+          avatarUrl: null,
+          isEmailVerified: true,
+          isActive: true,
+          hrProfile: {
+            create: {
+              employeeId: uniqueEmpId,
+              designation: defaultDesignation,
+              department: defaultDepartment,
+              status: hrmsStatus,
+            },
           },
         },
-      },
-      include: {
-        hrProfile: true,
-      },
-    });
+        include: {
+          hrProfile: true,
+        },
+      })
+    );
 
     // Create Notification Preferences
-    await prisma.notificationPreference.create({
-      data: {
-        userId: user.id,
-        emailTaskAssigned: true,
-        emailTaskUpdated: true,
-        emailMention: true,
-        emailComment: true,
-        emailDueDate: true,
-        emailOverdue: true,
-        inAppTaskAssigned: true,
-        inAppTaskUpdated: true,
-        inAppMention: true,
-        inAppComment: true,
-        inAppDueDate: true,
-        inAppOverdue: true,
-      },
-    });
+    try {
+      await withDbRetry(() =>
+        prisma.notificationPreference.create({
+          data: {
+            userId: user.id,
+            emailTaskAssigned: true,
+            emailTaskUpdated: true,
+            emailMention: true,
+            emailComment: true,
+            emailDueDate: true,
+            emailOverdue: true,
+            inAppTaskAssigned: true,
+            inAppTaskUpdated: true,
+            inAppMention: true,
+            inAppComment: true,
+            inAppDueDate: true,
+            inAppOverdue: true,
+          },
+        })
+      );
+    } catch (prefErr) {
+      console.warn("Notification preference creation fallback:", prefErr);
+    }
 
     // Record Audit Log
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: "USER_REGISTERED",
-        entityType: "USER",
-        entityId: user.id,
-        detailsJson: JSON.stringify({
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          portal,
-          hrmsStatus,
-        }),
-      },
-    });
+    try {
+      await withDbRetry(() =>
+        prisma.auditLog.create({
+          data: {
+            userId: user.id,
+            action: "USER_REGISTERED",
+            entityType: "USER",
+            entityId: user.id,
+            detailsJson: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              portal,
+              hrmsStatus,
+            }),
+          },
+        })
+      );
+    } catch (auditErr) {
+      console.warn("Audit log creation fallback:", auditErr);
+    }
 
     // Send welcome notification
-    await prisma.notification.create({
-      data: {
-        userId: user.id,
-        title: "Welcome to Domain Expansion!",
-        message: `Your account has been created successfully. An administrator will assign you to projects and activate your permissions as needed.`,
-        type: "SYSTEM",
-        link: "/dashboard",
-      },
-    });
+    try {
+      await withDbRetry(() =>
+        prisma.notification.create({
+          data: {
+            userId: user.id,
+            title: "Welcome to Domain Expansion!",
+            message: `Your account has been created successfully. An administrator will assign you to projects and activate your permissions as needed.`,
+            type: "SYSTEM",
+            link: "/dashboard",
+          },
+        })
+      );
+    } catch (notifErr) {
+      console.warn("Welcome notification creation fallback:", notifErr);
+    }
 
     // Broadcast user registered event
     emitPlatformEvent({

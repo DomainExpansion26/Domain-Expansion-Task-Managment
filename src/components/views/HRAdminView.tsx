@@ -18,6 +18,9 @@ import {
   X,
   ShieldAlert,
   ArrowRight,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
 import { getInitials, getAvatarGradient } from "@/lib/utils";
@@ -42,6 +45,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
   const [empName, setEmpName] = useState("");
   const [empEmail, setEmpEmail] = useState("");
   const [empPassword, setEmpPassword] = useState("");
+  const [showEmpPassword, setShowEmpPassword] = useState(false);
   const [empJobTitle, setEmpJobTitle] = useState("");
   const [empDepartment, setEmpDepartment] = useState("");
   const [empStatus, setEmpStatus] = useState("ACTIVE");
@@ -525,14 +529,25 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
               <div>
                 <label className="block text-[#ACACB8] font-semibold mb-1">Password *</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Min 6 chars"
-                  value={empPassword}
-                  onChange={(e) => setEmpPassword(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-pink-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showEmpPassword ? "text" : "password"}
+                    required
+                    placeholder="Min 6 chars"
+                    value={empPassword}
+                    onChange={(e) => setEmpPassword(e.target.value)}
+                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-3 pr-9 py-2 text-white focus:outline-none focus:border-pink-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEmpPassword(!showEmpPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    tabIndex={-1}
+                    aria-label={showEmpPassword ? "Hide password" : "Show password"}
+                  >
+                    {showEmpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">

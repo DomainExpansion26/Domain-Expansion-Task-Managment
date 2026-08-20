@@ -172,6 +172,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "qa.ticket.update",
     "qa.bug.view",
     "qa.bug.create",
+    "user.invite",
     "ai.use",
   ],
   QA: [

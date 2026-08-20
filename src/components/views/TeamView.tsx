@@ -24,10 +24,17 @@ interface TeamViewProps {
 }
 
 export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: TeamViewProps) {
+  const userRole = currentUser?.role || "MEMBER";
+  const isSuper = userRole === "SUPER_ADMIN";
+  const isHR = userRole === "HR_ADMIN";
+  const isPM = userRole === "MANAGER" || userRole === "PROJECT_MANAGER";
+  const isLead = userRole === "TEAM_LEAD";
+  const canInvite = isSuper || isHR || isPM || isLead;
+
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("TEAM_MEMBER");
+  const [inviteRole, setInviteRole] = useState("MEMBER");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -82,16 +89,18 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setStatusMsg(null);
-            setShowInviteModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)]"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Invite Member</span>
-        </button>
+        {canInvite && (
+          <button
+            onClick={() => {
+              setStatusMsg(null);
+              setShowInviteModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)] cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Invite Member</span>
+          </button>
+        )}
       </div>
 
       {/* Members Grid */}
@@ -275,15 +284,23 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Role</label>
+                <label className="block text-[#ACACB8] font-semibold mb-1">Invite as Role *</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none"
+                  className="w-full bg-[#1A1A1A] border border-[#FF6200]/50 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-[#FF6200]"
                 >
-                  <option value="TEAM_MEMBER">Team Member (Task execution & updates)</option>
-                  <option value="PROJECT_MANAGER">Project Manager (Task creation & project leads)</option>
-                  <option value="SUPER_ADMIN">Super Admin (Full organization control)</option>
+                  <option value="MEMBER">💻 Normal Member (Task execution & attendance)</option>
+                  {(isSuper || isHR || isPM) && (
+                    <option value="TEAM_LEAD">⚡ Team Lead (Team backlog & task distribution)</option>
+                  )}
+                  {(isSuper || isHR) && (
+                    <option value="MANAGER">👔 Project Manager (Project management & sprint leads)</option>
+                  )}
+                  <option value="QA">🧪 QA Engineer (Defects & verification)</option>
+                  {isSuper && (
+                    <option value="SUPER_ADMIN">👑 Super Admin (Full organization control)</option>
+                  )}
                 </select>
               </div>
 

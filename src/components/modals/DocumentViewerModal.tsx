@@ -10,11 +10,18 @@ import {
   AlertTriangle,
   Layers,
   Building,
-  User,
   Calendar,
   Eye,
   Maximize2,
   Minimize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Code,
+  FileCode,
+  FileSpreadsheet,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { formatDate, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
 import { isSuperAdmin } from "@/lib/permissions";
@@ -34,13 +41,73 @@ export function DocumentViewerModal({
 }: DocumentViewerModalProps) {
   const [warningMessage, setWarningMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [textContent, setTextContent] = useState<string | null>(null);
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+
+  const superAdmin = isSuperAdmin(currentUser?.role || currentUser);
+
+  const fileExt = document?.fileName?.split(".").pop()?.toLowerCase() || "";
+  const isImage = ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"].includes(fileExt);
+  const isPDF = fileExt === "pdf";
+  const isTextOrCode = [
+    "txt",
+    "md",
+    "markdown",
+    "json",
+    "js",
+    "ts",
+    "tsx",
+    "jsx",
+    "py",
+    "sql",
+    "html",
+    "css",
+    "scss",
+    "yaml",
+    "yml",
+    "csv",
+    "env",
+    "log",
+    "xml",
+    "sh",
+  ].includes(fileExt);
+
+  // Fetch readable text content for text/code/json/markdown documents
+  useEffect(() => {
+    if (!isOpen || !document || !document.fileUrl) {
+      setTextContent(null);
+      return;
+    }
+
+    if (isTextOrCode) {
+      setLoadingContent(true);
+      setContentError(null);
+      fetch(document.fileUrl)
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          const text = await res.text();
+          setTextContent(text);
+        })
+        .catch((err) => {
+          console.error("Failed to load text content:", err);
+          setContentError("Unable to fetch readable document stream directly. Displaying metadata view.");
+        })
+        .finally(() => {
+          setLoadingContent(false);
+        });
+    } else {
+      setTextContent(null);
+    }
+  }, [isOpen, document?.id, document?.fileUrl, isTextOrCode]);
 
   // Content Protection: Prevent Keyboard Copying, Inspect, Print, Save shortcuts
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+C, Ctrl+X, Ctrl+S, Ctrl+P, Ctrl+U, F12
+      // Ctrl+C, Ctrl+X, Ctrl+S, Ctrl+P, Ctrl+U, F12, DevTools
       if (
         (e.ctrlKey || e.metaKey) &&
         (e.key === "c" ||
@@ -60,7 +127,17 @@ export function DocumentViewerModal({
         setTimeout(() => setWarningMessage(""), 3500);
       }
 
-      if (e.key === "F12" || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c"))) {
+      if (
+        e.key === "F12" ||
+        ((e.ctrlKey || e.metaKey) &&
+          e.shiftKey &&
+          (e.key === "I" ||
+            e.key === "i" ||
+            e.key === "J" ||
+            e.key === "j" ||
+            e.key === "C" ||
+            e.key === "c"))
+      ) {
         e.preventDefault();
         e.stopPropagation();
         setWarningMessage("🔒 Developer Inspection is disabled for protected vault documents.");
@@ -73,12 +150,6 @@ export function DocumentViewerModal({
   }, [isOpen]);
 
   if (!isOpen || !document) return null;
-
-  const superAdmin = isSuperAdmin(currentUser);
-  const fileExt = document.fileName?.split(".").pop()?.toLowerCase() || "";
-  const isImage = ["jpg", "jpeg", "png", "webp", "gif", "svg"].includes(fileExt);
-  const isPDF = fileExt === "pdf";
-  const isCodeOrText = ["txt", "md", "json", "js", "ts", "tsx", "py", "sql", "html", "css", "yaml", "yml"].includes(fileExt);
 
   const watermarkText = `${currentUser?.email || "team"} • ${currentUser?.name || "Confidential"} • INTERNAL ONLY • ${new Date().toLocaleDateString()}`;
 
@@ -100,7 +171,7 @@ export function DocumentViewerModal({
     >
       <div
         className={`relative bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
-          isFullscreen ? "w-full h-full rounded-none" : "w-full max-w-5xl h-[88vh]"
+          isFullscreen ? "w-full h-full rounded-none" : "w-full max-w-6xl h-[90vh]"
         }`}
       >
         {/* Security Warning Toast */}
@@ -120,20 +191,61 @@ export function DocumentViewerModal({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-extrabold text-white truncate">{document.title}</h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#252525] border border-[#2E2E2E] text-[#FF8C42]">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#FF6200]/15 border border-[#FF6200]/30 text-[#FF6200]">
                   Phase {document.phaseNumber}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
                   {document.department}
                 </span>
               </div>
-              <p className="text-[11px] text-[#888898] truncate">{document.fileName} &bull; {(document.fileSize / 1024).toFixed(1)} KB</p>
+              <p className="text-[11px] text-[#888898] truncate">
+                {document.fileName} &bull; {(document.fileSize / 1024).toFixed(1)} KB
+                {document.phaseName && ` &bull; ${document.phaseName}`}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Zoom Controls for Images */}
+            {isImage && (
+              <div className="hidden sm:flex items-center gap-1 bg-[#252525] border border-[#2E2E2E] rounded-xl p-1">
+                <button
+                  onClick={() => setZoomLevel((prev) => Math.max(0.5, prev - 0.25))}
+                  className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#333] transition-colors"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] font-mono text-white px-1 font-bold">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <button
+                  onClick={() => setZoomLevel((prev) => Math.min(3, prev + 0.25))}
+                  className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#333] transition-colors"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setZoomLevel(1)}
+                  className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#333] transition-colors"
+                  title="Reset Zoom"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Read-Only Badge for Team Members */}
+            {!superAdmin && (
+              <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">
+                <Shield className="w-3.5 h-3.5" />
+                <span>Read-Only Protected</span>
+              </span>
+            )}
+
             {/* Super Admin Download Option */}
-            {superAdmin ? (
+            {superAdmin && (
               <a
                 href={document.fileUrl}
                 download={document.fileName}
@@ -145,13 +257,9 @@ export function DocumentViewerModal({
                 <Download className="w-3.5 h-3.5 text-[#FF6200]" />
                 <span className="hidden sm:inline">Download</span>
               </a>
-            ) : (
-              <span className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold">
-                <Shield className="w-3 h-3" />
-                <span>Read-Only Protection</span>
-              </span>
             )}
 
+            {/* Fullscreen Toggle */}
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
               className="p-2 rounded-xl text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
@@ -160,9 +268,10 @@ export function DocumentViewerModal({
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
 
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
+              className="p-2 rounded-xl text-[#888898] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
               title="Close Viewer"
             >
               <X className="w-4 h-4" />
@@ -178,7 +287,10 @@ export function DocumentViewerModal({
             style={{ transform: "rotate(-25deg) scale(1.3)" }}
           >
             {Array.from({ length: 35 }).map((_, idx) => (
-              <div key={idx} className="p-8 text-[11px] font-mono font-black text-slate-300 tracking-widest uppercase whitespace-nowrap">
+              <div
+                key={idx}
+                className="p-8 text-[11px] font-mono font-black text-slate-300 tracking-widest uppercase whitespace-nowrap"
+              >
                 {watermarkText}
               </div>
             ))}
@@ -186,44 +298,96 @@ export function DocumentViewerModal({
 
           {/* Document Content Frame */}
           <div className="relative w-full h-full flex items-center justify-center p-4 overflow-auto z-0 select-none">
+            {/* 1. Image Viewer */}
             {isImage && (
-              <div className="max-w-full max-h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center overflow-auto p-4">
                 <img
                   src={document.fileUrl}
                   alt={document.title}
                   draggable={false}
+                  style={{ transform: `scale(${zoomLevel})`, transition: "transform 0.2s ease-out" }}
                   className="max-w-full max-h-[75vh] object-contain rounded-2xl border border-[#2E2E2E] shadow-2xl pointer-events-none"
                 />
               </div>
             )}
 
+            {/* 2. PDF Viewer */}
             {isPDF && (
-              <iframe
-                src={`${document.fileUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-                title={document.title}
-                className="w-full h-full rounded-2xl border border-[#2E2E2E] bg-white shadow-2xl"
-              />
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-[#2E2E2E] bg-[#1A1A1A] shadow-2xl">
+                <iframe
+                  src={`${document.fileUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                  title={document.title}
+                  className="w-full h-full bg-white rounded-2xl"
+                />
+              </div>
             )}
 
-            {!isImage && !isPDF && (
+            {/* 3. Text / Markdown / Code / JSON Viewer */}
+            {isTextOrCode && (
+              <div className="w-full h-full max-w-5xl flex flex-col rounded-2xl border border-[#2E2E2E] bg-[#111111] overflow-hidden shadow-2xl">
+                {/* Code Top Header */}
+                <div className="px-4 py-2.5 bg-[#181818] border-b border-[#2E2E2E] flex items-center justify-between text-xs text-[#888898]">
+                  <div className="flex items-center gap-2 font-mono">
+                    <Code className="w-4 h-4 text-[#FF6200]" />
+                    <span className="text-white font-bold">{document.fileName}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#252525] uppercase text-[#FF8C42]">
+                      {fileExt}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono">
+                      {textContent ? `${textContent.split("\n").length} lines` : "Loading..."}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content Stream */}
+                <div className="flex-1 overflow-auto p-4 font-mono text-xs leading-relaxed text-slate-200 bg-[#0E0E0E]">
+                  {loadingContent ? (
+                    <div className="h-full flex items-center justify-center gap-2 text-[#888898]">
+                      <Loader2 className="w-5 h-5 animate-spin text-[#FF6200]" />
+                      <span>Reading secure document stream...</span>
+                    </div>
+                  ) : contentError ? (
+                    <div className="p-6 text-center text-amber-400 space-y-2">
+                      <AlertTriangle className="w-6 h-6 mx-auto" />
+                      <p>{contentError}</p>
+                      <p className="text-xs text-[#888898]">{document.description}</p>
+                    </div>
+                  ) : textContent !== null ? (
+                    <pre className="whitespace-pre-wrap break-words font-mono text-xs text-slate-200">
+                      {textContent}
+                    </pre>
+                  ) : (
+                    <div className="p-8 text-center text-[#888898]">No text content available.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Other Binary / Generic Files */}
+            {!isImage && !isPDF && !isTextOrCode && (
               <div className="max-w-xl w-full p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] space-y-5 text-center shadow-2xl">
                 <div className="p-4 rounded-2xl bg-[#FF6200]/10 border border-[#FF6200]/30 text-[#FF6200] w-16 h-16 mx-auto flex items-center justify-center">
                   <FileText className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-bold text-white">{document.title}</h3>
-                  <p className="text-xs text-[#888898]">{document.fileName} &bull; {(document.fileSize / 1024).toFixed(1)} KB</p>
+                  <p className="text-xs text-[#888898]">
+                    {document.fileName} &bull; {(document.fileSize / 1024).toFixed(1)} KB
+                  </p>
                 </div>
 
                 {document.description && (
-                  <p className="text-xs text-slate-300 italic bg-[#1A1A1A] p-4 rounded-xl border border-[#2E2E2E] text-left">
-                    &ldquo;{document.description}&rdquo;
-                  </p>
+                  <div className="text-left bg-[#1A1A1A] p-4 rounded-2xl border border-[#2E2E2E] space-y-1">
+                    <span className="text-[10px] font-mono uppercase text-[#888898] block">Description & Notes:</span>
+                    <p className="text-xs text-slate-200 leading-relaxed">{document.description}</p>
+                  </div>
                 )}
 
-                <div className="pt-2 flex items-center justify-center gap-2 text-emerald-400 text-xs font-bold">
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center gap-2">
                   <Shield className="w-4 h-4" />
-                  <span>Secure Document Verification Complete</span>
+                  <span className="font-semibold">Confidential Organization Document (Read-Only)</span>
                 </div>
               </div>
             )}
@@ -248,7 +412,11 @@ export function DocumentViewerModal({
               {document.uploadedBy?.avatarUrl ? (
                 <img src={document.uploadedBy.avatarUrl} alt="" className="w-4 h-4 rounded-full object-cover" />
               ) : (
-                <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(document.uploadedBy?.name)} text-[7px] font-bold text-white flex items-center justify-center uppercase`}>
+                <div
+                  className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(
+                    document.uploadedBy?.name
+                  )} text-[7px] font-bold text-white flex items-center justify-center uppercase`}
+                >
                   {getInitials(document.uploadedBy?.name)}
                 </div>
               )}
