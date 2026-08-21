@@ -61,8 +61,7 @@ function SuperAdminLoginForm() {
 
       const json = await res.json();
       if (json.success) {
-        // Successful Super Admin login -> go to dashboard
-        router.replace("/dashboard");
+        window.location.href = "/dashboard";
       } else {
         setError(json.error?.message || "Invalid credentials or unauthorized.");
       }

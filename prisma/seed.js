@@ -350,6 +350,40 @@ async function main() {
   });
 
   // 4. Create Core Tasks
+  const taskPROJ124 = await prisma.task.create({
+    data: {
+      taskKey: "PROJ-124",
+      title: "Implement User Registration API",
+      description: "Build robust REST API endpoint for user onboarding with email validation, password hashing, JWT session token generation, and role assignment.",
+      acceptanceCriteria: "1. Validates email format and unique constraint\n2. Hashes password using bcrypt\n3. Returns 409 Conflict if email already exists\n4. Generates secure JWT token\n5. Logs security audit trail",
+      projectId: projectWeb.id,
+      sprintId: sprint1.id,
+      taskType: "FEATURE",
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      reporterId: admin.id,
+      dueDate: new Date("2026-08-25"),
+      estimatedHours: 16,
+      loggedHours: 12,
+      position: 0,
+      assignees: { create: [{ userId: rahul.id }] },
+      subtasks: {
+        create: [
+          { title: "Create user validation schema with Zod", completed: true, assigneeId: rahul.id },
+          { title: "Implement bcrypt password hashing & Prisma user creation", completed: true, assigneeId: rahul.id },
+          { title: "Handle duplicate email exception handling (409 Conflict)", completed: false, assigneeId: rahul.id },
+          { title: "Write API integration test suite", completed: false, assigneeId: rahul.id },
+        ],
+      },
+      activities: {
+        create: [
+          { userId: admin.id, action: "CREATED", description: "Created task PROJ-124: Implement User Registration API" },
+          { userId: rahul.id, action: "STATUS_CHANGED", description: "Changed status to IN_PROGRESS" },
+        ],
+      },
+    },
+  });
+
   const task1 = await prisma.task.create({
     data: {
       taskKey: "WEB-101",
@@ -365,7 +399,7 @@ async function main() {
       dueDate: new Date("2026-08-18"),
       estimatedHours: 16,
       loggedHours: 16,
-      position: 0,
+      position: 1,
       assignees: { create: [{ userId: rahul.id }, { userId: amit.id }] },
       subtasks: {
         create: [
@@ -392,7 +426,7 @@ async function main() {
       dueDate: new Date("2026-08-20"),
       estimatedHours: 20,
       loggedHours: 12,
-      position: 1,
+      position: 2,
       assignees: { create: [{ userId: amit.id }] },
       subtasks: {
         create: [
@@ -419,7 +453,7 @@ async function main() {
       dueDate: new Date("2026-08-22"),
       estimatedHours: 18,
       loggedHours: 14,
-      position: 2,
+      position: 3,
       assignees: { create: [{ userId: neha.id }] },
     },
   });
@@ -433,7 +467,116 @@ async function main() {
     },
   });
 
-  // 6. Create QA Tickets & Bugs (Master Prompt Section 16-19)
+  // 6. Create QA Tickets & OpenProject/Plane QA Bugs Linked to Tasks
+  const bug058 = await prisma.qABug.create({
+    data: {
+      bugKey: "BUG-058",
+      title: "Registration API returns 500 error for duplicate email",
+      description: "When submitting duplicate email registration, the API crashes with unhandled database constraint exception instead of returning a clean 409 Conflict response.",
+      stepsToReproduce: "1. Send POST /api/auth/register with email 'user@example.com'\n2. Receive HTTP 201 Created\n3. Send identical POST /api/auth/register with same email 'user@example.com' or uppercase variant 'USER@EXAMPLE.COM'",
+      expectedResult: "HTTP 409 Conflict with JSON response: { success: false, error: { message: 'An account with this email address already exists.' } }",
+      actualResult: "HTTP 500 Internal Server Error returned with raw Prisma unique constraint violation dump (P2002).",
+      failureReason: "Duplicate email test case returns HTTP 500 with unhandled Prisma Unique constraint violation instead of 409 Conflict.",
+      environment: "Staging (v2.4.1)",
+      priority: "HIGH",
+      severity: "MAJOR",
+      status: "FAILED",
+      type: "BUG",
+      relatedTaskId: taskPROJ124.id,
+      projectId: projectWeb.id,
+      assignedToId: rahul.id,
+      createdById: sneha.id,
+      activities: {
+        create: [
+          { userId: sneha.id, action: "CREATED", description: "Raised bug BUG-058 linked to PROJ-124" },
+          { userId: rahul.id, action: "STATUS_CHANGED", description: "Changed status to READY_FOR_TESTING: Pushed fix for Prisma P2002 exception" },
+          { userId: sneha.id, action: "QA_FAILED", description: "QA verification FAILED: Duplicate email test case returns HTTP 500 with unhandled Prisma Unique constraint violation instead of 409 Conflict." },
+        ],
+      },
+    },
+  });
+
+  // Comments for BUG-058
+  await prisma.comment.create({
+    data: {
+      bugId: bug058.id,
+      authorId: sneha.id,
+      content: "Raised this bug after automated regression suite failed on duplicate user onboarding. Assigning to @Rahul Sharma.",
+      mentions: JSON.stringify(["Rahul Sharma"]),
+    },
+  });
+
+  await prisma.comment.create({
+    data: {
+      bugId: bug058.id,
+      authorId: rahul.id,
+      content: "Added try/catch block around prisma.user.create. Deployed fix to staging environment. @Sneha Patel please re-test.",
+      mentions: JSON.stringify(["Sneha Patel"]),
+    },
+  });
+
+  await prisma.comment.create({
+    data: {
+      bugId: bug058.id,
+      authorId: sneha.id,
+      content: "Retested with duplicate email test suite. The endpoint still throws 500 on uppercase email variants like `USER@EXAMPLE.COM` because email lowercasing middleware is missing. Marking as FAILED. @Rahul Sharma please sanitize email casing before lookup.",
+      mentions: JSON.stringify(["Rahul Sharma"]),
+    },
+  });
+
+  const bug061 = await prisma.qABug.create({
+    data: {
+      bugKey: "BUG-061",
+      title: "JWT Bearer header case sensitivity issue",
+      description: "Authorization header parser only accepts lowercase 'bearer <token>' and rejects standard 'Bearer <token>'.",
+      stepsToReproduce: "1. Send request with header 'Authorization: Bearer <token>'\n2. Server returns 401 Unauthorized",
+      expectedResult: "Header parser should be case-insensitive ('Bearer' or 'bearer')",
+      actualResult: "401 Unauthorized returned when using capital 'Bearer'",
+      environment: "Staging (v2.4.1)",
+      priority: "MEDIUM",
+      severity: "MEDIUM",
+      status: "READY_FOR_TESTING",
+      type: "BUG",
+      relatedTaskId: taskPROJ124.id,
+      projectId: projectWeb.id,
+      assignedToId: rahul.id,
+      createdById: sneha.id,
+      activities: {
+        create: [
+          { userId: sneha.id, action: "CREATED", description: "Raised bug BUG-061 linked to PROJ-124" },
+          { userId: rahul.id, action: "STATUS_CHANGED", description: "Changed status to READY_FOR_TESTING: Made regex case insensitive" },
+        ],
+      },
+    },
+  });
+
+  const bug067 = await prisma.qABug.create({
+    data: {
+      bugKey: "BUG-067",
+      title: "Input sanitization fails on script tags in profile bio",
+      description: "Bio field does not sanitize HTML entities, potential stored XSS vulnerability.",
+      stepsToReproduce: "1. Update profile bio with <script>alert(1)</script>\n2. View profile page",
+      expectedResult: "Tags stripped or HTML escaped",
+      actualResult: "Tags rendered raw in DOM",
+      environment: "Staging (v2.4.1)",
+      priority: "CRITICAL",
+      severity: "CRITICAL",
+      status: "PASSED",
+      type: "BUG",
+      relatedTaskId: taskPROJ124.id,
+      projectId: projectWeb.id,
+      assignedToId: rahul.id,
+      createdById: sneha.id,
+      activities: {
+        create: [
+          { userId: sneha.id, action: "CREATED", description: "Raised bug BUG-067 linked to PROJ-124" },
+          { userId: rahul.id, action: "STATUS_CHANGED", description: "Changed status to READY_FOR_TESTING" },
+          { userId: sneha.id, action: "STATUS_CHANGED", description: "Changed status to PASSED: Verified DOMPurify escapes all script tags" },
+        ],
+      },
+    },
+  });
+
   const qaTicket1 = await prisma.qATicket.create({
     data: {
       ticketKey: "WEB-QA-101",
@@ -444,7 +587,7 @@ async function main() {
       status: "READY_FOR_TESTING",
       priority: "CRITICAL",
       projectId: projectWeb.id,
-      relatedTaskId: task1.id,
+      relatedTaskId: taskPROJ124.id,
       assignedToId: neha.id,
       createdById: priya.id,
     },
@@ -457,7 +600,7 @@ async function main() {
       description: "1. Open /signup\n2. Submit account form\nExpected: Created with role MEMBER\nActual: Verified role is MEMBER in backend.",
       priority: "CRITICAL",
       severity: "CRITICAL",
-      status: "FIXED",
+      status: "PASSED",
       ticketId: qaTicket1.id,
       projectId: projectWeb.id,
       assignedToId: amit.id,
@@ -586,6 +729,28 @@ async function main() {
   });
 
   // 9. Create Notifications
+  await prisma.notification.create({
+    data: {
+      userId: rahul.id,
+      title: "BUG-058 failed QA testing",
+      message: "BUG-058 failed QA testing. Please review the QA comments: Duplicate email test case returns HTTP 500 with unhandled Prisma Unique constraint violation.",
+      type: "BUG_FAILED",
+      link: "/tasks/PROJ-124?bug=BUG-058",
+      senderUserId: sneha.id,
+    },
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: sneha.id,
+      title: "BUG-061 is Ready for Testing",
+      message: "Rahul Sharma marked BUG-061 (JWT Bearer header case sensitivity issue) as Ready for Testing.",
+      type: "BUG_READY_FOR_TESTING",
+      link: "/tasks/PROJ-124?bug=BUG-061",
+      senderUserId: rahul.id,
+    },
+  });
+
   await prisma.notification.create({
     data: {
       userId: amit.id,

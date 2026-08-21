@@ -5,8 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Lock, Mail, ArrowRight, AlertCircle, UserPlus, CheckCircle2, Shield, Clock, Eye, EyeOff } from "lucide-react";
 
+import { useAppDispatch } from "@/store/hooks";
+import { setCredentials } from "@/store/slices/authSlice";
+
 function LoginForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
   const emailParam = searchParams.get("email");
@@ -25,6 +29,13 @@ function LoginForm() {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data?.user) {
+          dispatch(
+            setCredentials({
+              user: json.data.user,
+              token: "active-session",
+              permissions: json.data.permissions || [],
+            })
+          );
           router.replace("/dashboard");
         } else {
           setCheckingAuth(false);
@@ -33,7 +44,7 @@ function LoginForm() {
       .catch(() => {
         setCheckingAuth(false);
       });
-  }, [router]);
+  }, [router, dispatch]);
 
   useEffect(() => {
     if (emailParam) {
@@ -64,9 +75,15 @@ function LoginForm() {
       });
 
       const json = await res.json();
-      if (json.success) {
-        // Use router.replace to avoid login in back history
-        router.replace("/dashboard");
+      if (json.success && json.data) {
+        dispatch(
+          setCredentials({
+            user: json.data.user,
+            token: json.data.token,
+            portal: "MAIN",
+          })
+        );
+        window.location.href = "/dashboard";
       } else {
         setError(json.error?.message || "Invalid credentials.");
       }

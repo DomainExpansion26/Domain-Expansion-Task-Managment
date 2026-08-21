@@ -26,15 +26,23 @@ import {
   FileText,
   Image as ImageIcon,
   Timer,
+  Bug,
+  ShieldCheck,
+  ShieldAlert,
+  ChevronRight,
+  GitBranch,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
+import { RaiseBugModal } from "@/components/modals/RaiseBugModal";
+import { BugDetailModal } from "@/components/qa/BugDetailModal";
 
 interface TaskDetailModalProps {
   taskKey: string;
   isOpen: boolean;
   onClose: () => void;
   onTaskUpdated?: () => void;
+  onSelectTask?: (taskKey: string) => void;
   users: any[];
   currentUser: any;
 }
@@ -44,6 +52,7 @@ export function TaskDetailModal({
   isOpen,
   onClose,
   onTaskUpdated,
+  onSelectTask,
   users,
   currentUser,
 }: TaskDetailModalProps) {
@@ -61,6 +70,11 @@ export function TaskDetailModal({
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isRelationsOpen, setIsRelationsOpen] = useState(false);
+
+  // QA & Defect Modals State
+  const [isRaiseBugOpen, setIsRaiseBugOpen] = useState(false);
+  const [selectedBugKey, setSelectedBugKey] = useState<string | null>(null);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
 
   // Time Logging Modal State
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
@@ -485,6 +499,156 @@ export function TaskDetailModal({
               </div>
             </div>
 
+            {/* QA & BUGS SECTION (Dedicated OpenProject/Plane-style Defect Management) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] space-y-4">
+              {/* QA Section Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#2E2E2E]">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400">
+                    <Bug className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <span>QA & Bugs</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#252525] text-red-400 font-bold">
+                        {task.qaBugs?.length || 0} Total
+                      </span>
+                    </h3>
+                    <p className="text-[10px] text-[#888898]">
+                      QA defect lifecycle, developer resolution, and verification status
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsRaiseBugOpen(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-red-600/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Raise Bug</span>
+                </button>
+              </div>
+
+              {/* Bug Summary Metric Chips */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between">
+                  <div className="text-[10px] text-[#888898] uppercase font-mono">Open Bugs</div>
+                  <div className="text-xs font-black text-amber-400 font-mono">
+                    {task.bugStats?.open ?? (task.qaBugs?.filter((b: any) => b.status === "OPEN" || b.status === "ASSIGNED" || b.status === "IN_PROGRESS").length || 0)}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between">
+                  <div className="text-[10px] text-[#888898] uppercase font-mono">Ready for Test</div>
+                  <div className="text-xs font-black text-purple-400 font-mono">
+                    {task.bugStats?.readyForTesting ?? (task.qaBugs?.filter((b: any) => b.status === "READY_FOR_TESTING").length || 0)}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between">
+                  <div className="text-[10px] text-[#888898] uppercase font-mono">Passed</div>
+                  <div className="text-xs font-black text-emerald-400 font-mono">
+                    {task.bugStats?.passed ?? (task.qaBugs?.filter((b: any) => b.status === "PASSED" || b.status === "CLOSED").length || 0)}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between">
+                  <div className="text-[10px] text-[#888898] uppercase font-mono">Failed</div>
+                  <div className="text-xs font-black text-red-400 font-mono">
+                    {task.bugStats?.failed ?? (task.qaBugs?.filter((b: any) => b.status === "FAILED" || b.status === "REOPENED").length || 0)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bug List Hierarchy */}
+              {(!task.qaBugs || task.qaBugs.length === 0) ? (
+                <div className="py-6 text-center text-xs text-[#888898] bg-[#181818]/40 rounded-xl border border-dashed border-[#2E2E2E]">
+                  No QA bugs raised against this task yet. Click "+ Raise Bug" to log a defect.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Tree Hierarchy Representation */}
+                  <div className="px-3 py-1.5 rounded-lg bg-[#0F0F0F] border border-[#2E2E2E] text-[11px] font-mono text-[#888898] flex items-center gap-2">
+                    <GitBranch className="w-3.5 h-3.5 text-[#FF8C42]" />
+                    <span className="text-white font-bold">{task.taskKey}</span>
+                    <span>└── QA Bugs:</span>
+                    <span className="text-[#ACACB8]">
+                      {task.qaBugs.map((b: any) => `${b.bugKey} (${b.status})`).join(" • ")}
+                    </span>
+                  </div>
+
+                  {/* Bug List Cards */}
+                  <div className="space-y-2">
+                    {task.qaBugs.map((b: any) => (
+                      <div
+                        key={b.id}
+                        onClick={() => setSelectedBugKey(b.bugKey)}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer hover:scale-[1.01] ${
+                          b.status === "FAILED"
+                            ? "bg-red-950/15 border-red-500/40 hover:border-red-500 shadow-sm"
+                            : b.status === "READY_FOR_TESTING"
+                            ? "bg-purple-950/15 border-purple-500/40 hover:border-purple-500 shadow-sm"
+                            : b.status === "PASSED"
+                            ? "bg-emerald-950/15 border-emerald-500/40 hover:border-emerald-500"
+                            : "bg-[#1A1A1A] border-[#2E2E2E] hover:border-[#FF6200]/50"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="font-mono text-xs font-black text-red-400">
+                              {b.bugKey}
+                            </span>
+                            <span className="text-xs font-bold text-white truncate">
+                              {b.title}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityColor(b.priority)}`}>
+                              {b.priority}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
+                                b.status === "FAILED"
+                                  ? "bg-red-500/20 border-red-500/40 text-red-400"
+                                  : b.status === "READY_FOR_TESTING"
+                                  ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                                  : b.status === "PASSED"
+                                  ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                                  : "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                              }`}
+                            >
+                              {b.status.replace(/_/g, " ")}
+                            </span>
+                            <ChevronRight className="w-3.5 h-3.5 text-[#888898]" />
+                          </div>
+                        </div>
+
+                        {/* Assignee & Reporter line */}
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#2E2E2E]/60 text-[10px] text-[#888898]">
+                          <div className="flex items-center gap-3">
+                            <span>
+                              Assigned: <strong className="text-slate-300">{b.assignedTo?.name || "Unassigned"}</strong>
+                            </span>
+                            <span>&bull;</span>
+                            <span>
+                              Raised by: <strong className="text-slate-300">{b.createdBy?.name || "QA"}</strong>
+                            </span>
+                          </div>
+                          {b.failureReason && (
+                            <span className="text-red-400 font-semibold truncate max-w-[200px]">
+                              Reason: {b.failureReason}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Bottom Tabs: Comments, Activity History & Attachments */}
             <div className="pt-4 border-t border-[#2E2E2E] space-y-4">
               <div className="flex items-center gap-3 border-b border-[#2E2E2E] pb-2 text-xs font-semibold">
@@ -557,12 +721,58 @@ export function TaskDetailModal({
                     ))}
                   </div>
 
-                  <form onSubmit={handleAddComment} className="flex gap-2 pt-2">
+                  {/* Comment input with @mention autocomplete */}
+                  <form onSubmit={handleAddComment} className="relative flex gap-2 pt-2">
+                    {mentionQuery !== null && users.filter((u) => u.name.toLowerCase().includes((mentionQuery || "").toLowerCase())).length > 0 && (
+                      <div className="absolute bottom-full mb-2 left-0 w-64 bg-[#1E1E1E] border border-[#333] rounded-xl shadow-2xl p-1 z-30 space-y-0.5 animate-fade-in">
+                        <div className="px-2.5 py-1 text-[10px] font-mono text-[#888898] uppercase">Mention Member</div>
+                        {users
+                          .filter((u) => u.name.toLowerCase().includes((mentionQuery || "").toLowerCase()))
+                          .slice(0, 5)
+                          .map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                const lastAtPos = newComment.lastIndexOf("@");
+                                if (lastAtPos !== -1) {
+                                  const before = newComment.substring(0, lastAtPos);
+                                  setNewComment(`${before}@${u.name} `);
+                                  setMentionQuery(null);
+                                }
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-left text-xs text-white"
+                            >
+                              <div className="w-5 h-5 rounded-full bg-[#FF6200] text-[9px] font-bold flex items-center justify-center">
+                                {getInitials(u.name)}
+                              </div>
+                              <span className="font-semibold">{u.name}</span>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+
                     <input
                       type="text"
                       placeholder="Add a comment... (Type @Name to mention)"
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewComment(val);
+                        const lastAtPos = val.lastIndexOf("@");
+                        if (lastAtPos !== -1 && lastAtPos === val.length - 1) {
+                          setMentionQuery("");
+                        } else if (lastAtPos !== -1) {
+                          const textAfterAt = val.substring(lastAtPos + 1);
+                          if (!textAfterAt.includes(" ") && textAfterAt.length <= 15) {
+                            setMentionQuery(textAfterAt);
+                          } else {
+                            setMentionQuery(null);
+                          }
+                        } else {
+                          setMentionQuery(null);
+                        }
+                      }}
                       className="flex-1 bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-4 py-2.5 text-xs text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]/60"
                     />
                     <button
@@ -927,6 +1137,47 @@ export function TaskDetailModal({
           taskKey={task.taskKey}
           isOpen={isRelationsOpen}
           onClose={() => setIsRelationsOpen(false)}
+        />
+      )}
+
+      {/* Raise Bug Modal against this task */}
+      <RaiseBugModal
+        isOpen={isRaiseBugOpen}
+        onClose={() => setIsRaiseBugOpen(false)}
+        parentTask={task ? {
+          id: task.id,
+          taskKey: task.taskKey,
+          title: task.title,
+          projectId: task.projectId,
+          projectName: task.project?.name,
+          assignees: task.assignees,
+        } : null}
+        users={users}
+        currentUser={currentUser}
+        onBugCreated={() => {
+          fetchTaskDetails();
+          if (onTaskUpdated) onTaskUpdated();
+        }}
+      />
+
+      {/* Bug Detail Modal for clicked bug */}
+      {selectedBugKey && (
+        <BugDetailModal
+          bugKey={selectedBugKey}
+          isOpen={Boolean(selectedBugKey)}
+          onClose={() => setSelectedBugKey(null)}
+          onSelectTask={(key) => {
+            setSelectedBugKey(null);
+            if (key !== task.taskKey && onSelectTask) {
+              // already on task
+            }
+          }}
+          onBugUpdated={() => {
+            fetchTaskDetails();
+            if (onTaskUpdated) onTaskUpdated();
+          }}
+          users={users}
+          currentUser={currentUser}
         />
       )}
     </div>

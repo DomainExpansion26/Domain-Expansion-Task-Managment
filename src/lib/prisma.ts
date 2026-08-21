@@ -30,26 +30,31 @@ export async function withDbRetry<T>(fn: () => Promise<T>, retries = 4, delayMs 
       return await fn();
     } catch (err: any) {
       lastError = err;
-      const msg = err?.message || "";
-      const code = err?.code || "";
+      const msg = String(err?.message || "");
+      const code = String(err?.code || "");
       const isTransient =
         code === "P1001" ||
         code === "P1002" ||
         code === "P1008" ||
         code === "P1017" ||
         code === "P2024" ||
-        msg.includes("Can't reach database server") ||
-        msg.includes("connection closed") ||
-        msg.includes("Connection terminated") ||
-        msg.includes("timeout") ||
-        msg.includes("ETIMEDOUT") ||
-        msg.includes("ECONNRESET") ||
-        msg.includes("wsasend") ||
-        msg.includes("connection refused") ||
-        msg.includes("closed by the remote host");
+        msg.toLowerCase().includes("can't reach database server") ||
+        msg.toLowerCase().includes("connection closed") ||
+        msg.toLowerCase().includes("connection terminated") ||
+        msg.toLowerCase().includes("closed") ||
+        msg.toLowerCase().includes("timeout") ||
+        msg.toLowerCase().includes("etimedout") ||
+        msg.toLowerCase().includes("econnreset") ||
+        msg.toLowerCase().includes("wsasend") ||
+        msg.toLowerCase().includes("connection refused") ||
+        msg.toLowerCase().includes("closed by the remote host") ||
+        msg.toLowerCase().includes("kind: closed");
 
       if (isTransient && i < retries - 1) {
-        console.warn(`[Prisma Retry] Neon database wake-up / transient error on attempt ${i + 1}/${retries}. Retrying in ${delayMs * (i + 1)}ms...`);
+        console.warn(`[Prisma Retry] Database connection drop or wake-up (attempt ${i + 1}/${retries}). Reconnecting in ${delayMs * (i + 1)}ms...`);
+        try {
+          await prisma.$connect();
+        } catch {}
         await new Promise((res) => setTimeout(res, delayMs * (i + 1)));
         continue;
       }

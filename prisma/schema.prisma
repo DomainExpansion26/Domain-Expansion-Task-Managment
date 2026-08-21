@@ -44,6 +44,7 @@ model User {
   comments         Comment[]
   activities       Activity[]
   notifications    Notification[]
+  sentNotifications Notification[] @relation("NotificationSender")
   notificationPref NotificationPreference?
   aiConversations  AIConversation[]
   aiUsages         AIUsage[]
@@ -224,6 +225,7 @@ model Task {
   attachments        Attachment[]
   activities         Activity[]
   qaTickets          QATicket[]
+  qaBugs             QABug[]        @relation("TaskQABugs")
 
   relationsAsSource  TaskRelation[] @relation("SourceTask")
   relationsAsTarget  TaskRelation[] @relation("TargetTask")
@@ -264,25 +266,36 @@ model QATicket {
 }
 
 model QABug {
-  id           String    @id @default(cuid())
-  bugKey       String    @unique // e.g. BUG-001
-  title        String
-  description  String
-  priority     String    @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
-  severity     String    @default("MEDIUM") // CRITICAL, MAJOR, MEDIUM, MINOR, TRIVIAL
-  status       String    @default("OPEN") // OPEN, IN_PROGRESS, READY_FOR_TESTING, TEST_FAILED, FIXED, CLOSED
-  startDate    DateTime?
-  endDate      DateTime?
-  ticketId     String
-  ticket       QATicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  projectId    String
-  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignedToId String?
-  assignedTo   User?     @relation("QABugAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-  createdById  String
-  createdBy    User      @relation("QABugReporter", fields: [createdById], references: [id], onDelete: Cascade)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String       @id @default(cuid())
+  bugKey           String       @unique // e.g. BUG-058
+  title            String
+  description      String
+  type             String       @default("Bug")
+  priority         String       @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  severity         String       @default("MEDIUM") // CRITICAL, MAJOR, MEDIUM, MINOR, TRIVIAL
+  status           String       @default("OPEN") // OPEN, ASSIGNED, IN_PROGRESS, READY_FOR_TESTING, IN_TESTING, PASSED, FAILED, REOPENED, CLOSED
+  environment      String?      @default("Production") // Production, Staging, QA, Development
+  stepsToReproduce String?
+  expectedResult   String?
+  actualResult     String?
+  failureReason    String?
+  startDate        DateTime?
+  endDate          DateTime?
+  ticketId         String?
+  ticket           QATicket?    @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  relatedTaskId    String?
+  relatedTask      Task?        @relation("TaskQABugs", fields: [relatedTaskId], references: [id], onDelete: SetNull)
+  projectId        String
+  project          Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedToId     String?
+  assignedTo       User?        @relation("QABugAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdById      String
+  createdBy        User         @relation("QABugReporter", fields: [createdById], references: [id], onDelete: Cascade)
+  comments         Comment[]
+  activities       Activity[]
+  attachments      Attachment[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model TaskAssignee {
@@ -309,11 +322,14 @@ model Subtask {
 
 model Comment {
   id              String       @id @default(cuid())
-  taskId          String
-  task            Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId          String?
+  task            Task?        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bugId           String?
+  bug             QABug?       @relation(fields: [bugId], references: [id], onDelete: Cascade)
   authorId        String
   author          User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   content         String
+  mentions        String?
   parentCommentId String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -331,6 +347,8 @@ model Attachment {
   project      Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   taskId       String?
   task         Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bugId        String?
+  bug          QABug?    @relation(fields: [bugId], references: [id], onDelete: Cascade)
   commentId    String?
   comment      Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
   uploadedById String?
@@ -350,15 +368,19 @@ model Label {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  message   String
-  type      String   @default("SYSTEM") // TASK_ASSIGNED, TASK_UPDATED, MENTION, COMMENT, DUE_DATE, OVERDUE, INVITATION, LEAVE_UPDATE, QA_UPDATE, SYSTEM
-  link      String?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  senderUserId String?
+  sender       User?    @relation("NotificationSender", fields: [senderUserId], references: [id], onDelete: SetNull)
+  title        String
+  message      String
+  type         String   @default("SYSTEM") // TASK_ASSIGNED, TASK_UPDATED, BUG_ASSIGNED, BUG_CREATED, BUG_STATUS_CHANGED, BUG_READY_FOR_TESTING, BUG_FAILED, BUG_PASSED, MENTION, COMMENT, DUE_DATE, OVERDUE, INVITATION, LEAVE_UPDATE, QA_UPDATE, SYSTEM
+  link         String?
+  taskId       String?
+  bugId        String?
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
 }
 
 model NotificationPreference {
@@ -383,15 +405,18 @@ model Activity {
   id           String   @id @default(cuid())
   taskId       String?
   task         Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bugId        String?
+  bug          QABug?   @relation(fields: [bugId], references: [id], onDelete: Cascade)
   projectId    String?
   project      Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action       String   // CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, ATTACHMENT_ADDED, SUBTASK_ADDED, QA_TICKET_CREATED, QA_BUG_LOGGED
+  action       String   // CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, ATTACHMENT_ADDED, SUBTASK_ADDED, QA_TICKET_CREATED, QA_BUG_LOGGED, QA_BUG_FAILED, QA_BUG_PASSED, QA_BUG_READY_FOR_TESTING
   fieldChanged String?
   oldValue     String?
   newValue     String?
   description  String
+  metadata     String?
   createdAt    DateTime @default(now())
 }
 

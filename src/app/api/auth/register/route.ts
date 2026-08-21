@@ -39,15 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+    const cleanPassword = password.trim();
+
+    if (cleanPassword.length < 6) {
       return NextResponse.json(
         { success: false, error: { code: "INVALID_PASSWORD", message: "Password must be at least 6 characters." } },
         { status: 400 }
       );
     }
-
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanName = name.trim();
 
     // Check if user already exists with retry
     const existing = await withDbRetry(() =>
@@ -65,12 +66,12 @@ export async function POST(request: NextRequest) {
 
     const userCount = await withDbRetry(() => prisma.user.count());
     let assignedRole = "MEMBER";
-    let hrmsStatus = "PENDING_ACTIVATION";
-    let defaultDesignation = jobTitle?.trim() || "Team Member";
-    let defaultDepartment = department?.trim() || "General";
+    let hrmsStatus = "ACTIVE";
+    let defaultDesignation = jobTitle?.trim() || "Software Engineer";
+    let defaultDepartment = department?.trim() || "Engineering";
 
     const normPortal = portal?.trim()?.toUpperCase()?.replace(/[^A-Z]/g, "_");
-    if (normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
+    if (userCount === 0 || normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
       assignedRole = "SUPER_ADMIN";
       hrmsStatus = "ACTIVE";
       defaultDesignation = jobTitle?.trim() || "Super Administrator";
@@ -83,10 +84,10 @@ export async function POST(request: NextRequest) {
     } else {
       // Normal Member registration
       assignedRole = "MEMBER";
-      hrmsStatus = "PENDING_ACTIVATION";
+      hrmsStatus = "ACTIVE";
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(cleanPassword, 10);
     const uniqueEmpId = `EMP-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
 
     // Create User with retry

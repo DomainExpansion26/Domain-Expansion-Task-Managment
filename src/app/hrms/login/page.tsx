@@ -5,8 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Clock, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, ShieldAlert, UserPlus, Eye, EyeOff } from "lucide-react";
 
+import { useAppDispatch } from "@/store/hooks";
+import { setCredentials } from "@/store/slices/authSlice";
+
 function HRMSLoginForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
   const emailParam = searchParams.get("email");
@@ -24,6 +28,14 @@ function HRMSLoginForm() {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data?.user) {
+          dispatch(
+            setCredentials({
+              user: json.data.user,
+              token: "active-session",
+              permissions: json.data.permissions || [],
+              portal: "HRMS",
+            })
+          );
           if (json.data.user.isHRMSActive) {
             router.replace("/hrms/dashboard");
           } else {
@@ -36,7 +48,7 @@ function HRMSLoginForm() {
       .catch(() => {
         setCheckingAuth(false);
       });
-  }, [router]);
+  }, [router, dispatch]);
 
   useEffect(() => {
     if (emailParam) setEmail(emailParam);
@@ -66,9 +78,15 @@ function HRMSLoginForm() {
       });
 
       const json = await res.json();
-      if (json.success) {
-        // Active employee authenticated -> enter HRMS dashboard
-        router.replace("/hrms/dashboard");
+      if (json.success && json.data) {
+        dispatch(
+          setCredentials({
+            user: json.data.user,
+            token: json.data.token,
+            portal: "HRMS",
+          })
+        );
+        window.location.href = "/hrms/dashboard";
       } else {
         if (json.error?.code === "HRMS_NOT_ACTIVATED") {
           setNotActivated(true);

@@ -47,6 +47,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           include: { user: true },
           orderBy: { createdAt: "desc" },
         },
+        qaBugs: {
+          include: {
+            assignedTo: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, department: true } },
+            createdBy: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, department: true } },
+            comments: { include: { author: true }, orderBy: { createdAt: "asc" } },
+            activities: { include: { user: true }, orderBy: { createdAt: "desc" } },
+          },
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 
@@ -57,11 +66,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    const bugs = task.qaBugs || [];
+    const bugStats = {
+      total: bugs.length,
+      open: bugs.filter((b) => b.status === "OPEN" || b.status === "ASSIGNED" || b.status === "IN_PROGRESS").length,
+      readyForTesting: bugs.filter((b) => b.status === "READY_FOR_TESTING").length,
+      inTesting: bugs.filter((b) => b.status === "IN_TESTING").length,
+      passed: bugs.filter((b) => b.status === "PASSED" || b.status === "CLOSED").length,
+      failed: bugs.filter((b) => b.status === "FAILED" || b.status === "REOPENED").length,
+    };
+
     return NextResponse.json({
       success: true,
       data: {
         ...task,
         assignees: task.assignees.map((a) => a.user),
+        bugStats,
       },
     });
   } catch (error: any) {

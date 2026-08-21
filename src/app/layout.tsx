@@ -15,6 +15,8 @@ export const viewport: Viewport = {
   themeColor: "#0D0D0D",
 };
 
+import { StoreProvider } from "@/store/StoreProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -31,7 +33,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#0D0D0D] text-[#F3F4F6] antialiased selection:bg-[#FF6200] selection:text-white">
-        {children}
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );

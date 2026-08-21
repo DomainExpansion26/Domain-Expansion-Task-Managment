@@ -9,6 +9,8 @@ import { DevMailboxModal } from "@/components/layout/DevMailboxModal";
 import { DXAIAssistant } from "@/components/ai/DXAIAssistant";
 import { TaskCreateModal } from "@/components/tasks/TaskCreateModal";
 import { TaskDetailModal } from "@/components/tasks/TaskDetailModal";
+import { BugDetailModal } from "@/components/qa/BugDetailModal";
+import { RaiseBugModal } from "@/components/modals/RaiseBugModal";
 import { DashboardView } from "@/components/views/DashboardView";
 import { MyWorkView } from "@/components/views/MyWorkView";
 import { ProjectsView } from "@/components/views/ProjectsView";
@@ -24,24 +26,51 @@ import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
 import { DocumentsView } from "@/components/views/DocumentsView";
 import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 
+import { useAppDispatch, useAppSelector, useAuth, useUI, useTasks, useNotifications } from "@/store/hooks";
+import { setCredentials, logout as reduxLogout } from "@/store/slices/authSlice";
+import { setActiveTab as setReduxTab } from "@/store/slices/uiSlice";
+import { setTasks as setReduxTasks, updateTaskStatus as updateReduxTaskStatus } from "@/store/slices/tasksSlice";
+import { setNotifications as setReduxNotifications, markAsRead as markReduxRead, markAllAsRead as markReduxAllRead } from "@/store/slices/notificationsSlice";
+import { clearAllDXStorage } from "@/store/localStorage";
+
 export default function Home() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [authLoading, setAuthLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const authState = useAuth();
+  const uiState = useUI();
+  const tasksState = useTasks();
+  const notificationsState = useNotifications();
+
+  const [currentUser, setCurrentUser] = useState<any | null>(authState.user || null);
+  const [permissions, setPermissions] = useState<string[]>(authState.permissions || []);
+  const [authLoading, setAuthLoading] = useState(!authState.user);
 
   // App Data
-  const [currentTab, setCurrentTab] = useState<string>("dashboard");
-  const [tasks, setTasks] = useState<any[]>([]);
+  const currentTab = uiState.activeTab || "dashboard";
+  const setCurrentTab = (tab: string) => dispatch(setReduxTab(tab));
+
+  const tasks = tasksState.items || [];
+  const setTasks = (val: any) => {
+    if (typeof val === "function") {
+      const updated = val(tasksState.items);
+      dispatch(setReduxTasks(updated));
+    } else {
+      dispatch(setReduxTasks(val));
+    }
+  };
+
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [sprints, setSprints] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  
+  const notifications = notificationsState.items || [];
+  const unreadCount = notificationsState.unreadCount || 0;
 
   // Modals & Panels
   const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(null);
+  const [selectedBugKey, setSelectedBugKey] = useState<string | null>(null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isCreateBugOpen, setIsCreateBugOpen] = useState(false);
   const [createTaskStatus, setCreateTaskStatus] = useState("TODO");
   const [createTaskProjectId, setCreateTaskProjectId] = useState<string | undefined>(undefined);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -57,18 +86,27 @@ export default function Home() {
       if (json.success && json.data?.user) {
         setCurrentUser(json.data.user);
         setPermissions(json.data.permissions || []);
+        dispatch(
+          setCredentials({
+            user: json.data.user,
+            token: "active-session",
+            permissions: json.data.permissions || [],
+          })
+        );
         return json.data.user;
       } else {
         window.location.replace("/login");
         return null;
       }
     } catch {
-      window.location.replace("/login");
-      return null;
+      if (!authState.user) {
+        window.location.replace("/login");
+      }
+      return authState.user;
     } finally {
       setAuthLoading(false);
     }
-  }, []);
+  }, [dispatch, authState.user]);
 
   // 2. Fetch App Data
   const fetchAppData = useCallback(async () => {
@@ -89,18 +127,17 @@ export default function Home() {
         notifsRes.json(),
       ]);
 
-      if (tasksJson.success) setTasks(tasksJson.data);
+      if (tasksJson.success) dispatch(setReduxTasks(tasksJson.data));
       if (projectsJson.success) setProjects(projectsJson.data);
       if (usersJson.success) setUsers(usersJson.data);
       if (sprintsJson.success) setSprints(sprintsJson.data);
       if (notifsJson.success) {
-        setNotifications(notifsJson.data.notifications || []);
-        setUnreadCount(notifsJson.data.unreadCount || 0);
+        dispatch(setReduxNotifications(notifsJson.data.notifications || []));
       }
     } catch (err) {
       console.error("Failed to load platform data:", err);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     checkAuth().then((user) => {
@@ -141,9 +178,7 @@ export default function Home() {
 
   // 4. Quick Actions
   const handleStatusChange = async (taskKey: string, newStatus: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.taskKey === taskKey ? { ...t, status: newStatus } : t))
-    );
+    dispatch(updateReduxTaskStatus({ id: taskKey, status: newStatus }));
 
     try {
       const res = await fetch(`/api/tasks/${taskKey}`, {
@@ -161,6 +196,11 @@ export default function Home() {
   };
 
   const handleMarkNotificationsRead = async (id?: string, markAll?: boolean) => {
+    if (markAll) {
+      dispatch(markReduxAllRead());
+    } else if (id) {
+      dispatch(markReduxRead(id));
+    }
     try {
       await fetch("/api/notifications", {
         method: "PATCH",
@@ -179,7 +219,8 @@ export default function Home() {
     } catch {
       // Ignore network failure on logout
     }
-    // Hard replace to clean all in-memory client state and history
+    dispatch(reduxLogout());
+    clearAllDXStorage();
     window.location.replace("/login");
   };
 
@@ -252,7 +293,9 @@ export default function Home() {
         <MyWorkView
           tasks={tasks}
           currentUser={currentUser}
+          users={users}
           onSelectTask={(key) => setSelectedTaskKey(key)}
+          onSelectBug={(key) => setSelectedBugKey(key)}
           onStatusChange={handleStatusChange}
           onOpenCreateTask={() => setIsCreateTaskOpen(true)}
           onToggleAI={() => setIsAIOpen(true)}
@@ -303,6 +346,7 @@ export default function Home() {
           projects={projects}
           users={users}
           tasks={tasks}
+          onSelectTask={(key) => setSelectedTaskKey(key)}
         />
       )}
 
@@ -357,8 +401,15 @@ export default function Home() {
                 key={n.id}
                 onClick={() => {
                   if (!n.isRead) handleMarkNotificationsRead(n.id);
-                  if (n.link) {
-                    const match = n.link.match(/tasks\/(.+)/);
+                  if (n.bugId) {
+                    setSelectedBugKey(n.bugId);
+                  } else if (n.link) {
+                    const matchBug = n.link.match(/bug=([^&]+)/);
+                    if (matchBug && matchBug[1]) {
+                      setSelectedBugKey(matchBug[1]);
+                      return;
+                    }
+                    const match = n.link.match(/tasks\/([^?]+)/);
                     if (match && match[1]) setSelectedTaskKey(match[1]);
                   }
                 }}
@@ -400,6 +451,7 @@ export default function Home() {
         notifications={notifications}
         onMarkRead={handleMarkNotificationsRead}
         onSelectTask={(key) => setSelectedTaskKey(key)}
+        onSelectBug={(key) => setSelectedBugKey(key)}
       />
 
       <DevMailboxModal
@@ -427,12 +479,36 @@ export default function Home() {
         onTaskCreated={() => fetchAppData()}
       />
 
+      <RaiseBugModal
+        isOpen={isCreateBugOpen}
+        onClose={() => setIsCreateBugOpen(false)}
+        projects={projects}
+        users={users}
+        currentUser={currentUser}
+        onBugCreated={() => fetchAppData()}
+      />
+
       {selectedTaskKey && (
         <TaskDetailModal
           taskKey={selectedTaskKey}
           isOpen={Boolean(selectedTaskKey)}
           onClose={() => setSelectedTaskKey(null)}
           onTaskUpdated={() => fetchAppData()}
+          users={users}
+          currentUser={currentUser}
+        />
+      )}
+
+      {selectedBugKey && (
+        <BugDetailModal
+          bugKey={selectedBugKey}
+          isOpen={Boolean(selectedBugKey)}
+          onClose={() => setSelectedBugKey(null)}
+          onSelectTask={(key) => {
+            setSelectedBugKey(null);
+            setSelectedTaskKey(key);
+          }}
+          onBugUpdated={() => fetchAppData()}
           users={users}
           currentUser={currentUser}
         />
