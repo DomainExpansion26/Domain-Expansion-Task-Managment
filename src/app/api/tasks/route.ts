@@ -159,7 +159,9 @@ export async function POST(request: NextRequest) {
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
-      include: { tasks: { select: { id: true } } },
+      include: {
+        members: { select: { userId: true } },
+      },
     });
 
     if (!project) {
@@ -168,6 +170,25 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const isSuper = currentUser.role === "SUPER_ADMIN";
+    const isMemberOfProject = project.members.some((m) => m.userId === currentUser.id);
+    const isProjectLeadOrManager = project.leadId === currentUser.id || project.managerId === currentUser.id || project.teamLeadId === currentUser.id;
+
+    if (!isSuper && !isMemberOfProject && !isProjectLeadOrManager) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "You are not authorized to create tasks in this project" } },
+        { status: 403 }
+      );
+    }
+
+    // Only assign members who belong to this project
+    const projectMemberUserIds = new Set(project.members.map((m) => m.userId));
+    if (project.leadId) projectMemberUserIds.add(project.leadId);
+    if (project.managerId) projectMemberUserIds.add(project.managerId);
+    if (project.teamLeadId) projectMemberUserIds.add(project.teamLeadId);
+
+    const filteredAssigneeIds = (assigneeIds || []).filter((uId: string) => isSuper || projectMemberUserIds.has(uId));
 
     // Generate unique sequential task key, e.g. WEB-106
     const taskCount = await prisma.task.count({ where: { projectId } });
@@ -189,7 +210,7 @@ export async function POST(request: NextRequest) {
         estimatedHours: Number(estimatedHours) || 0,
         position: taskCount,
         assignees: {
-          create: assigneeIds.map((userId: string) => ({ userId })),
+          create: filteredAssigneeIds.map((userId: string) => ({ userId })),
         },
         subtasks: {
           create: subtasks.map((st: string | { title: string; completed?: boolean }) => ({

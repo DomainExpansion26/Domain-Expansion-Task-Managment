@@ -920,16 +920,21 @@ export function TaskDetailModal({
               <select
                 value={task.assignees?.[0]?.id || ""}
                 onChange={(e) => handleUpdateField({ assigneeIds: e.target.value ? [e.target.value] : [] })}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none"
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="">Unassigned</option>
-                {users
-                  .filter((u) => u.role !== "SUPER_ADMIN" && u.role !== "HR_ADMIN")
-                  .map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.role})
-                    </option>
-                  ))}
+                {(task.project?.members && task.project.members.length > 0
+                  ? task.project.members.map((m: any) => ({
+                      id: m.user?.id || m.userId || m.id,
+                      name: m.user?.name || m.name,
+                      role: m.role || m.projectRole || m.user?.role || "MEMBER",
+                    }))
+                  : users.filter((u) => u.role !== "SUPER_ADMIN" && u.role !== "HR_ADMIN")
+                ).map((u: any) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.role})
+                  </option>
+                ))}
               </select>
             </div>
 

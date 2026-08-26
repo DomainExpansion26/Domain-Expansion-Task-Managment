@@ -1,29 +1,54 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { X, UploadCloud, FileText, Layers, Building, Tag, AlertCircle, CheckCircle2, Shield } from "lucide-react";
+import { X, UploadCloud, FileText, Layers, Building, Tag, AlertCircle, CheckCircle2, Shield, FolderGit2 } from "lucide-react";
 
 interface DocumentUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploaded: () => void;
+  initialDepartment?: string;
+  initialCategory?: string;
+  initialPhase?: number;
 }
 
 const DEPARTMENTS = [
-  { id: "ALL", label: "All Departments (Company-Wide)", color: "border-purple-500/30 text-purple-400 bg-purple-500/10" },
-  { id: "FRONTEND", label: "Frontend Team", color: "border-cyan-500/30 text-cyan-400 bg-cyan-500/10" },
-  { id: "UI_UX", label: "UI / UX Design Team", color: "border-pink-500/30 text-pink-400 bg-pink-500/10" },
-  { id: "BACKEND", label: "Backend & API Team", color: "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" },
-  { id: "QA", label: "Quality Assurance & Testing Team", color: "border-blue-500/30 text-blue-400 bg-blue-500/10" },
-  { id: "MARKETING", label: "Marketing & Growth Team", color: "border-amber-500/30 text-amber-400 bg-amber-500/10" },
+  { id: "ALL", label: "All Departments (Company-Wide)" },
+  { id: "DEVELOPMENT", label: "Development & Engineering" },
+  { id: "UI_UX", label: "UI / UX Design" },
+  { id: "QA", label: "QA & Testing" },
+  { id: "MARKETING", label: "Marketing & Growth" },
+  { id: "HR", label: "Human Resources" },
+  { id: "FINANCE", label: "Finance & Legal" },
+  { id: "OPERATIONS", label: "Business Operations" },
 ];
 
-export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUploadModalProps) {
+const CATEGORY_DEFAULTS: Record<string, string[]> = {
+  DEVELOPMENT: ["Backend", "Frontend", "Mobile", "DevOps", "Database", "API", "Architecture", "General"],
+  UI_UX: ["Design System", "Figma", "Components", "User Research", "Wireframes", "Project Designs", "General"],
+  QA: ["Testing Guidelines", "Test Cases", "Bug Reporting", "Automation", "Regression", "Release Checklist"],
+  MARKETING: ["Brand Guidelines", "Social Media", "Content", "SEO", "Campaigns", "General"],
+  ALL: ["Company Policies", "Engineering Standards", "General Guidelines", "Architecture Overview"],
+};
+
+export function DocumentUploadModal({
+  isOpen,
+  onClose,
+  onUploaded,
+  initialDepartment = "ALL",
+  initialCategory = "General",
+  initialPhase = 1,
+}: DocumentUploadModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [department, setDepartment] = useState("ALL");
-  const [phaseNumber, setPhaseNumber] = useState(1);
-  const [phaseName, setPhaseName] = useState("Phase 1: Architecture & Requirements");
+  const [department, setDepartment] = useState(initialDepartment);
+  const [category, setCategory] = useState(initialCategory);
+  const [customCategory, setCustomCategory] = useState("");
+  const [phaseNumber, setPhaseNumber] = useState(initialPhase);
+  const [phaseName, setPhaseName] = useState(`Phase ${initialPhase}: Specifications & Standards`);
+  const [version, setVersion] = useState("1.0");
+  const [status, setStatus] = useState("PUBLISHED");
+  const [visibility, setVisibility] = useState("DEPARTMENT");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -32,18 +57,18 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
 
   if (!isOpen) return null;
 
-  const handlePhaseNumberChange = (num: number) => {
-    setPhaseNumber(num);
-    const defaults: Record<number, string> = {
-      1: "Phase 1: Architecture & Requirements",
-      2: "Phase 2: UI/UX Wireframing & Design",
-      3: "Phase 3: Core API & Database Implementation",
-      4: "Phase 4: Frontend Component Integration",
-      5: "Phase 5: Quality Assurance & Security Audit",
-      6: "Phase 6: Deployment & Performance Tuning",
-      7: "Phase 7: Marketing Launch & User Growth",
-    };
-    setPhaseName(defaults[num] || `Phase ${num}: Milestone Documentation`);
+  const currentCategoryList = CATEGORY_DEFAULTS[department] || ["General", "Technical", "Guidelines", "Architecture"];
+
+  const handleDeptChange = (dept: string) => {
+    setDepartment(dept);
+    const available = CATEGORY_DEFAULTS[dept] || ["General"];
+    setCategory(available[0]);
+  };
+
+  const handlePhaseChange = (num: number) => {
+    const val = Math.max(1, num);
+    setPhaseNumber(val);
+    setPhaseName(`Phase ${val}: Specifications & Standards`);
   };
 
   const handleFileDrop = (e: React.DragEvent) => {
@@ -65,13 +90,20 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
     setErrorMsg("");
 
     try {
+      const activeCategory = category === "CUSTOM" ? customCategory.trim() || "General" : category;
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("title", title.trim());
       if (description.trim()) formData.append("description", description.trim());
       formData.append("department", department);
+      formData.append("category", activeCategory);
+      formData.append("team", activeCategory);
       formData.append("phaseNumber", phaseNumber.toString());
       if (phaseName.trim()) formData.append("phaseName", phaseName.trim());
+      formData.append("version", version.trim() || "1.0");
+      formData.append("status", status);
+      formData.append("visibility", visibility);
 
       const res = await fetch("/api/documents", {
         method: "POST",
@@ -96,17 +128,17 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-xl max-h-[90vh] bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in text-[#F3F4F6]">
+      <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[#FF6200]/15 border border-[#FF6200]/30 text-[#FF6200]">
+            <div className="p-2.5 rounded-xl bg-[#FF6200]/15 border border-[#FF6200]/30 text-[#FF8C42]">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-white">Upload Organization Document</h2>
-              <p className="text-xs text-[#888898]">Assign department visibility and phase milestone</p>
+              <h2 className="text-base font-extrabold text-white">Super Admin — Upload Documentation</h2>
+              <p className="text-xs text-[#888898]">Publish official team guidelines, architecture, and phase documentation</p>
             </div>
           </div>
 
@@ -127,101 +159,164 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
             </div>
           )}
 
-          {/* Title */}
+          {/* Row 1: Title */}
           <div>
-            <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold">
+            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
               Document Title *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Master Backend API Specifications & Data Models"
+              placeholder="e.g. Master Backend Architecture & API Specifications"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]"
+              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#FF6200]"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold">
-              Description / Summary (Optional)
-            </label>
-            <textarea
-              rows={2}
-              placeholder="Brief overview of the document contents and key takeaways..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white placeholder-[#888898] focus:outline-none focus:border-[#FF6200]"
-            />
-          </div>
-
-          {/* Department Visibility Picker */}
-          <div>
-            <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1.5">
-              <Building className="w-3.5 h-3.5 text-[#FF6200]" />
-              <span>Target Department Visibility *</span>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {DEPARTMENTS.map((dept) => (
-                <button
-                  key={dept.id}
-                  type="button"
-                  onClick={() => setDepartment(dept.id)}
-                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                    department === dept.id
-                      ? "border-[#FF6200] bg-[#FF6200]/15 text-white font-bold shadow-md shadow-[#FF6200]/10"
-                      : "border-[#2E2E2E] bg-[#1A1A1A] text-[#888898] hover:text-white hover:bg-[#252525]"
-                  }`}
-                >
-                  <span className="truncate">{dept.label}</span>
-                  {department === dept.id && <CheckCircle2 className="w-3.5 h-3.5 text-[#FF6200] flex-shrink-0" />}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-[#888898] mt-1.5 italic">
-              Members outside the chosen department will not be able to view or access this document.
-            </p>
-          </div>
-
-          {/* Phase Number & Custom Name */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Row 2: Department & Category / Team */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1">
-                <Layers className="w-3 h-3 text-[#FF8C42]" />
-                <span>Phase Number *</span>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+                <Building className="w-3.5 h-3.5 text-[#FF6200]" />
+                <span>Department *</span>
               </label>
               <select
-                value={phaseNumber}
-                onChange={(e) => handlePhaseNumberChange(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#FF6200] font-mono font-bold"
+                value={department}
+                onChange={(e) => handleDeptChange(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
               >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
-                  <option key={num} value={num}>
-                    Phase {num}
+                {DEPARTMENTS.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold">
-                Phase Milestone Title
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-[#FF6200]" />
+                <span>Team / Category *</span>
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              >
+                {currentCategoryList.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                <option value="CUSTOM">+ Custom Category</option>
+              </select>
+            </div>
+          </div>
+
+          {category === "CUSTOM" && (
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+                Custom Category / Team Name
               </label>
               <input
                 type="text"
-                placeholder="e.g. Phase 1: Architecture & Requirements"
+                placeholder="e.g. Microservices, AI Copilot, Cloud Infra"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              />
+            </div>
+          )}
+
+          {/* Row 3: Phase Number & Phase Name (Unbounded) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#FF6200]" />
+                <span>Phase Number</span>
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={phaseNumber}
+                onChange={(e) => handlePhaseChange(parseInt(e.target.value) || 1)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-[#FF6200]"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+                Phase Title / Milestone Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Phase 1: Architecture & API Specifications"
                 value={phaseName}
                 onChange={(e) => setPhaseName(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
               />
             </div>
           </div>
 
-          {/* File Upload Zone */}
+          {/* Row 4: Version, Status, Visibility */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Version</label>
+              <input
+                type="text"
+                placeholder="1.0"
+                value={version}
+                onChange={(e) => setVersion(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-1.5 text-white font-mono focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-white focus:outline-none"
+              >
+                <option value="PUBLISHED">Published (Active)</option>
+                <option value="DRAFT">Draft (Admin Only)</option>
+                <option value="ARCHIVED">Archived</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Visibility</label>
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-white focus:outline-none"
+              >
+                <option value="DEPARTMENT">Department Only</option>
+                <option value="COMPANY_WIDE">Company-Wide</option>
+                <option value="ADMIN_ONLY">Super Admin Only</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Row 5: Description */}
           <div>
-            <label className="block text-[#888898] font-mono text-[10px] uppercase tracking-wider mb-1.5 font-bold">
-              Document File (Any Format: PDF, Images, Code, Docs, ZIP) *
+            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+              Summary / Scope
+            </label>
+            <textarea
+              rows={2}
+              placeholder="Brief summary of what this document covers..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl p-3 text-white placeholder-[#666] focus:outline-none"
+            />
+          </div>
+
+          {/* Row 6: File Upload Area */}
+          <div>
+            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+              File Attachment * (PDF, DOCX, XLSX, TXT, JSON, Markdown, Images, ZIP)
             </label>
             <div
               onDragOver={(e) => {
@@ -231,11 +326,11 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
               onDragLeave={() => setDragOver(false)}
               onDrop={handleFileDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`p-6 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all ${
+              className={`p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center space-y-2 ${
                 dragOver
                   ? "border-[#FF6200] bg-[#FF6200]/10"
                   : file
-                  ? "border-emerald-500/50 bg-emerald-500/10"
+                  ? "border-emerald-500/50 bg-emerald-500/5"
                   : "border-[#2E2E2E] bg-[#1A1A1A] hover:border-[#FF6200]/50"
               }`}
             >
@@ -243,51 +338,44 @@ export function DocumentUploadModal({ isOpen, onClose, onUploaded }: DocumentUpl
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setFile(e.target.files[0]);
-                  }
-                }}
+                onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
               />
-
+              <div className="flex justify-center">
+                {file ? (
+                  <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                ) : (
+                  <UploadCloud className="w-8 h-8 text-[#888898]" />
+                )}
+              </div>
               {file ? (
-                <div className="flex items-center justify-center gap-3 text-emerald-400 font-bold">
-                  <FileText className="w-6 h-6" />
-                  <div className="text-left">
-                    <div className="text-xs text-white">{file.name}</div>
-                    <div className="text-[10px] text-[#888898] font-mono">{(file.size / 1024).toFixed(1)} KB</div>
-                  </div>
+                <div>
+                  <div className="font-bold text-white text-xs">{file.name}</div>
+                  <div className="text-[10px] text-[#888898]">{(file.size / 1024).toFixed(1)} KB</div>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  <UploadCloud className="w-8 h-8 text-[#888898] mx-auto" />
-                  <div className="text-xs font-bold text-white">Click or drag file here to upload</div>
-                  <div className="text-[10px] text-[#888898]">Files are stored securely in Supabase Cloud Storage</div>
+                <div>
+                  <div className="font-semibold text-white text-xs">Click to browse or drop file here</div>
+                  <div className="text-[10px] text-[#888898]">Supported: PDF, DOC, DOCX, XLSX, TXT, JSON, MD, PNG, ZIP</div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center gap-2 text-[#888898] text-[11px]">
-            <Shield className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>Documents are protected with in-portal anti-copy, anti-selection, and security watermarks.</span>
-          </div>
-
-          {/* Footer Buttons */}
+          {/* Footer Submit */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2E2E2E]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs font-semibold text-[#ACACB8] hover:text-white"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading || !file || !title.trim()}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-[#FF6200]/25 transition-all disabled:opacity-50 cursor-pointer"
+              disabled={loading}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[#FF6200]/25 transition-all"
             >
-              {loading ? "Uploading..." : "Save to Vault"}
+              {loading ? "Publishing Document..." : "Publish to Vault"}
             </button>
           </div>
         </form>

@@ -214,7 +214,6 @@ export async function sendEmail({ to, subject, template, data }: SendEmailOption
           subject,
           html: finalHtml,
         });
-        console.log(`🚀 [Resend API] Successfully dispatched email to ${to}`);
       } catch (resendErr: any) {
         console.error("⚠️ [Resend API] Error dispatching live email:", resendErr.message);
       }

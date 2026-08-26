@@ -41,9 +41,14 @@ export default function Home() {
   const tasksState = useTasks();
   const notificationsState = useNotifications();
 
+  const [mounted, setMounted] = useState(false);
   const [currentUser, setCurrentUser] = useState<any | null>(authState.user || null);
   const [permissions, setPermissions] = useState<string[]>(authState.permissions || []);
   const [authLoading, setAuthLoading] = useState(!authState.user);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // App Data
   const currentTab = uiState.activeTab || "dashboard";
@@ -224,7 +229,7 @@ export default function Home() {
     window.location.replace("/login");
   };
 
-  if (authLoading || !currentUser) {
+  if (!mounted || authLoading || !currentUser) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#0D0D0D] text-white text-xs">
         <div className="flex items-center gap-3">
@@ -474,6 +479,7 @@ export default function Home() {
         onClose={() => setIsCreateTaskOpen(false)}
         projects={projects}
         users={users}
+        currentUser={currentUser}
         defaultProjectId={createTaskProjectId}
         defaultStatus={createTaskStatus}
         onTaskCreated={() => fetchAppData()}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, withDbRetry } from "@/lib/prisma";
-import { getCurrentUserFromRequest } from "@/lib/auth";
+import { getCurrentUserFromRequest, hashPassword, verifyPassword } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
@@ -79,34 +79,107 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { id, role, jobTitle, department, name } = await request.json();
+    const body = await request.json();
+    const { id, role, jobTitle, department, name, avatarUrl, phone, newPassword, currentPassword } = body;
+
+    const targetUserId = id || currentUser.id;
+    const isSuper = currentUser.role === "SUPER_ADMIN";
+
+    // Non-superadmins cannot edit other users
+    if (targetUserId !== currentUser.id && !isSuper) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "You are only allowed to update your own profile" } },
+        { status: 403 }
+      );
+    }
 
     // Only super admin can change role
-    if (role && currentUser.role !== "SUPER_ADMIN") {
+    if (role && role !== currentUser.role && !isSuper) {
       return NextResponse.json(
         { success: false, error: { code: "FORBIDDEN", message: "Only Super Admins can modify roles" } },
         { status: 403 }
       );
     }
 
+    const updateData: any = {};
+    if (role && isSuper) updateData.role = role;
+    if (jobTitle !== undefined) updateData.jobTitle = jobTitle.trim();
+    if (department !== undefined) updateData.department = department.trim();
+    if (name !== undefined && name.trim()) updateData.name = name.trim();
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+
+    // Handle password update
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        return NextResponse.json(
+          { success: false, error: { code: "INVALID_INPUT", message: "New password must be at least 6 characters" } },
+          { status: 400 }
+        );
+      }
+
+      // If non-superadmin changing their own password, verify current password if provided
+      if (!isSuper && currentPassword) {
+        const fullUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+        if (fullUser) {
+          const isValid = await verifyPassword(currentPassword, fullUser.passwordHash);
+          if (!isValid) {
+            return NextResponse.json(
+              { success: false, error: { code: "INVALID_CREDENTIALS", message: "Current password is incorrect" } },
+              { status: 400 }
+            );
+          }
+        }
+      }
+
+      updateData.passwordHash = await hashPassword(newPassword);
+    }
+
     const updated = await prisma.user.update({
-      where: { id: id || currentUser.id },
-      data: {
-        ...(role ? { role } : {}),
-        ...(jobTitle ? { jobTitle } : {}),
-        ...(department ? { department } : {}),
-        ...(name ? { name } : {}),
+      where: { id: targetUserId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        jobTitle: true,
+        department: true,
+        avatarUrl: true,
+        isActive: true,
+        createdAt: true,
+        managerId: true,
+        teamLeadId: true,
+        manager: { select: { id: true, name: true, email: true } },
+        teamLead: { select: { id: true, name: true, email: true } },
+        hrProfile: true,
       },
     });
+
+    // Update phone in HRProfile if provided
+    if (phone !== undefined) {
+      await prisma.hRProfile.upsert({
+        where: { userId: targetUserId },
+        create: {
+          userId: targetUserId,
+          phone: phone.trim(),
+          designation: updated.jobTitle || "Team Member",
+          department: updated.department || "General",
+        },
+        update: {
+          phone: phone.trim(),
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
       data: updated,
-      message: "User profile updated",
+      message: "Profile updated successfully",
     });
   } catch (error: any) {
+    console.error("Update user error:", error);
     return NextResponse.json(
-      { success: false, error: { code: "SERVER_ERROR", message: "Failed to update user" } },
+      { success: false, error: { code: "SERVER_ERROR", message: "Failed to update user profile" } },
       { status: 500 }
     );
   }

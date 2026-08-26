@@ -512,14 +512,20 @@ model OrganizationDocument {
   id           String   @id @default(cuid())
   title        String
   description  String?
-  department   String   // FRONTEND, UI_UX, BACKEND, MARKETING, ALL
-  phaseNumber  Int      @default(1) // 1, 2, 3, 4, 5, 6, 7, etc.
+  department   String   // e.g. DEVELOPMENT, UI_UX, QA, MARKETING, ALL, etc.
+  category     String?  @default("General") // e.g. Backend, Frontend, Figma, Automation, API
+  team         String?  @default("Core") // e.g. Backend, Frontend, Mobile, DevOps
+  phaseNumber  Int      @default(1) // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, etc. Unbounded!
   phaseName    String?  // e.g. "Phase 1: Architecture & Requirements"
   fileName     String
   fileUrl      String
   storagePath  String
   fileSize     Int
   fileType     String
+  version      String   @default("1.0")
+  status       String   @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  sortOrder    Int      @default(0)
+  visibility   String   @default("DEPARTMENT") // DEPARTMENT, COMPANY_WIDE, ADMIN_ONLY
   uploadedById String
   uploadedBy   User     @relation("DocumentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
@@ -528,4 +534,275 @@ model OrganizationDocument {
   @@index([department])
   @@index([phaseNumber])
 }
+
+model DocCategory {
+  id          String   @id @default(cuid())
+  name        String
+  department  String   // e.g. DEVELOPMENT, UI_UX, QA, MARKETING
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([department, name])
+}
+
+model DocPhase {
+  id          String   @id @default(cuid())
+  department  String
+  category    String   @default("General") // e.g. Backend, Frontend
+  phaseNumber Int      // 1, 2, 3, 4, 5, 6, 7, etc.
+  phaseName   String   // e.g. Phase 1: Architecture & Standards
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([department, category, phaseNumber])
+}
+
+// ==========================================
+// COMPLEMENTARY HRMS PORTAL MODELS
+// ==========================================
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  managerId   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Designation {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  department  String?
+  level       String?  @default("Mid-Level") // Junior, Mid-Level, Senior, Lead, Executive
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  name        String
+  date        DateTime
+  holidayType String   @default("Public Holiday") // Public Holiday, Company Holiday, Optional Holiday
+  year        Int      @default(2026)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LeaveTypeConfig {
+  id            String   @id @default(cuid())
+  name          String   @unique // Casual Leave, Sick Leave, Earned Leave, Emergency Leave, etc.
+  code          String   @unique // CL, SL, EL, EML, ML, PL, UL
+  daysAllowed   Int      @default(12)
+  isPaid        Boolean  @default(true)
+  carryForward  Boolean  @default(false)
+  maxConsecutive Int     @default(5)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SalaryStructure {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  basic       Float    @default(0)
+  hra         Float    @default(0)
+  allowances  Float    @default(0)
+  bonus       Float    @default(0)
+  deductions  Float    @default(0)
+  grossSalary Float    @default(0)
+  netSalary   Float    @default(0)
+  currency    String   @default("INR")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+model Payslip {
+  id             String   @id @default(cuid())
+  userId         String
+  month          Int
+  year           Int
+  basic          Float    @default(0)
+  hra            Float    @default(0)
+  allowances     Float    @default(0)
+  bonus          Float    @default(0)
+  deductions     Float    @default(0)
+  grossSalary    Float    @default(0)
+  netSalary      Float    @default(0)
+  earningsJson   String   @default("[]") // Detailed breakdowns
+  deductionsJson String   @default("[]")
+  status         String   @default("GENERATED") // GENERATED, PAID, ARCHIVED
+  generatedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, month, year])
+}
+
+model Asset {
+  id           String    @id @default(cuid())
+  assetTag     String    @unique // e.g. AST-LAP-042
+  name         String    // e.g. MacBook Pro M3
+  type         String    // Laptop, Desktop, Monitor, Mobile, ID Card, Accessory
+  serialNumber String?
+  assignedToId String?
+  status       String    @default("AVAILABLE") // AVAILABLE, ASSIGNED, UNDER_MAINTENANCE, RETURNED, DISPOSED
+  condition    String    @default("EXCELLENT") // EXCELLENT, GOOD, DAMAGED
+  assignedDate DateTime?
+  returnDate   DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model HRAnnouncement {
+  id               String    @id @default(cuid())
+  title            String
+  content          String
+  priority         String    @default("NORMAL") // URGENT, HIGH, NORMAL, LOW
+  targetDepartment String?   @default("ALL") // ALL, or specific department
+  authorId         String?
+  authorName       String?
+  expiresAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model HRRequest {
+  id              String    @id @default(cuid())
+  userId          String
+  requestType     String    // PROFILE_UPDATE, DOCUMENT_REQUEST, SALARY_CERTIFICATE, EXPERIENCE_LETTER, HR_QUERY, OTHER
+  subject         String
+  description     String
+  status          String    @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+  priority        String    @default("MEDIUM") // URGENT, HIGH, MEDIUM, LOW
+  resolverId      String?
+  resolutionNotes String?
+  attachmentUrl   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model PerformanceReview {
+  id              String   @id @default(cuid())
+  userId          String
+  reviewerId      String?
+  period          String   // e.g. "Q1 2026", "Annual 2025"
+  selfReview      String?
+  managerFeedback String?
+  rating          Float    @default(5.0) // 1.0 - 5.0
+  goalsJson       String   @default("[]") // Array of { goal, kpi, progress, status }
+  strengths       String?
+  improvementAreas String?
+  status          String   @default("PENDING_SELF_REVIEW") // PENDING_SELF_REVIEW, PENDING_MANAGER_REVIEW, COMPLETED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TrainingProgram {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  trainer          String
+  startDate        DateTime
+  endDate          DateTime
+  status           String   @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
+  participantsJson String   @default("[]") // Array of { userId, name, status, certified }
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model JobOpening {
+  id                 String   @id @default(cuid())
+  title              String
+  department         String
+  location           String   @default("Bangalore, IN (Hybrid)")
+  workMode           String   @default("HYBRID") // ONSITE, HYBRID, REMOTE
+  openingsCount      Int      @default(1)
+  experienceRequired String   @default("2-4 Years")
+  status             String   @default("OPEN") // OPEN, PAUSED, CLOSED
+  description        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Candidate {
+  id                String    @id @default(cuid())
+  jobOpeningId      String?
+  name              String
+  email             String
+  phone             String?
+  resumeUrl         String?
+  status            String    @default("APPLIED") // APPLIED, SCREENING, INTERVIEW, SELECTED, REJECTED, HIRED
+  interviewDate     DateTime?
+  interviewType     String?   // Technical, HR, Managerial, Cultural
+  interviewerName   String?
+  interviewFeedback String?
+  rating            Float?    @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model EmployeeTimeline {
+  id            String   @id @default(cuid())
+  userId        String
+  eventType     String   // JOINED, PROMOTION, TRANSFER, LEAVE, PERFORMANCE, TRAINING, RESIGNATION, EXIT
+  title         String
+  description   String?
+  effectiveDate DateTime @default(now())
+  recordedById  String?
+  metadataJson  String?  @default("{}")
+  createdAt     DateTime @default(now())
+}
+
+model OnboardingChecklist {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  accountCreated Boolean @default(true)
+  profileCompleted Boolean @default(false)
+  departmentAssigned Boolean @default(false)
+  managerAssigned Boolean @default(false)
+  projectAssigned Boolean @default(false)
+  documentsUploaded Boolean @default(false)
+  hrOrientation Boolean @default(false)
+  policyAcknowledged Boolean @default(false)
+  status        String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+}
+
+model OffboardingRecord {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  resignationDate DateTime  @default(now())
+  lastWorkingDay  DateTime
+  exitReason      String?
+  noticePeriodDays Int      @default(30)
+  managerApproval Boolean   @default(false)
+  hrApproval      Boolean   @default(false)
+  exitInterviewDone Boolean @default(false)
+  assetCleared    Boolean   @default(false)
+  documentCleared Boolean   @default(false)
+  finalStatus     String    @default("RESIGNED") // RESIGNED, TERMINATED, RETIRED, INACTIVE
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model HRSetting {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  valueJson          String   // Stringified configuration
+  description        String?
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+}
+
 

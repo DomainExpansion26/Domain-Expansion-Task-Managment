@@ -5,6 +5,39 @@ import { Provider } from "react-redux";
 import { store } from "./index";
 import { setCredentials, setAuthLoaded, logout } from "./slices/authSlice";
 import { loadFromLocalStorage, STORAGE_KEYS, saveToLocalStorage } from "./localStorage";
+import { useAppSelector } from "./hooks";
+
+function ThemeInitializer() {
+  const theme = useAppSelector((state) => state.ui?.theme || "dark");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      const body = document.body;
+      if (theme === "light") {
+        root.classList.add("light");
+        root.classList.remove("dark");
+        root.setAttribute("data-theme", "light");
+        if (body) {
+          body.classList.add("light");
+          body.classList.remove("dark");
+          body.setAttribute("data-theme", "light");
+        }
+      } else {
+        root.classList.add("dark");
+        root.classList.remove("light");
+        root.setAttribute("data-theme", "dark");
+        if (body) {
+          body.classList.add("dark");
+          body.classList.remove("light");
+          body.setAttribute("data-theme", "dark");
+        }
+      }
+    }
+  }, [theme]);
+
+  return null;
+}
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -54,6 +87,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
+      <ThemeInitializer />
       <AuthInitializer>{children}</AuthInitializer>
     </Provider>
   );

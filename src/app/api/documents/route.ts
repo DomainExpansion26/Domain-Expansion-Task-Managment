@@ -8,9 +8,10 @@ import { uploadFileToStorage } from "@/lib/storage";
 function normalizeDepartment(dept?: string | null): string {
   if (!dept) return "GENERAL";
   const clean = dept.trim().toUpperCase().replace(/[^A-Z0-9]/g, "_");
-  if (clean.includes("FRONTEND") || clean.includes("FRONT_END") || clean.includes("REACT") || clean.includes("WEB") || clean.includes("CLIENT")) return "FRONTEND";
+  if (clean.includes("FRONTEND") || clean.includes("FRONT_END") || clean.includes("REACT") || clean.includes("WEB") || clean.includes("CLIENT")) return "DEVELOPMENT";
+  if (clean.includes("BACKEND") || clean.includes("BACK_END") || clean.includes("NODE") || clean.includes("API") || clean.includes("DATABASE") || clean.includes("SERVER")) return "DEVELOPMENT";
+  if (clean.includes("DEVELOP") || clean.includes("ENGINEER") || clean.includes("DEV")) return "DEVELOPMENT";
   if (clean.includes("UI") || clean.includes("UX") || clean.includes("DESIGN") || clean.includes("FIGMA")) return "UI_UX";
-  if (clean.includes("BACKEND") || clean.includes("BACK_END") || clean.includes("NODE") || clean.includes("API") || clean.includes("DATABASE") || clean.includes("SERVER")) return "BACKEND";
   if (clean.includes("QA") || clean.includes("TEST") || clean.includes("QUALITY") || clean.includes("DEFECT")) return "QA";
   if (clean.includes("MARKET") || clean.includes("SEO") || clean.includes("GROWTH") || clean.includes("SALES")) return "MARKETING";
   return clean;
@@ -26,7 +27,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const phaseParam = searchParams.get("phase");
     const deptParam = searchParams.get("department");
+    const categoryParam = searchParams.get("category") || searchParams.get("team");
     const searchParam = searchParams.get("search");
+    const statusParam = searchParams.get("status");
 
     const superAdmin = isSuperAdmin(currentUser);
     const userDept = normalizeDepartment(currentUser.department || currentUser.jobTitle);
@@ -36,19 +39,20 @@ export async function GET(request: NextRequest) {
 
     if (superAdmin) {
       if (deptParam && deptParam !== "ALL_DEPTS") {
-        departmentFilter = deptParam;
+        departmentFilter = deptParam.toUpperCase();
       }
     } else {
       // Normal member is restricted to their department and "ALL"
-      const allowed = ["ALL", "GENERAL", userDept];
+      const allowed = ["ALL", "GENERAL", "COMPANY", userDept];
       if (deptParam && deptParam !== "ALL_DEPTS") {
-        if (!allowed.includes(deptParam)) {
+        const target = deptParam.toUpperCase();
+        if (!allowed.includes(target)) {
           return NextResponse.json({
             success: false,
             error: { code: "FORBIDDEN", message: "You do not have permission to view documents from other departments." },
           }, { status: 403 });
         }
-        departmentFilter = deptParam;
+        departmentFilter = target;
       } else {
         departmentFilter = { in: allowed };
       }
@@ -58,6 +62,9 @@ export async function GET(request: NextRequest) {
     if (departmentFilter) {
       whereClause.department = departmentFilter;
     }
+    if (categoryParam && categoryParam !== "ALL_CATEGORIES") {
+      whereClause.category = { equals: categoryParam, mode: "insensitive" };
+    }
     if (phaseParam && phaseParam !== "ALL_PHASES") {
       const phaseNum = parseInt(phaseParam);
       if (!isNaN(phaseNum)) {
@@ -65,46 +72,47 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let docs: any[] = [];
-    try {
-      if (searchParam && searchParam.trim()) {
-        whereClause.OR = [
-          { title: { contains: searchParam.trim(), mode: "insensitive" } },
-          { description: { contains: searchParam.trim(), mode: "insensitive" } },
-          { fileName: { contains: searchParam.trim(), mode: "insensitive" } },
-          { phaseName: { contains: searchParam.trim(), mode: "insensitive" } },
-        ];
-      }
-      docs = await prisma.organizationDocument.findMany({
-        where: whereClause,
-        include: {
-          uploadedBy: {
-            select: { id: true, name: true, email: true, role: true, avatarUrl: true },
-          },
-        },
-        orderBy: [{ phaseNumber: "asc" }, { createdAt: "desc" }],
-      });
-    } catch (dbErr: any) {
-      console.warn("organizationDocument.findMany error:", dbErr.message);
-      docs = [];
+    // Role-based visibility scoping
+    if (!superAdmin) {
+      whereClause.status = "PUBLISHED";
+    } else if (statusParam && statusParam !== "ALL_STATUSES") {
+      whereClause.status = statusParam;
     }
 
-    let allPhases: any[] = [];
-    try {
-      allPhases = await prisma.organizationDocument.findMany({
-        select: { phaseNumber: true, phaseName: true },
-        distinct: ["phaseNumber"],
-        orderBy: { phaseNumber: "asc" },
-      });
-    } catch {
-      allPhases = [];
+    if (searchParam && searchParam.trim()) {
+      whereClause.OR = [
+        { title: { contains: searchParam.trim(), mode: "insensitive" } },
+        { description: { contains: searchParam.trim(), mode: "insensitive" } },
+        { fileName: { contains: searchParam.trim(), mode: "insensitive" } },
+        { phaseName: { contains: searchParam.trim(), mode: "insensitive" } },
+        { category: { contains: searchParam.trim(), mode: "insensitive" } },
+      ];
     }
+
+    const docs = await prisma.organizationDocument.findMany({
+      where: whereClause,
+      include: {
+        uploadedBy: {
+          select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+        },
+      },
+      orderBy: [{ sortOrder: "asc" }, { phaseNumber: "asc" }, { createdAt: "desc" }],
+    });
+
+    // Distinct metadata for filters
+    const [allPhases, allCategories, allDepts] = await Promise.all([
+      prisma.docPhase.findMany({ orderBy: { phaseNumber: "asc" } }),
+      prisma.docCategory.findMany({ orderBy: { sortOrder: "asc" } }),
+      prisma.department.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    ]);
 
     return NextResponse.json({
       success: true,
       data: {
         documents: docs,
         phases: allPhases,
+        categories: allCategories,
+        departments: allDepts,
         userDepartment: userDept,
         isSuperAdmin: superAdmin,
       },
@@ -135,8 +143,14 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string | null;
     const description = formData.get("description") as string | null;
     const department = formData.get("department") as string | null;
+    const category = (formData.get("category") as string) || (formData.get("team") as string) || "General";
+    const team = (formData.get("team") as string) || category || "Core";
     const phaseNumber = parseInt(formData.get("phaseNumber") as string) || 1;
     const phaseName = formData.get("phaseName") as string | null;
+    const version = (formData.get("version") as string) || "1.0";
+    const status = (formData.get("status") as string) || "PUBLISHED";
+    const sortOrder = parseInt(formData.get("sortOrder") as string) || 0;
+    const visibility = (formData.get("visibility") as string) || "DEPARTMENT";
 
     if (!file || !title || !department) {
       return NextResponse.json(
@@ -153,57 +167,16 @@ export async function POST(request: NextRequest) {
       buffer,
       file.name,
       file.type || "application/octet-stream",
-      "documents"
+      `documents/${department.toLowerCase()}/${category.toLowerCase()}`
     );
 
-    let doc: any = null;
-    if ((prisma as any).organizationDocument?.create) {
-      doc = await (prisma as any).organizationDocument.create({
-        data: {
-          title: title.trim(),
-          description: description?.trim() || null,
-          department: department.trim().toUpperCase(),
-          phaseNumber,
-          phaseName: phaseName?.trim() || `Phase ${phaseNumber}`,
-          fileName: file.name,
-          fileUrl: uploaded.fileUrl,
-          storagePath: uploaded.storagePath,
-          fileSize: uploaded.fileSize || file.size,
-          fileType: file.type || "application/octet-stream",
-          uploadedById: currentUser.id,
-        },
-        include: {
-          uploadedBy: {
-            select: { id: true, name: true, email: true, role: true, avatarUrl: true },
-          },
-        },
-      });
-    } else {
-      const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const now = new Date();
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "OrganizationDocument" ("id", "title", "description", "department", "phaseNumber", "phaseName", "fileName", "fileUrl", "storagePath", "fileSize", "fileType", "uploadedById", "createdAt", "updatedAt")
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-        id,
-        title.trim(),
-        description?.trim() || null,
-        department.trim().toUpperCase(),
-        phaseNumber,
-        phaseName?.trim() || `Phase ${phaseNumber}`,
-        file.name,
-        uploaded.fileUrl,
-        uploaded.storagePath,
-        uploaded.fileSize || file.size,
-        file.type || "application/octet-stream",
-        currentUser.id,
-        now,
-        now
-      );
-      doc = {
-        id,
+    const doc = await prisma.organizationDocument.create({
+      data: {
         title: title.trim(),
         description: description?.trim() || null,
         department: department.trim().toUpperCase(),
+        category: category.trim(),
+        team: team.trim(),
         phaseNumber,
         phaseName: phaseName?.trim() || `Phase ${phaseNumber}`,
         fileName: file.name,
@@ -211,18 +184,18 @@ export async function POST(request: NextRequest) {
         storagePath: uploaded.storagePath,
         fileSize: uploaded.fileSize || file.size,
         fileType: file.type || "application/octet-stream",
+        version: version.trim(),
+        status: status.trim().toUpperCase(),
+        sortOrder,
+        visibility: visibility.trim().toUpperCase(),
         uploadedById: currentUser.id,
+      },
+      include: {
         uploadedBy: {
-          id: currentUser.id,
-          name: currentUser.name,
-          email: currentUser.email,
-          role: currentUser.role,
-          avatarUrl: currentUser.avatarUrl,
+          select: { id: true, name: true, email: true, role: true, avatarUrl: true },
         },
-        createdAt: now,
-        updatedAt: now,
-      };
-    }
+      },
+    });
 
     // Record audit log
     try {
@@ -235,23 +208,75 @@ export async function POST(request: NextRequest) {
           detailsJson: JSON.stringify({
             title: doc.title,
             department: doc.department,
+            category: doc.category,
             phaseNumber: doc.phaseNumber,
+            version: doc.version,
             fileName: doc.fileName,
-            storagePath: doc.storagePath,
           }),
         },
       });
     } catch (auditErr) {
-      console.warn("Audit log creation notice:", auditErr);
+      console.warn("Audit log notice:", auditErr);
     }
 
     return NextResponse.json({
       success: true,
       data: doc,
-      message: "Document uploaded successfully to organization vault.",
+      message: `Document "${doc.title}" published successfully to ${doc.department} / ${doc.category}.`,
     });
   } catch (error: any) {
     console.error("POST /api/documents error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to upload document" } }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser || !isSuperAdmin(currentUser)) {
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Super Admin permission required" } }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { id, title, description, department, category, team, phaseNumber, phaseName, version, status, sortOrder, visibility } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: { code: "INVALID_INPUT", message: "Document ID is required" } }, { status: 400 });
+    }
+
+    const updated = await prisma.organizationDocument.update({
+      where: { id },
+      data: {
+        ...(title ? { title: title.trim() } : {}),
+        ...(description !== undefined ? { description: description?.trim() || null } : {}),
+        ...(department ? { department: department.trim().toUpperCase() } : {}),
+        ...(category ? { category: category.trim() } : {}),
+        ...(team ? { team: team.trim() } : {}),
+        ...(phaseNumber ? { phaseNumber: Number(phaseNumber) } : {}),
+        ...(phaseName ? { phaseName: phaseName.trim() } : {}),
+        ...(version ? { version: version.trim() } : {}),
+        ...(status ? { status: status.trim().toUpperCase() } : {}),
+        ...(sortOrder !== undefined ? { sortOrder: Number(sortOrder) } : {}),
+        ...(visibility ? { visibility: visibility.trim().toUpperCase() } : {}),
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: "DOCUMENT_UPDATED",
+        entityType: "ORGANIZATION_DOCUMENT",
+        entityId: id,
+        detailsJson: JSON.stringify({ title: updated.title, status: updated.status, version: updated.version }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      message: `Document "${updated.title}" updated successfully`,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to update document" } }, { status: 500 });
   }
 }

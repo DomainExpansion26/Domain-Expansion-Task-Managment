@@ -23,11 +23,16 @@ import {
   FileText,
   Menu,
   X,
+  User,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 import { useInactivityTimeout } from "./useInactivityTimeout";
 import { InactivityWarningModal } from "@/components/modals/InactivityWarningModal";
 import { getInitials, getAvatarGradient } from "@/lib/utils";
+import { useAppDispatch, useUI } from "@/store/hooks";
+import { toggleTheme } from "@/store/slices/uiSlice";
 
 interface AppShellProps {
   currentTab: string;
@@ -56,6 +61,10 @@ export function AppShell({
   onLogout,
   children,
 }: AppShellProps) {
+  const dispatch = useAppDispatch();
+  const uiState = useUI();
+  const isDark = (uiState?.theme || "dark") === "dark";
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -255,7 +264,35 @@ export function AppShell({
                 </div>
               </div>
 
-              <div className="pt-1">
+              <div className="pt-1 space-y-0.5">
+                <button
+                  onClick={() => {
+                    handleNavClick("profile");
+                    setProfileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#ACACB8] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                >
+                  <User className="w-3.5 h-3.5 text-[#FF6200]" />
+                  <span>My Profile & Settings</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    dispatch(toggleTheme());
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-[#ACACB8] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+                    <span>Theme</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold uppercase text-[#FF8C42]">
+                    {isDark ? "Dark" : "Light"}
+                  </span>
+                </button>
+
+                <div className="border-t border-[#2E2E2E]/60 my-1" />
+
                 <button
                   onClick={() => {
                     setProfileOpen(false);
@@ -343,6 +380,19 @@ export function AppShell({
               title="Search"
             >
               <Search className="w-4 h-4 text-white" />
+            </button>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => dispatch(toggleTheme())}
+              className="p-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] hover:text-white hover:border-[#FF6200]/40 transition-colors cursor-pointer"
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-400" />
+              )}
             </button>
 
             {/* DX AI Assistant Trigger Button */}

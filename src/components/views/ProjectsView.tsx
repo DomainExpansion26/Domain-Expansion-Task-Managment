@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 import { isSuperAdmin, PROJECT_ROLES, PROJECT_ROLE_LABELS, ProjectRole, normalizeProjectRole } from "@/lib/permissions";
+import { ProjectMembersModal } from "@/components/modals/ProjectMembersModal";
 
 interface ProjectsViewProps {
   projects: any[];
@@ -35,6 +36,7 @@ export function ProjectsView({
   onRefreshData,
 }: ProjectsViewProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<any | null>(null);
   const [name, setName] = useState("");
   const [key, setKey] = useState("");
   const [description, setDescription] = useState("");
@@ -256,8 +258,8 @@ export function ProjectsView({
                   </div>
                 </div>
 
-                {/* Bottom Metadata */}
-                <div className="flex items-center justify-between text-[11px] text-[#888898] pt-1">
+                {/* Bottom Metadata & Actions */}
+                <div className="flex items-center justify-between text-[11px] text-[#888898] pt-1 gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
                     {project.lead?.avatarUrl ? (
                       <img
@@ -272,17 +274,49 @@ export function ProjectsView({
                         {getInitials(project.lead?.name)}
                       </div>
                     )}
-                    <span>{project.lead?.name || "Project Lead"}</span>
+                    <span className="truncate max-w-[100px]">{project.lead?.name || "Project Lead"}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#FF8C42] font-semibold group-hover:translate-x-0.5 transition-transform">
-                    <span>Open Board</span>
-                    <ArrowRight className="w-3 h-3" />
+
+                  <div className="flex items-center gap-2">
+                    {project.canManageMembers && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProjectForMembers(project);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#252525] hover:bg-[#FF6200] text-[#ACACB8] hover:text-white text-[11px] font-semibold transition-all border border-[#2E2E2E] cursor-pointer"
+                        title="Manage Project Members"
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                        <span>Members</span>
+                      </button>
+                    )}
+                    <div className="flex items-center gap-1 text-[#FF8C42] font-semibold group-hover:translate-x-0.5 transition-transform">
+                      <span>Board</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Project Members Management Modal */}
+      {selectedProjectForMembers && (
+        <ProjectMembersModal
+          isOpen={Boolean(selectedProjectForMembers)}
+          onClose={() => setSelectedProjectForMembers(null)}
+          projectId={selectedProjectForMembers.id}
+          projectName={selectedProjectForMembers.name}
+          projectKey={selectedProjectForMembers.key}
+          canManage={selectedProjectForMembers.canManageMembers ?? true}
+          onMembersUpdated={() => {
+            onRefreshData();
+          }}
+        />
       )}
 
       {/* Create Project Modal with Member Assignment (Requirement #10 & #11) */}

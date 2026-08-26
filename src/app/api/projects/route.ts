@@ -19,11 +19,12 @@ export async function GET(request: NextRequest) {
     const whereClause: any = {};
 
     if (!isSuper) {
-      whereClause.members = {
-        some: {
-          userId: currentUser.id,
-        },
-      };
+      whereClause.OR = [
+        { members: { some: { userId: currentUser.id } } },
+        { managerId: currentUser.id },
+        { teamLeadId: currentUser.id },
+        { leadId: currentUser.id },
+      ];
     }
 
     const projects = await withDbRetry(() =>
@@ -49,6 +50,8 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    const userGlobalRole = (currentUser.role || "").toUpperCase();
+
     const formatted = projects.map((p) => {
       const total = p.tasks.length;
       const done = p.tasks.filter((t) => t.status === "DONE" || t.status === "COMPLETED" || t.status === "CLOSED").length;
@@ -57,6 +60,20 @@ export async function GET(request: NextRequest) {
       const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
 
       const myMembership = p.members.find((m) => m.userId === currentUser.id);
+      const myProjRole = myMembership ? normalizeProjectRole(myMembership.role) : (isSuper ? "PROJECT_MANAGER" : null);
+
+      let canManageMembers = false;
+      if (isSuper) {
+        canManageMembers = true;
+      } else if (userGlobalRole === "MANAGER" || userGlobalRole === "PROJECT_MANAGER") {
+        if (p.managerId === currentUser.id || p.leadId === currentUser.id || myProjRole === "PROJECT_MANAGER" || myProjRole === "TEAM_LEAD") {
+          canManageMembers = true;
+        }
+      } else if (userGlobalRole === "TEAM_LEAD") {
+        if (p.teamLeadId === currentUser.id || p.leadId === currentUser.id || myProjRole === "TEAM_LEAD") {
+          canManageMembers = true;
+        }
+      }
 
       return {
         id: p.id,
@@ -69,7 +86,8 @@ export async function GET(request: NextRequest) {
         lead: p.lead,
         manager: p.manager,
         teamLead: p.teamLead,
-        myProjectRole: myMembership ? normalizeProjectRole(myMembership.role) : (isSuper ? "PROJECT_MANAGER" : null),
+        canManageMembers,
+        myProjectRole: myProjRole,
         members: p.members.map((m) => ({
           ...m.user,
           globalRole: m.user.role,

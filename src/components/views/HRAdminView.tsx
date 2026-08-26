@@ -23,6 +23,7 @@ import {
   Lock,
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
+import { EmployeeDetailModal } from "@/components/modals/EmployeeDetailModal";
 import { getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface HRAdminViewProps {
@@ -39,6 +40,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
   const [actionLoading, setActionLoading] = useState(false);
   const [approverComment, setApproverComment] = useState("");
   const [selectedDayRecord, setSelectedDayRecord] = useState<{ record: any; dateStr: string } | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   // Add Employee Modal
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
@@ -429,17 +431,21 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                 {members.map((m) => {
                   const isActive = m.hrmsStatus === "ACTIVE" || m.hrmsStatus === "PROBATION";
                   return (
-                    <tr key={m.id} className="hover:bg-[#1A1A1A]/40">
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-white">{m.name}</div>
+                    <tr
+                      key={m.id}
+                      onClick={() => setSelectedEmployeeId(m.id)}
+                      className="hover:bg-[#1A1A1A] cursor-pointer transition-colors group"
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-white group-hover:text-pink-400 transition-colors">{m.name}</div>
                         <div className="text-[11px] text-[#888898]">{m.email}</div>
                       </td>
-                      <td className="py-3 px-4 font-mono">{m.employeeId || "N/A"}</td>
-                      <td className="py-3 px-4">
-                        <div className="text-white">{m.jobTitle}</div>
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-300">{m.employeeId || "N/A"}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="text-white font-medium">{m.jobTitle}</div>
                         <div className="text-[10px] text-[#888898]">{m.department}</div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3.5 px-4">
                         <span
                           className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                             isActive
@@ -450,28 +456,36 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                           {m.hrmsStatus || "PENDING"}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => handleToggleEmployeeActivation(m.id, m.hrmsStatus)}
-                          disabled={actionLoading}
-                          className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 ml-auto ${
-                            isActive
-                              ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
-                              : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30"
-                          }`}
-                        >
-                          {isActive ? (
-                            <>
-                              <UserX className="w-3.5 h-3.5" />
-                              <span>Deactivate HRMS</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="w-3.5 h-3.5" />
-                              <span>Activate HRMS</span>
-                            </>
-                          )}
-                        </button>
+                      <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setSelectedEmployeeId(m.id)}
+                            className="px-3 py-1.5 rounded-xl font-bold text-[11px] bg-[#252525] hover:bg-pink-600 text-white transition-all cursor-pointer"
+                          >
+                            View 360°
+                          </button>
+                          <button
+                            onClick={() => handleToggleEmployeeActivation(m.id, m.hrmsStatus)}
+                            disabled={actionLoading}
+                            className={`px-3 py-1.5 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1.5 ${
+                              isActive
+                                ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
+                                : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30"
+                            }`}
+                          >
+                            {isActive ? (
+                              <>
+                                <UserX className="w-3.5 h-3.5" />
+                                <span>Deactivate</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="w-3.5 h-3.5" />
+                                <span>Activate</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -616,6 +630,17 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           dateStr={selectedDayRecord.dateStr}
           isHRAdmin={true}
           onRecordUpdated={fetchHRData}
+        />
+      )}
+
+      {/* 360-Degree Employee Detail & Management Modal */}
+      {selectedEmployeeId && (
+        <EmployeeDetailModal
+          isOpen={Boolean(selectedEmployeeId)}
+          onClose={() => setSelectedEmployeeId(null)}
+          userId={selectedEmployeeId}
+          currentUser={currentUser}
+          onEmployeeUpdated={fetchHRData}
         />
       )}
     </div>

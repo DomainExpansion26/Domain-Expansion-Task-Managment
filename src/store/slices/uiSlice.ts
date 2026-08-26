@@ -81,6 +81,26 @@ export const uiSlice = createSlice({
         theme: state.theme,
       });
     },
+    setTheme: (state, action: PayloadAction<"dark" | "light">) => {
+      state.theme = action.payload;
+      saveToLocalStorage(STORAGE_KEYS.UI, {
+        activeTab: state.activeTab,
+        activeWorkspace: state.activeWorkspace,
+        activeProjectId: state.activeProjectId,
+        sidebarCollapsed: state.sidebarCollapsed,
+        theme: state.theme,
+      });
+    },
+    toggleTheme: (state) => {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      saveToLocalStorage(STORAGE_KEYS.UI, {
+        activeTab: state.activeTab,
+        activeWorkspace: state.activeWorkspace,
+        activeProjectId: state.activeProjectId,
+        sidebarCollapsed: state.sidebarCollapsed,
+        theme: state.theme,
+      });
+    },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
@@ -102,6 +122,8 @@ export const {
   setActiveProjectId,
   toggleSidebar,
   setSidebarCollapsed,
+  setTheme,
+  toggleTheme,
   setSearchQuery,
   setCommandPaletteOpen,
   setCreateTaskModalOpen,
