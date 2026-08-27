@@ -14,12 +14,10 @@ export async function GET(request: NextRequest) {
     const targetUserId = searchParams.get("userId");
 
     const isHRorSuper = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
-
-    // Regular users can only access their own salary structure
     const userId = isHRorSuper && targetUserId ? targetUserId : currentUser.id;
 
     if (isHRorSuper && !targetUserId) {
-      // Return salary summary for all employees
+      // Return salary structures for all employees
       const structures = await prisma.salaryStructure.findMany();
       return NextResponse.json({ success: true, data: structures });
     }
@@ -28,21 +26,13 @@ export async function GET(request: NextRequest) {
       where: { userId },
     });
 
+    // Zero fake data: return actual record or null
     return NextResponse.json({
       success: true,
-      data: salary || {
-        userId,
-        basic: 45000,
-        hra: 18000,
-        allowances: 12000,
-        bonus: 5000,
-        deductions: 4000,
-        grossSalary: 80000,
-        netSalary: 76000,
-        currency: "INR",
-      },
+      data: salary || null,
     });
   } catch (error: any) {
+    console.error("GET payroll error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch salary structure" } }, { status: 500 });
   }
 }
@@ -94,15 +84,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        userId: currentUser.id,
-        action: "SALARY_UPDATED",
-        entityType: "PAYROLL",
-        entityId: userId,
-        detailsJson: JSON.stringify({ grossSalary, netSalary }),
-      },
-    });
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: currentUser.id,
+          action: "SALARY_UPDATED",
+          entityType: "PAYROLL",
+          entityId: userId,
+          detailsJson: JSON.stringify({ grossSalary, netSalary }),
+        },
+      });
+    } catch (e) {}
 
     return NextResponse.json({
       success: true,
@@ -110,6 +102,7 @@ export async function POST(request: NextRequest) {
       message: "Salary structure updated successfully",
     });
   } catch (error: any) {
+    console.error("POST payroll error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to update salary" } }, { status: 500 });
   }
 }

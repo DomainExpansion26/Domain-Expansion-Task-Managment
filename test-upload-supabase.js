@@ -49,7 +49,6 @@ function extractCookie(headers) {
 }
 
 async function testUpload() {
-  console.log("1. Registering/Logging in test user...");
   const email = `uploader_${Date.now()}@company.com`;
   const password = "Password123!";
 
@@ -66,7 +65,6 @@ async function testUpload() {
   });
 
   const cookie = extractCookie(loginRes.headers);
-  console.log("2. Acquired session cookie:", Boolean(cookie));
 
   // Build multipart form data
   const boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
@@ -82,7 +80,6 @@ async function testUpload() {
   body += `tasks\r\n`;
   body += `--${boundary}--\r\n`;
 
-  console.log("3. Uploading file to /api/storage/upload...");
   const uploadRes = await request("/api/storage/upload", {
     method: "POST",
     headers: {
@@ -92,8 +89,6 @@ async function testUpload() {
     body: Buffer.from(body),
   });
 
-  console.log("4. Upload Response Status:", uploadRes.status);
-  console.log("5. Upload Result Data:", JSON.stringify(uploadRes.data, null, 2));
 }
 
 testUpload().catch(console.error);

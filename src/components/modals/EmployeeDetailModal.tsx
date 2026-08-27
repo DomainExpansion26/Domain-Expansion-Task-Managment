@@ -22,8 +22,11 @@ import {
   ExternalLink,
   Plus,
   TrendingUp,
+  DollarSign,
+  Download,
+  Upload,
 } from "lucide-react";
-import { formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
+import { formatDateTime, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 
 interface EmployeeDetailModalProps {
   isOpen: boolean;
@@ -40,9 +43,7 @@ export function EmployeeDetailModal({
   onEmployeeUpdated,
   currentUser,
 }: EmployeeDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<
-    "profile" | "attendance" | "leaves" | "documents" | "projects" | "activity"
-  >("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "attendance" | "leaves" | "documents" | "payroll">("profile");
 
   const [employeeData, setEmployeeData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,19 +52,29 @@ export function EmployeeDetailModal({
 
   // Edit Form Fields
   const [editName, setEditName] = useState("");
+  const [editEmployeeId, setEditEmployeeId] = useState("");
   const [editJobTitle, setEditJobTitle] = useState("");
   const [editDepartment, setEditDepartment] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editEmergency, setEditEmergency] = useState("");
   const [editAddress, setEditAddress] = useState("");
   const [editStatus, setEditStatus] = useState("ACTIVE");
+  const [editDob, setEditDob] = useState("");
+  const [editJoiningDate, setEditJoiningDate] = useState("");
+
+  // Payroll Edit Fields
+  const [salaryBasic, setSalaryBasic] = useState<number>(0);
+  const [salaryHra, setSalaryHra] = useState<number>(0);
+  const [salaryAllowances, setSalaryAllowances] = useState<number>(0);
+  const [salaryBonus, setSalaryBonus] = useState<number>(0);
+  const [salaryDeductions, setSalaryDeductions] = useState<number>(0);
+  const [savingSalary, setSavingSalary] = useState(false);
 
   // Leave approval response comment
-  const [leaveComment, setLeaveComment] = useState("");
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  const showToast = (text: string) => {
-    setToastMsg(text);
+  const showToast = (text: string, type: "success" | "error" = "success") => {
+    setToastMsg({ text, type });
     setTimeout(() => setToastMsg(null), 3500);
   };
 
@@ -77,12 +88,24 @@ export function EmployeeDetailModal({
         setEmployeeData(json.data);
         const u = json.data.user;
         setEditName(u.name || "");
-        setEditJobTitle(u.jobTitle || "");
-        setEditDepartment(u.department || "");
+        setEditEmployeeId(u.hrProfile?.employeeId || "");
+        setEditJobTitle(u.jobTitle || u.hrProfile?.designation || "");
+        setEditDepartment(u.department || u.hrProfile?.department || "");
         setEditPhone(u.hrProfile?.phone || "");
         setEditEmergency(u.hrProfile?.emergencyContact || "");
         setEditAddress(u.hrProfile?.address || "");
         setEditStatus(u.hrProfile?.status || (u.isActive ? "ACTIVE" : "INACTIVE"));
+        setEditDob(u.hrProfile?.dateOfBirth ? new Date(u.hrProfile.dateOfBirth).toISOString().split("T")[0] : "");
+        setEditJoiningDate(u.hrProfile?.joiningDate ? new Date(u.hrProfile.joiningDate).toISOString().split("T")[0] : "");
+
+        if (json.data.salaryStructure) {
+          const s = json.data.salaryStructure;
+          setSalaryBasic(s.basic || 0);
+          setSalaryHra(s.hra || 0);
+          setSalaryAllowances(s.allowances || 0);
+          setSalaryBonus(s.bonus || 0);
+          setSalaryDeductions(s.deductions || 0);
+        }
       }
     } catch (err) {
       console.error("Failed to load employee details", err);
@@ -101,7 +124,6 @@ export function EmployeeDetailModal({
 
   if (!isOpen || !userId) return null;
 
-  // Handle Save Profile Changes
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -111,611 +133,652 @@ export function EmployeeDetailModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName,
+          employeeId: editEmployeeId || undefined,
           jobTitle: editJobTitle,
+          designation: editJobTitle,
           department: editDepartment,
           phone: editPhone,
           emergencyContact: editEmergency,
           address: editAddress,
           status: editStatus,
-          isActive: editStatus !== "TERMINATED" && editStatus !== "INACTIVE",
+          dateOfBirth: editDob || null,
+          joiningDate: editJoiningDate || null,
         }),
       });
+
       const json = await res.json();
       if (json.success) {
-        showToast("Employee profile updated successfully");
+        showToast("Employee profile updated successfully", "success");
         setIsEditing(false);
         fetchDetails();
         if (onEmployeeUpdated) onEmployeeUpdated();
       } else {
-        alert(json.error?.message || "Failed to update profile");
+        showToast(json.error?.message || "Failed to update profile", "error");
       }
-    } catch (err) {
-      alert("Network error updating profile");
+    } catch (err: any) {
+      showToast("Network error updating profile", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle Leave Approval / Rejection
-  const handleLeaveDecision = async (leaveId: string, status: "APPROVED" | "REJECTED") => {
+  const handleSaveSalary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSalary(true);
     try {
-      const res = await fetch("/api/hrms/leave", {
-        method: "PATCH",
+      const res = await fetch("/api/hrms/payroll", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leaveId, status, approverComment: leaveComment || undefined }),
+        body: JSON.stringify({
+          userId,
+          basic: salaryBasic,
+          hra: salaryHra,
+          allowances: salaryAllowances,
+          bonus: salaryBonus,
+          deductions: salaryDeductions,
+        }),
       });
       const json = await res.json();
       if (json.success) {
-        showToast(`Leave request ${status.toLowerCase()} successfully`);
-        setLeaveComment("");
+        showToast("Salary structure updated successfully", "success");
         fetchDetails();
-        if (onEmployeeUpdated) onEmployeeUpdated();
       } else {
-        alert(json.error?.message || "Failed to update leave");
+        showToast(json.error?.message || "Failed to update salary", "error");
       }
     } catch (err) {
-      console.error(err);
+      showToast("Error updating salary", "error");
+    } finally {
+      setSavingSalary(false);
     }
   };
 
-  const user = employeeData?.user;
-  const attSummary = employeeData?.attendanceSummary;
-  const leaves = employeeData?.leaves;
-  const docs = employeeData?.documents || [];
-  const projects = employeeData?.projects || [];
-  const tasks = employeeData?.tasks || [];
-  const timeline = employeeData?.timeline || [];
+  const u = employeeData?.user;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fade-in text-[#F3F4F6]">
-      <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Toast Notification */}
-        {toastMsg && (
-          <div className="absolute top-4 right-16 z-50 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-semibold animate-fade-in flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>{toastMsg}</span>
-          </div>
-        )}
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-4xl max-h-[92vh] bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-900 dark:text-[#F3F4F6]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
-          <div className="flex items-center gap-3 min-w-0">
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.name} className="w-11 h-11 rounded-2xl object-cover" />
-            ) : (
-              <div
-                className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
-                  user?.name || "Employee"
-                )} flex items-center justify-center font-bold text-white text-sm uppercase flex-shrink-0`}
-              >
-                {getInitials(user?.name || "Employee")}
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-extrabold text-white truncate">{user?.name || "Loading..."}</h2>
-                <span className="px-2 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 font-mono text-[10px] font-bold">
-                  {user?.hrProfile?.employeeId || "EMP-ID"}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/70 dark:bg-[#1A1A1A]">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
+                u?.name || "User"
+              )} flex items-center justify-center text-sm font-black text-white uppercase shadow-md flex-shrink-0`}
+            >
+              {getInitials(u?.name || "U")}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                  {u?.name || "Employee Profile"}
+                </h2>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+                  {u?.hrProfile?.employeeId || "EMP-" + (userId.slice(0, 5).toUpperCase())}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                    user?.hrProfile?.status === "ACTIVE" || user?.isActive
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                      : "bg-red-500/15 text-red-400 border-red-500/30"
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    (u?.hrProfile?.status || (u?.isActive ? "ACTIVE" : "INACTIVE")) === "ACTIVE"
+                      ? "bg-emerald-500/15 text-emerald-500"
+                      : "bg-amber-500/15 text-amber-500"
                   }`}
                 >
-                  {user?.hrProfile?.status || (user?.isActive ? "ACTIVE" : "INACTIVE")}
+                  {u?.hrProfile?.status || (u?.isActive ? "ACTIVE" : "INACTIVE")}
                 </span>
               </div>
-              <p className="text-xs text-[#888898] truncate">
-                {user?.jobTitle} &bull; {user?.department} &bull; {user?.email}
+              <p className="text-xs text-gray-500 dark:text-[#888898]">
+                {u?.jobTitle || "Employee"} • {u?.department || "General"} • {u?.email}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[#888898] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-gray-200 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 px-6 py-2 border-b border-[#2E2E2E] bg-[#141414] overflow-x-auto no-scrollbar">
-          {[
-            { id: "profile", label: "Profile & Overview", icon: User },
-            { id: "attendance", label: "Attendance Ledger", icon: Clock },
-            { id: "leaves", label: `Leaves (${leaves?.history?.length || 0})`, icon: Calendar },
-            { id: "documents", label: `Documents (${docs.length})`, icon: FileText },
-            { id: "projects", label: `Projects & Tasks (${projects.length}/${tasks.length})`, icon: Briefcase },
-            { id: "activity", label: "Activity History", icon: Activity },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-[#FF6200] text-white shadow-md shadow-[#FF6200]/20 font-bold"
-                    : "text-[#ACACB8] hover:text-white hover:bg-[#1A1A1A]"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+        {/* Toast Alert */}
+        {toastMsg && (
+          <div
+            className={`px-6 py-2 text-xs font-semibold text-white flex items-center gap-2 ${
+              toastMsg.type === "success" ? "bg-emerald-600" : "bg-rose-600"
+            }`}
+          >
+            {toastMsg.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            <span>{toastMsg.text}</span>
+          </div>
+        )}
+
+        {/* Tabs Bar */}
+        <div className="flex border-b border-gray-200 dark:border-[#2E2E2E] px-6 bg-white dark:bg-[#141414] overflow-x-auto text-xs font-bold">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "profile"
+                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            👤 HR Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("attendance")}
+            className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "attendance"
+                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            ⏱️ Attendance Logs ({employeeData?.attendanceSummary?.recentLogs?.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab("leaves")}
+            className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "leaves"
+                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            🏖️ Leave History ({employeeData?.leaves?.history?.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab("documents")}
+            className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "documents"
+                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            📁 Documents ({employeeData?.documents?.length || 0})
+          </button>
+          <button
+            onClick={() => setActiveTab("payroll")}
+            className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "payroll"
+                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            💰 Payroll & Salary Structure
+          </button>
         </div>
 
-        {/* Modal Body Content */}
-        <div className="p-6 overflow-y-auto flex-1 text-xs space-y-6">
+        {/* Modal Body */}
+        <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="p-12 text-center text-[#888898]">Loading 360° employee information...</div>
+            <div className="py-20 flex flex-col items-center justify-center gap-3 text-xs text-gray-500 dark:text-[#888898]">
+              <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <span>Loading employee HR records...</span>
+            </div>
           ) : (
             <>
-              {/* ========================================================= */}
-              {/* TAB 1: PROFILE & OVERVIEW */}
-              {/* ========================================================= */}
+              {/* TAB 1: PROFILE */}
               {activeTab === "profile" && (
                 <div className="space-y-6">
-                  {/* Action Bar */}
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                      Employee HRMS Master Record
+                    <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                      Employee HR Information
                     </h3>
-                    {!isEditing ? (
-                      <button
-                        onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#252525] hover:bg-[#FF6200] text-[#ACACB8] hover:text-white text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Edit Employee Details</span>
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsEditing(false)}
-                          className="px-3 py-1.5 rounded-xl bg-[#1A1A1A] text-[#888898] hover:text-white"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSaveProfile}
-                          disabled={saving}
-                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold shadow-md shadow-emerald-600/20 cursor-pointer"
-                        >
-                          <Save className="w-3.5 h-3.5" />
-                          <span>{saving ? "Saving..." : "Save Changes"}</span>
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#1A1A1A] text-xs font-semibold hover:border-cyan-500 text-gray-700 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>{isEditing ? "Cancel Edit" : "Edit Profile"}</span>
+                    </button>
                   </div>
 
-                  {!isEditing ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Personal Info */}
-                      <div className="p-5 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
-                        <span className="text-[10px] font-bold text-[#FF8C42] uppercase font-mono block">
-                          Personal Information
-                        </span>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Full Name:</span>
-                            <span className="font-bold text-white">{user?.name}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Email:</span>
-                            <span className="text-white">{user?.email}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Phone:</span>
-                            <span className="text-white font-mono">{user?.hrProfile?.phone || "N/A"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Emergency Contact:</span>
-                            <span className="text-white">{user?.hrProfile?.emergencyContact || "N/A"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Address:</span>
-                            <span className="text-white">{user?.hrProfile?.address || "N/A"}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Professional Info */}
-                      <div className="p-5 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
-                        <span className="text-[10px] font-bold text-emerald-400 uppercase font-mono block">
-                          Professional & Account Details
-                        </span>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Employee ID:</span>
-                            <span className="font-bold text-white font-mono">{user?.hrProfile?.employeeId || "N/A"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Designation:</span>
-                            <span className="text-white">{user?.jobTitle}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Department:</span>
-                            <span className="text-white font-mono">{user?.department}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Reporting Manager:</span>
-                            <span className="text-white">{user?.manager?.name || "Direct to CTO"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Joining Date:</span>
-                            <span className="text-white font-mono">
-                              {new Date(user?.hrProfile?.joiningDate || user?.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#888898]">Account Status:</span>
-                            <span className="font-bold text-emerald-400 font-mono">{user?.hrProfile?.status}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleSaveProfile} className="space-y-4">
+                  {isEditing ? (
+                    <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Full Name</label>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Full Name</label>
                           <input
                             type="text"
                             required
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Designation</label>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Employee ID</label>
                           <input
                             type="text"
-                            required
+                            value={editEmployeeId}
+                            onChange={(e) => setEditEmployeeId(e.target.value)}
+                            placeholder="e.g. EMP001"
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Designation / Job Title</label>
+                          <input
+                            type="text"
                             value={editJobTitle}
                             onChange={(e) => setEditJobTitle(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Department</label>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Department</label>
                           <input
                             type="text"
-                            required
                             value={editDepartment}
                             onChange={(e) => setEditDepartment(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Account Status</label>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Phone Number</label>
+                          <input
+                            type="text"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Emergency Contact</label>
+                          <input
+                            type="text"
+                            value={editEmergency}
+                            onChange={(e) => setEditEmergency(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Date of Birth</label>
+                          <input
+                            type="date"
+                            value={editDob}
+                            onChange={(e) => setEditDob(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Joining Date</label>
+                          <input
+                            type="date"
+                            value={editJoiningDate}
+                            onChange={(e) => setEditJoiningDate(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Employment Status</label>
                           <select
                             value={editStatus}
                             onChange={(e) => setEditStatus(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
                           >
                             <option value="ACTIVE">ACTIVE</option>
-                            <option value="PENDING_ACTIVATION">PENDING ACTIVATION</option>
-                            <option value="SUSPENDED">SUSPENDED</option>
-                            <option value="RESIGNED">RESIGNED</option>
+                            <option value="ON_LEAVE">ON_LEAVE</option>
+                            <option value="PROBATION">PROBATION</option>
+                            <option value="INACTIVE">INACTIVE</option>
                             <option value="TERMINATED">TERMINATED</option>
                           </select>
                         </div>
+                      </div>
 
-                        <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Mobile Phone</label>
-                          <input
-                            type="text"
-                            placeholder="+91 98765 43210"
-                            value={editPhone}
-                            onChange={(e) => setEditPhone(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Residential Address</label>
+                        <textarea
+                          rows={2}
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl p-3 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
 
-                        <div>
-                          <label className="block text-[#888898] mb-1 font-semibold">Emergency Contact</label>
-                          <input
-                            type="text"
-                            placeholder="Family Name - +91 98765 00000"
-                            value={editEmergency}
-                            onChange={(e) => setEditEmergency(e.target.value)}
-                            className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
-                          />
-                        </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditing(false)}
+                          className="px-4 py-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] text-gray-600 dark:text-[#888898]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={saving}
+                          className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-md disabled:opacity-50"
+                        >
+                          {saving ? "Saving Changes..." : "Save Profile"}
+                        </button>
                       </div>
                     </form>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                      {/* Personal Info Box */}
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] space-y-3">
+                        <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-cyan-500" />
+                          <span>Personal Details</span>
+                        </h4>
+                        <div className="space-y-2 text-gray-600 dark:text-[#ACACB8]">
+                          <div className="flex justify-between">
+                            <span>Date of Birth:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                              {u?.hrProfile?.dateOfBirth ? formatDate(u.hrProfile.dateOfBirth) : "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Phone:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                              {u?.hrProfile?.phone || "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Emergency Contact:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                              {u?.hrProfile?.emergencyContact || "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Address:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white text-right max-w-[200px]">
+                              {u?.hrProfile?.address || "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Employment Info Box */}
+                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] space-y-3">
+                        <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                          <Briefcase className="w-4 h-4 text-cyan-500" />
+                          <span>Employment Information</span>
+                        </h4>
+                        <div className="space-y-2 text-gray-600 dark:text-[#ACACB8]">
+                          <div className="flex justify-between">
+                            <span>Department:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {u?.department || u?.hrProfile?.department || "General"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Designation:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {u?.jobTitle || u?.hrProfile?.designation || "Employee"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Joining Date:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                              {u?.hrProfile?.joiningDate ? formatDate(u.hrProfile.joiningDate) : "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Manager:</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {u?.manager?.name || "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* ========================================================= */}
-              {/* TAB 2: ATTENDANCE LEDGER */}
-              {/* ========================================================= */}
+              {/* TAB 2: ATTENDANCE LOGS */}
               {activeTab === "attendance" && (
                 <div className="space-y-4">
-                  {/* Summary Metric Counters */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                      <span className="text-[10px] text-[#888898] uppercase block">Present Days</span>
-                      <span className="text-lg font-bold text-emerald-400 font-mono mt-0.5 block">
-                        {attSummary?.presentDays || 0}
-                      </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
+                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Present Days</div>
+                      <div className="text-lg font-black text-emerald-500 mt-1">
+                        {employeeData?.attendanceSummary?.presentDays || 0}
+                      </div>
                     </div>
-
-                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                      <span className="text-[10px] text-[#888898] uppercase block">Half Days</span>
-                      <span className="text-lg font-bold text-amber-400 font-mono mt-0.5 block">
-                        {attSummary?.halfDays || 0}
-                      </span>
+                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
+                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Half Days</div>
+                      <div className="text-lg font-black text-amber-500 mt-1">
+                        {employeeData?.attendanceSummary?.halfDays || 0}
+                      </div>
                     </div>
-
-                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                      <span className="text-[10px] text-[#888898] uppercase block">Leave Days</span>
-                      <span className="text-lg font-bold text-purple-400 font-mono mt-0.5 block">
-                        {attSummary?.leaveDays || 0}
-                      </span>
+                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
+                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Leave Days</div>
+                      <div className="text-lg font-black text-purple-500 mt-1">
+                        {employeeData?.attendanceSummary?.leaveDays || 0}
+                      </div>
                     </div>
-
-                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                      <span className="text-[10px] text-[#888898] uppercase block">Late Marks</span>
-                      <span className="text-lg font-bold text-pink-400 font-mono mt-0.5 block">
-                        {attSummary?.lateArrivals || 0}
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                      <span className="text-[10px] text-[#888898] uppercase block">Total Hours</span>
-                      <span className="text-lg font-bold text-[#FF8C42] font-mono mt-0.5 block">
-                        {attSummary?.totalWorkingHours || 0} hrs
-                      </span>
+                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
+                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Total Hours</div>
+                      <div className="text-lg font-black text-cyan-500 mt-1 font-mono">
+                        {employeeData?.attendanceSummary?.totalWorkingHours || 0}h
+                      </div>
                     </div>
                   </div>
 
-                  {/* Attendance Records Table */}
-                  <div className="rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#202020] text-[#888898] uppercase font-mono text-[10px]">
-                        <tr>
-                          <th className="p-3">Date</th>
-                          <th className="p-3">Punch In</th>
-                          <th className="p-3">Punch Out</th>
-                          <th className="p-3">Break</th>
-                          <th className="p-3">Hours</th>
-                          <th className="p-3">Status</th>
+                  {employeeData?.attendanceSummary?.recentLogs?.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                      No attendance records found for this employee.
+                    </div>
+                  ) : (
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Punch In</th>
+                          <th className="py-2.5 px-3">Punch Out</th>
+                          <th className="py-2.5 px-3">Hours</th>
+                          <th className="py-2.5 px-3">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#2E2E2E]/60 text-white">
-                        {attSummary?.recentLogs?.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="p-6 text-center text-[#888898] italic">
-                              No attendance recorded yet for this employee.
+                      <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                        {employeeData.attendanceSummary.recentLogs.map((log: any) => (
+                          <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                            <td className="py-2.5 px-3 font-mono font-semibold">{formatDate(log.date)}</td>
+                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                              {log.punchIn ? new Date(log.punchIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                              {log.punchOut ? new Date(log.punchOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono font-bold">{log.totalWorkingHours || 0}h</td>
+                            <td className="py-2.5 px-3">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  log.status === "FULL_DAY" || log.status === "PRESENT"
+                                    ? "bg-emerald-500/15 text-emerald-500"
+                                    : log.status === "HALF_DAY"
+                                    ? "bg-amber-500/15 text-amber-500"
+                                    : "bg-purple-500/15 text-purple-500"
+                                }`}
+                              >
+                                {log.status}
+                              </span>
                             </td>
                           </tr>
-                        ) : (
-                          attSummary?.recentLogs?.map((rec: any) => (
-                            <tr key={rec.id} className="hover:bg-[#252525]/40">
-                              <td className="p-3 font-mono font-bold">{new Date(rec.date).toLocaleDateString()}</td>
-                              <td className="p-3">{rec.punchIn ? formatDateTime(rec.punchIn) : "--:--"}</td>
-                              <td className="p-3">{rec.punchOut ? formatDateTime(rec.punchOut) : "--:--"}</td>
-                              <td className="p-3 font-mono">{rec.breakDurationMinutes || 0}m</td>
-                              <td className="p-3 font-mono font-bold text-[#FF8C42]">{rec.totalWorkingHours}h</td>
-                              <td className="p-3">
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                    rec.status === "FULL_DAY"
-                                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                                      : rec.status === "HALF_DAY"
-                                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                                      : "bg-purple-500/15 text-purple-400 border-purple-500/30"
-                                  }`}
-                                >
-                                  {rec.status.replace("_", " ")}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
-                        )}
+                        ))}
                       </tbody>
                     </table>
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* ========================================================= */}
-              {/* TAB 3: LEAVES & APPROVALS */}
-              {/* ========================================================= */}
+              {/* TAB 3: LEAVES */}
               {activeTab === "leaves" && (
                 <div className="space-y-4">
-                  <div className="space-y-3">
-                    {leaves?.history?.length === 0 ? (
-                      <div className="p-8 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] text-center text-[#888898] italic">
-                        No leave applications from this employee.
-                      </div>
-                    ) : (
-                      leaves?.history?.map((l: any) => (
-                        <div
-                          key={l.id}
-                          className="p-4 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-2 flex flex-col justify-between"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <span className="font-bold text-white text-xs">{l.leaveType}</span>
-                              <span className="text-[#888898] text-[11px] ml-2 font-mono">
-                                {new Date(l.startDate).toLocaleDateString()} &rarr; {new Date(l.endDate).toLocaleDateString()} ({l.daysCount || 1} day(s))
+                  {employeeData?.leaves?.history?.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                      No leave records found for this employee.
+                    </div>
+                  ) : (
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase">
+                          <th className="py-2.5 px-3">Type</th>
+                          <th className="py-2.5 px-3">Dates</th>
+                          <th className="py-2.5 px-3">Days</th>
+                          <th className="py-2.5 px-3">Reason</th>
+                          <th className="py-2.5 px-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                        {employeeData.leaves.history.map((l: any) => (
+                          <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                            <td className="py-2.5 px-3 font-bold">{l.leaveType}</td>
+                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                              {formatDate(l.startDate)} - {formatDate(l.endDate)}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono font-bold">{l.daysCount}</td>
+                            <td className="py-2.5 px-3 text-gray-600 dark:text-[#ACACB8]">{l.reason}</td>
+                            <td className="py-2.5 px-3">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  l.status === "APPROVED"
+                                    ? "bg-emerald-500/15 text-emerald-500"
+                                    : l.status === "PENDING"
+                                    ? "bg-amber-500/15 text-amber-500"
+                                    : "bg-rose-500/15 text-rose-500"
+                                }`}
+                              >
+                                {l.status}
                               </span>
-                            </div>
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                l.status === "APPROVED"
-                                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                                  : l.status === "REJECTED"
-                                  ? "bg-red-500/15 text-red-400 border-red-500/30"
-                                  : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                              }`}
-                            >
-                              {l.status}
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-[#ACACB8]">{l.reason}</p>
-
-                          {/* Action Buttons for Pending Requests */}
-                          {l.status === "PENDING" && (
-                            <div className="flex items-center gap-2 pt-2 border-t border-[#2E2E2E]">
-                              <input
-                                type="text"
-                                placeholder="Approver comment..."
-                                value={leaveComment}
-                                onChange={(e) => setLeaveComment(e.target.value)}
-                                className="flex-1 bg-[#141414] border border-[#2E2E2E] rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none"
-                              />
-                              <button
-                                onClick={() => handleLeaveDecision(l.id, "APPROVED")}
-                                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleLeaveDecision(l.id, "REJECTED")}
-                                className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               )}
 
-              {/* ========================================================= */}
               {/* TAB 4: DOCUMENTS */}
-              {/* ========================================================= */}
               {activeTab === "documents" && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {docs.length === 0 ? (
-                      <div className="p-8 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] text-center text-[#888898] col-span-full italic">
-                        No documents uploaded for this employee.
-                      </div>
-                    ) : (
-                      docs.map((d: any) => (
-                        <div key={d.id} className="p-4 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <FileText className="w-5 h-5 text-[#FF6200] flex-shrink-0" />
-                            <div className="min-w-0">
-                              <div className="font-bold text-white text-xs truncate">{d.fileName}</div>
-                              <div className="text-[10px] text-[#888898]">{(d.fileSize / 1024).toFixed(1)} KB</div>
+                  {employeeData?.documents?.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                      No documents available for this employee.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {employeeData.documents.map((doc: any) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-cyan-500" />
+                            <div>
+                              <div className="font-bold text-gray-900 dark:text-white">{doc.fileName}</div>
+                              <div className="text-[10px] text-gray-400">
+                                {(doc.fileSize / 1024).toFixed(1)} KB • Uploaded on {formatDate(doc.createdAt)}
+                              </div>
                             </div>
                           </div>
                           <a
-                            href={d.fileUrl}
+                            href={doc.fileUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-2 rounded-xl bg-[#252525] hover:bg-[#FF6200] text-[#ACACB8] hover:text-white transition-colors"
+                            className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8]"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <Download className="w-4 h-4" />
                           </a>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ========================================================= */}
-              {/* TAB 5: PROJECTS & TASKS */}
-              {/* ========================================================= */}
-              {activeTab === "projects" && (
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-[10px] font-bold text-[#FF8C42] uppercase font-mono block mb-2">
-                      Assigned Projects ({projects.length})
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {projects.length === 0 ? (
-                        <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] text-xs col-span-full italic">
-                          No active projects assigned.
-                        </div>
-                      ) : (
-                        projects.map((p: any) => (
-                          <div key={p.id} className="p-3.5 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] flex justify-between items-center">
-                            <span className="font-bold text-white text-xs">{p.name}</span>
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold font-mono">
-                              {p.status}
-                            </span>
-                          </div>
-                        ))
-                      )}
+                      ))}
                     </div>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase font-mono block mb-2">
-                      Recent Assigned Tasks ({tasks.length})
-                    </span>
-                    <div className="space-y-2">
-                      {tasks.length === 0 ? (
-                        <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] text-xs italic">
-                          No tasks assigned to this employee.
-                        </div>
-                      ) : (
-                        tasks.map((t: any) => (
-                          <div key={t.id} className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] flex justify-between items-center">
-                            <div>
-                              <div className="font-semibold text-white text-xs">{t.title}</div>
-                              <div className="text-[10px] text-[#888898]">Priority: {t.priority}</div>
-                            </div>
-                            <span className="px-2 py-0.5 rounded-full bg-[#252525] text-[#ACACB8] text-[10px] font-mono font-bold">
-                              {t.status.replace("_", " ")}
-                            </span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ========================================================= */}
-              {/* TAB 6: ACTIVITY HISTORY */}
-              {/* ========================================================= */}
-              {activeTab === "activity" && (
-                <div className="space-y-3">
-                  {timeline.length === 0 ? (
-                    <div className="p-8 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] text-center text-[#888898] italic">
-                      No lifecycle events or promotions recorded yet.
-                    </div>
-                  ) : (
-                    timeline.map((event: any) => (
-                      <div key={event.id} className="p-4 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-start gap-3">
-                        <div className="p-2 rounded-xl bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 flex-shrink-0">
-                          <Activity className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-white text-xs">{event.title}</div>
-                          <div className="text-[11px] text-[#888898] mt-0.5">{event.description}</div>
-                          <div className="text-[10px] text-[#FF8C42] font-mono mt-1">
-                            {new Date(event.effectiveDate || event.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))
                   )}
                 </div>
+              )}
+
+              {/* TAB 5: PAYROLL & SALARY */}
+              {activeTab === "payroll" && (
+                <form onSubmit={handleSaveSalary} className="space-y-4 text-xs">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                      Salary Structure & Compensation (INR)
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Basic Salary</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salaryBasic}
+                        onChange={(e) => setSalaryBasic(Number(e.target.value))}
+                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">House Rent Allowance (HRA)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salaryHra}
+                        onChange={(e) => setSalaryHra(Number(e.target.value))}
+                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Special Allowances</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salaryAllowances}
+                        onChange={(e) => setSalaryAllowances(Number(e.target.value))}
+                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Bonus / Variable</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salaryBonus}
+                        onChange={(e) => setSalaryBonus(Number(e.target.value))}
+                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Deductions (PF / Tax)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salaryDeductions}
+                        onChange={(e) => setSalaryDeductions(Number(e.target.value))}
+                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex flex-col justify-center">
+                      <div className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase">Calculated Net Pay</div>
+                      <div className="text-xl font-black text-cyan-600 dark:text-cyan-400 font-mono">
+                        ₹{(salaryBasic + salaryHra + salaryAllowances + salaryBonus - salaryDeductions).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={savingSalary}
+                      className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-md disabled:opacity-50"
+                    >
+                      {savingSalary ? "Saving..." : "Save Salary Structure"}
+                    </button>
+                  </div>
+                </form>
               )}
             </>
           )}

@@ -62,36 +62,36 @@ export function LeaveApplyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-2xl overflow-hidden text-gray-900 dark:text-[#F3F4F6]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/70 dark:bg-[#1A1A1A]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30">
+            <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Apply for Leave</h2>
-              <p className="text-[11px] text-[#888898]">Submit time-off request for manager & HR approval</p>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">Apply for Leave</h2>
+              <p className="text-[11px] text-gray-500 dark:text-[#888898]">Submit time-off request for HR approval</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-500 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1">Leave Category *</label>
+            <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Leave Category *</label>
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 font-semibold"
             >
               <option value="CASUAL">Casual Leave (CL)</option>
               <option value="SICK">Sick Leave (SL)</option>
@@ -103,52 +103,52 @@ export function LeaveApplyModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1">Start Date *</label>
+              <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Start Date *</label>
               <input
                 type="date"
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1">End Date *</label>
+              <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">End Date *</label>
               <input
                 type="date"
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1">Reason / Handover Details *</label>
+            <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Reason for Leave *</label>
             <textarea
               rows={3}
               required
-              placeholder="Reason for leave and any critical task handover instructions..."
+              placeholder="Provide reason for time-off..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg p-3 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200] leading-relaxed"
+              className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl p-3 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 leading-relaxed"
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2E2E2E]">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-200 dark:border-[#2E2E2E]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-slate-300 hover:text-white"
+              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] text-gray-600 dark:text-[#888898]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)]"
+              className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md disabled:opacity-50 transition-all"
             >
               {loading ? "Submitting..." : "Submit Application"}
             </button>

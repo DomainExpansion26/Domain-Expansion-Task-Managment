@@ -43,15 +43,11 @@ function extractCookie(headers) {
 }
 
 async function testLiveAuth() {
-  console.log("==========================================================================");
-  console.log("🧪 TESTING LIVE AUTHENTICATION WITH NEON POSTGRESQL");
-  console.log("==========================================================================\n");
 
   const email = `employee_${Date.now()}@domainexpansion.in`;
   const password = "ProductionPass123!";
 
   // 1. Create Account via /api/auth/register
-  console.log(`[1] Registering account: ${email}...`);
   const regRes = await request("/api/auth/register", {
     method: "POST",
     body: {
@@ -64,44 +60,32 @@ async function testLiveAuth() {
       portal: "MAIN",
     },
   });
-  console.log("- Registration status:", regRes.status, regRes.data?.message || regRes.data);
 
   // 2. Login
-  console.log("\n[2] Logging in...");
   const login1 = await request("/api/auth/login", {
     method: "POST",
     body: { email, password, portal: "MAIN" },
   });
-  console.log("- Login 1 status:", login1.status === 200 ? "✓ 200 OK" : "❌ Failed", `User: ${login1.data.data?.user?.email}`);
   const cookie = extractCookie(login1.headers);
 
   // 3. Verify session
-  console.log("\n[3] Verifying session with /api/auth/me...");
   const meRes = await request("/api/auth/me", {
     method: "GET",
     headers: { Cookie: cookie },
   });
-  console.log("- Me verification:", meRes.status === 200 ? "✓ 200 OK (Authenticated)" : "❌ Failed");
 
   // 4. Logout
-  console.log("\n[4] Logging out...");
   const logoutRes = await request("/api/auth/logout", {
     method: "POST",
     headers: { Cookie: cookie },
   });
-  console.log("- Logout status:", logoutRes.status === 200 ? "✓ 200 OK (Cookie Cleared)" : "❌ Failed");
 
   // 5. Subsequent Login after logout
-  console.log("\n[5] Logging back in after logout...");
   const login2 = await request("/api/auth/login", {
     method: "POST",
     body: { email, password, portal: "MAIN" },
   });
-  console.log("- Login 2 status:", login2.status === 200 ? "✓ 200 OK (Persistent in PostgreSQL!)" : "❌ Failed");
 
-  console.log("\n==========================================================================");
-  console.log("🎉 LIVE POSTGRESQL PRODUCTION AUTHENTICATION VERIFIED 100%!");
-  console.log("==========================================================================");
 }
 
 testLiveAuth().catch((e) => {

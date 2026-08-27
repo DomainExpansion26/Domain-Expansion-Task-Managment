@@ -22,7 +22,6 @@ async function verifyEmpty() {
     auditLogs: await prisma.auditLog.count(),
   };
 
-  console.log("Verified Current Database Counts:", counts);
 }
 
 verifyEmpty()

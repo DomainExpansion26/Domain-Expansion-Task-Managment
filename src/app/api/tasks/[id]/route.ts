@@ -24,12 +24,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       include: {
         project: {
           include: {
-            members: { include: { user: true } },
+            lead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            teamLead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            manager: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+              },
+            },
             sprints: true,
           },
         },
         assignees: { include: { user: true } },
-        reporter: true,
+        reporter: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
         sprint: true,
         subtasks: {
           include: { assignee: true },
@@ -56,6 +63,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           },
           orderBy: { createdAt: "desc" },
         },
+        relationsAsSource: {
+          include: { targetTask: { select: { id: true, taskKey: true, title: true, status: true, priority: true } } },
+        },
+        relationsAsTarget: {
+          include: { sourceTask: { select: { id: true, taskKey: true, title: true, status: true, priority: true } } },
+        },
       },
     });
 
@@ -64,6 +77,45 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         { success: false, error: { code: "NOT_FOUND", message: "Task not found" } },
         { status: 404 }
       );
+    }
+
+    // Fetch watchers & shares safely
+    let taskWatchers: any[] = [];
+    let taskShares: any[] = [];
+    let accountableUser: any = null;
+
+    try {
+      taskWatchers = (await prisma.$queryRaw`
+        SELECT w.id, w."taskId", w."userId", u.name, u.email, u."avatarUrl", u.role
+        FROM "TaskWatcher" w
+        JOIN "User" u ON w."userId" = u.id
+        WHERE w."taskId" = ${task.id}
+      `) as any[];
+    } catch {
+      taskWatchers = [];
+    }
+
+    try {
+      taskShares = (await prisma.$queryRaw`
+        SELECT s.id, s."taskId", s."userId", u.name, u.email, u."avatarUrl", u.role, sb.name as "sharedByName"
+        FROM "TaskShare" s
+        JOIN "User" u ON s."userId" = u.id
+        JOIN "User" sb ON s."sharedById" = sb.id
+        WHERE s."taskId" = ${task.id}
+      `) as any[];
+    } catch {
+      taskShares = [];
+    }
+
+    if ((task as any).accountableId) {
+      try {
+        accountableUser = await prisma.user.findUnique({
+          where: { id: (task as any).accountableId },
+          select: { id: true, name: true, email: true, avatarUrl: true, role: true },
+        });
+      } catch {
+        accountableUser = null;
+      }
     }
 
     const bugs = task.qaBugs || [];
@@ -80,11 +132,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       success: true,
       data: {
         ...task,
+        progress: (task as any).progress ?? 0,
+        category: (task as any).category,
+        version: (task as any).version,
+        accountable: accountableUser,
+        accountableId: (task as any).accountableId,
         assignees: task.assignees.map((a) => a.user),
+        watchers: taskWatchers,
+        isWatching: taskWatchers.some((w: any) => w.userId === currentUser.id),
+        shares: taskShares,
         bugStats,
       },
     });
   } catch (error: any) {
+    console.error("Task detail fetch error:", error);
     return NextResponse.json(
       { success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch task" } },
       { status: 500 }
@@ -107,7 +168,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const existing = await prisma.task.findFirst({
       where: { OR: [{ id }, { taskKey: id.toUpperCase() }] },
-      include: { assignees: true },
+      include: {
+        assignees: { include: { user: true } },
+        project: true,
+      },
     });
 
     if (!existing) {
@@ -120,7 +184,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const updateData: any = {};
     const activitiesToCreate: any[] = [];
 
-    // Check status change
+    // 1. Status change
     if (body.status && body.status !== existing.status) {
       updateData.status = body.status;
       activitiesToCreate.push({
@@ -131,11 +195,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         fieldChanged: "status",
         oldValue: existing.status,
         newValue: body.status,
-        description: `${currentUser.name} moved ${existing.taskKey} from ${existing.status} to ${body.status}`,
+        description: `Status changed from ${existing.status} to ${body.status}`,
       });
     }
 
-    // Check priority change
+    // 2. Priority change
     if (body.priority && body.priority !== existing.priority) {
       updateData.priority = body.priority;
       activitiesToCreate.push({
@@ -146,26 +210,103 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         fieldChanged: "priority",
         oldValue: existing.priority,
         newValue: body.priority,
-        description: `${currentUser.name} changed priority of ${existing.taskKey} to ${body.priority}`,
+        description: `Priority changed from ${existing.priority} to ${body.priority}`,
       });
     }
 
-    // Check title/description
+    // 3. Title change
     if (body.title && body.title !== existing.title) {
       updateData.title = body.title;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "title",
+        oldValue: existing.title,
+        newValue: body.title,
+        description: `Subject changed to "${body.title}"`,
+      });
     }
-    if (body.description !== undefined) {
+
+    // 4. Description change
+    if (body.description !== undefined && body.description !== existing.description) {
       updateData.description = body.description;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "description",
+        description: `Description updated`,
+      });
     }
+
     if (body.acceptanceCriteria !== undefined) {
       updateData.acceptanceCriteria = body.acceptanceCriteria;
     }
+
     if (body.taskType && body.taskType !== existing.taskType) {
       updateData.taskType = body.taskType;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "taskType",
+        oldValue: existing.taskType,
+        newValue: body.taskType,
+        description: `Type changed from ${existing.taskType} to ${body.taskType}`,
+      });
     }
+
+    // 5. Dates change
+    if (body.startDate !== undefined) {
+      const newStartDate = body.startDate ? new Date(body.startDate) : null;
+      updateData.startDate = newStartDate;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "startDate",
+        description: `Start date set to ${body.startDate ? new Date(body.startDate).toLocaleDateString() : "None"}`,
+      });
+    }
+
+    if (body.endDate !== undefined) {
+      const newEndDate = body.endDate ? new Date(body.endDate) : null;
+      updateData.endDate = newEndDate;
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "endDate",
+        description: `End date set to ${body.endDate ? new Date(body.endDate).toLocaleDateString() : "None"}`,
+      });
+    }
+
     if (body.dueDate !== undefined) {
       updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null;
     }
+
+    // 6. Progress, Category & Version (activity tracking)
+    if (body.progress !== undefined) {
+      const newProgress = Math.min(100, Math.max(0, parseInt(body.progress, 10) || 0));
+      activitiesToCreate.push({
+        taskId: existing.id,
+        projectId: existing.projectId,
+        userId: currentUser.id,
+        action: "UPDATED",
+        fieldChanged: "progress",
+        oldValue: `${(existing as any).progress ?? 0}%`,
+        newValue: `${newProgress}%`,
+        description: `% Complete changed to ${newProgress}%`,
+      });
+    }
+
+    // 9. Estimates & Logged hours
     if (body.estimatedHours !== undefined) {
       updateData.estimatedHours = Number(body.estimatedHours);
       activitiesToCreate.push({
@@ -176,9 +317,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         fieldChanged: "estimatedHours",
         oldValue: String(existing.estimatedHours || 0),
         newValue: String(body.estimatedHours),
-        description: `${currentUser.name} updated estimate on ${existing.taskKey} to ${body.estimatedHours}h`,
+        description: `Estimated hours set to ${body.estimatedHours}h`,
       });
     }
+
     if (body.addLoggedHours !== undefined && Number(body.addLoggedHours) > 0) {
       const added = Number(body.addLoggedHours);
       const newTotal = (existing.loggedHours || 0) + added;
@@ -191,24 +333,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         fieldChanged: "loggedHours",
         oldValue: String(existing.loggedHours || 0),
         newValue: String(newTotal),
-        description: `${currentUser.name} logged ${added}h on ${existing.taskKey}${body.worklogNote ? ` ("${body.worklogNote}")` : ""}`,
+        description: `Logged ${added}h${body.worklogNote ? ` ("${body.worklogNote}")` : ""}`,
       });
     } else if (body.loggedHours !== undefined) {
       updateData.loggedHours = Number(body.loggedHours);
     }
+
     if (body.position !== undefined) {
       updateData.position = Number(body.position);
     }
 
-    // Handle Assignees update
+    // 10. Handle Assignees update
     if (body.assigneeIds && Array.isArray(body.assigneeIds)) {
       await prisma.taskAssignee.deleteMany({ where: { taskId: existing.id } });
-      await prisma.taskAssignee.createMany({
-        data: body.assigneeIds.map((userId: string) => ({
-          taskId: existing.id,
-          userId,
-        })),
-      });
+      if (body.assigneeIds.length > 0) {
+        await prisma.taskAssignee.createMany({
+          data: body.assigneeIds.map((userId: string) => ({
+            taskId: existing.id,
+            userId,
+          })),
+        });
+      }
 
       // Record assignment activity
       activitiesToCreate.push({
@@ -216,7 +361,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         projectId: existing.projectId,
         userId: currentUser.id,
         action: "ASSIGNED",
-        description: `${currentUser.name} updated assignees for ${existing.taskKey}`,
+        description: `Assignee updated`,
       });
 
       for (const newAssigneeId of body.assigneeIds) {
@@ -238,7 +383,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id: existing.id },
       data: updateData,
       include: {
-        project: true,
+        project: {
+          include: {
+            lead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            teamLead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            manager: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+            members: {
+              include: {
+                user: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+              },
+            },
+            sprints: true,
+          },
+        },
         assignees: { include: { user: true } },
         reporter: true,
         sprint: true,
@@ -272,11 +429,43 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       });
     }
 
+    // Fetch watchers & accountable
+    let taskWatchers: any[] = [];
+    let accountableUser: any = null;
+    try {
+      taskWatchers = (await prisma.$queryRaw`
+        SELECT w.id, w."taskId", w."userId", u.name, u.email, u."avatarUrl", u.role
+        FROM "TaskWatcher" w
+        JOIN "User" u ON w."userId" = u.id
+        WHERE w."taskId" = ${updated.id}
+      `) as any[];
+    } catch {
+      taskWatchers = [];
+    }
+
+    if ((updated as any).accountableId) {
+      try {
+        accountableUser = await prisma.user.findUnique({
+          where: { id: (updated as any).accountableId },
+          select: { id: true, name: true, email: true, avatarUrl: true, role: true },
+        });
+      } catch {
+        accountableUser = null;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         ...updated,
+        progress: (updated as any).progress ?? 0,
+        category: (updated as any).category,
+        version: (updated as any).version,
+        accountable: accountableUser,
+        accountableId: (updated as any).accountableId,
         assignees: updated.assignees.map((a) => a.user),
+        watchers: taskWatchers,
+        isWatching: taskWatchers.some((w: any) => w.userId === currentUser.id),
       },
       message: `Task ${existing.taskKey} updated`,
     });

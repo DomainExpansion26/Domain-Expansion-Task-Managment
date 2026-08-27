@@ -12,6 +12,7 @@ import { TaskDetailModal } from "@/components/tasks/TaskDetailModal";
 import { BugDetailModal } from "@/components/qa/BugDetailModal";
 import { RaiseBugModal } from "@/components/modals/RaiseBugModal";
 import { DashboardView } from "@/components/views/DashboardView";
+import { WorkPackagesView } from "@/components/views/WorkPackagesView";
 import { MyWorkView } from "@/components/views/MyWorkView";
 import { ProjectsView } from "@/components/views/ProjectsView";
 import { KanbanView } from "@/components/views/KanbanView";
@@ -48,7 +49,18 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const taskParam = params.get("task");
+      const tabParam = params.get("tab");
+      if (taskParam) {
+        setSelectedTaskKey(taskParam);
+      }
+      if (tabParam) {
+        dispatch(setReduxTab(tabParam));
+      }
+    }
+  }, [dispatch]);
 
   // App Data
   const currentTab = uiState.activeTab || "dashboard";
@@ -83,74 +95,63 @@ export default function Home() {
   const [isDevMailboxOpen, setIsDevMailboxOpen] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
 
-  // 1. Check Authentication
-  const checkAuth = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      const json = await res.json();
-      if (json.success && json.data?.user) {
-        setCurrentUser(json.data.user);
-        setPermissions(json.data.permissions || []);
-        dispatch(
-          setCredentials({
-            user: json.data.user,
-            token: "active-session",
-            permissions: json.data.permissions || [],
-          })
-        );
-        return json.data.user;
-      } else {
-        window.location.replace("/login");
-        return null;
-      }
-    } catch {
-      if (!authState.user) {
-        window.location.replace("/login");
-      }
-      return authState.user;
-    } finally {
-      setAuthLoading(false);
-    }
-  }, [dispatch, authState.user]);
-
-  // 2. Fetch App Data
+  // 1. Fetch Workspace Data (Consolidated Bootstrap for 5x Performance)
   const fetchAppData = useCallback(async () => {
     try {
-      const [tasksRes, projectsRes, usersRes, sprintsRes, notifsRes] = await Promise.all([
-        fetch("/api/tasks"),
-        fetch("/api/projects"),
-        fetch("/api/users"),
-        fetch("/api/sprints"),
-        fetch("/api/notifications"),
-      ]);
+      const res = await fetch("/api/platform/bootstrap");
+      const json = await res.json();
 
-      const [tasksJson, projectsJson, usersJson, sprintsJson, notifsJson] = await Promise.all([
-        tasksRes.json(),
-        projectsRes.json(),
-        usersRes.json(),
-        sprintsRes.json(),
-        notifsRes.json(),
-      ]);
-
-      if (tasksJson.success) dispatch(setReduxTasks(tasksJson.data));
-      if (projectsJson.success) setProjects(projectsJson.data);
-      if (usersJson.success) setUsers(usersJson.data);
-      if (sprintsJson.success) setSprints(sprintsJson.data);
-      if (notifsJson.success) {
-        dispatch(setReduxNotifications(notifsJson.data.notifications || []));
+      if (json.success && json.data) {
+        const { user, permissions: perms, tasks: tList, projects: pList, users: uList, sprints: sList, notifications: nList } = json.data;
+        if (user) {
+          setCurrentUser(user);
+          setPermissions(perms || []);
+          dispatch(setCredentials({ user, token: "active-session", permissions: perms || [] }));
+        }
+        if (tList) dispatch(setReduxTasks(tList));
+        if (pList) setProjects(pList);
+        if (uList) setUsers(uList);
+        if (sList) setSprints(sList);
+        if (nList) dispatch(setReduxNotifications(nList));
+        setAuthLoading(false);
+        return;
+      } else if (res.status === 401) {
+        window.location.replace("/login");
+        return;
       }
-    } catch (err) {
-      console.error("Failed to load platform data:", err);
+    } catch {
+      // Fallback to individual endpoints if bootstrap encounters network error
+      try {
+        const [authRes, tasksRes, projectsRes, usersRes] = await Promise.all([
+          fetch("/api/auth/me"),
+          fetch("/api/tasks"),
+          fetch("/api/projects"),
+          fetch("/api/users"),
+        ]);
+        const [authJson, tasksJson, projectsJson, usersJson] = await Promise.all([
+          authRes.json(),
+          tasksRes.json(),
+          projectsRes.json(),
+          usersRes.json(),
+        ]);
+        if (authJson.success && authJson.data?.user) {
+          setCurrentUser(authJson.data.user);
+          setPermissions(authJson.data.permissions || []);
+        }
+        if (tasksJson.success) dispatch(setReduxTasks(tasksJson.data));
+        if (projectsJson.success) setProjects(projectsJson.data);
+        if (usersJson.success) setUsers(usersJson.data);
+      } catch (e) {
+        console.error("Fallback load failed:", e);
+      }
+    } finally {
+      setAuthLoading(false);
     }
   }, [dispatch]);
 
   useEffect(() => {
-    checkAuth().then((user) => {
-      if (user) {
-        fetchAppData();
-      }
-    });
-  }, [checkAuth, fetchAppData]);
+    fetchAppData();
+  }, [fetchAppData]);
 
   // 3. Setup SSE for live real-time sync
   useEffect(() => {
@@ -291,6 +292,22 @@ export default function Home() {
           onSelectProject={(id) => setCurrentTab("kanban")}
           onOpenCreateTask={() => setIsCreateTaskOpen(true)}
           onToggleAI={() => setIsAIOpen(true)}
+        />
+      )}
+
+      {currentTab === "work-packages" && (
+        <WorkPackagesView
+          tasks={tasks}
+          projects={projects}
+          users={users}
+          currentUser={currentUser}
+          onSelectTask={(key) => setSelectedTaskKey(key)}
+          onOpenCreateTask={(projId, defaultStatus) => {
+            setCreateTaskProjectId(projId);
+            setCreateTaskStatus(defaultStatus || "TODO");
+            setIsCreateTaskOpen(true);
+          }}
+          onRefreshData={fetchAppData}
         />
       )}
 

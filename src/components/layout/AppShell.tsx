@@ -7,6 +7,7 @@ import {
   FolderKanban,
   Columns3,
   ListTodo,
+  Layers,
   Users,
   Bell,
   Sparkles,
@@ -107,10 +108,11 @@ export function AppShell({
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "work-packages", label: "Work Packages", icon: ListTodo, hideForHR: true },
     { id: "my-work", label: "My Work", icon: CheckSquare, hideForExecs: true },
     { id: "projects", label: "Projects", icon: FolderKanban, hideForHR: true },
     { id: "kanban", label: "Kanban Board", icon: Columns3, hideForHR: true },
-    { id: "backlog", label: "Backlog & Sprints", icon: ListTodo, requireManagerOrLead: true },
+    { id: "backlog", label: "Backlog & Sprints", icon: Layers, requireManagerOrLead: true },
     { id: "qa", label: "QA & Defects", icon: Bug, requireQAOrLead: true },
     { id: "hrms", label: "HRMS & Attendance", icon: Clock },
     { id: "documents", label: "Documents & Vault", icon: FileText },
@@ -123,6 +125,14 @@ export function AppShell({
   ];
 
   const handleNavClick = (tabId: string) => {
+    if (tabId === "hrms") {
+      window.location.href = "/hrms/dashboard";
+      return;
+    }
+    if (tabId === "hradmin") {
+      window.location.href = "/hrms/dashboard?tab=hradmin";
+      return;
+    }
     onSelectTab(tabId);
     setMobileMenuOpen(false);
   };

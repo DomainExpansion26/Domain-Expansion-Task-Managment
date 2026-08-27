@@ -32,54 +32,11 @@ export async function GET(request: NextRequest) {
       select: { name: true, email: true, jobTitle: true, department: true, hrProfile: true },
     });
 
-    // If no generated payslip exists for this employee yet, return a clean dynamically calculated preview
+    // Zero fake data: if no payslips in DB, return empty array
     if (payslips.length === 0) {
-      const now = new Date();
-      const currentMonth = month || now.getMonth() + 1;
-      const currentYear = year || now.getFullYear();
-
-      const salary = await prisma.salaryStructure.findUnique({ where: { userId } });
-      const basic = salary?.basic || 45000;
-      const hra = salary?.hra || 18000;
-      const allowances = salary?.allowances || 12000;
-      const bonus = salary?.bonus || 5000;
-      const deductions = salary?.deductions || 4000;
-      const gross = basic + hra + allowances + bonus;
-      const net = Math.max(0, gross - deductions);
-
       return NextResponse.json({
         success: true,
-        data: [
-          {
-            id: `PREV-${userId}-${currentMonth}-${currentYear}`,
-            userId,
-            month: currentMonth,
-            year: currentYear,
-            basic,
-            hra,
-            allowances,
-            bonus,
-            deductions,
-            grossSalary: gross,
-            netSalary: net,
-            status: "GENERATED",
-            generatedAt: new Date().toISOString(),
-            employeeName: user?.name || "Employee",
-            employeeId: user?.hrProfile?.employeeId || "EMP-" + userId.slice(0, 5),
-            designation: user?.jobTitle || "Team Member",
-            department: user?.department || "General",
-            earningsBreakdown: [
-              { label: "Basic Salary", amount: basic },
-              { label: "House Rent Allowance (HRA)", amount: hra },
-              { label: "Special Allowance", amount: allowances },
-              { label: "Performance Bonus", amount: bonus },
-            ],
-            deductionsBreakdown: [
-              { label: "Provident Fund (PF)", amount: Math.round(deductions * 0.6) },
-              { label: "Professional Tax", amount: Math.round(deductions * 0.4) },
-            ],
-          },
-        ],
+        data: [],
       });
     }
 
@@ -111,8 +68,8 @@ export async function GET(request: NextRequest) {
         ...p,
         employeeName: user?.name || "Employee",
         employeeId: user?.hrProfile?.employeeId || "EMP-" + userId.slice(0, 5),
-        designation: user?.jobTitle || "Team Member",
-        department: user?.department || "General",
+        designation: user?.jobTitle || user?.hrProfile?.designation || "Team Member",
+        department: user?.department || user?.hrProfile?.department || "General",
         earningsBreakdown: earnings,
         deductionsBreakdown: deductionsList,
       };
@@ -123,6 +80,7 @@ export async function GET(request: NextRequest) {
       data: formatted,
     });
   } catch (error: any) {
+    console.error("GET payslips error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to load payslips" } }, { status: 500 });
   }
 }
@@ -145,11 +103,11 @@ export async function POST(request: NextRequest) {
     const generatedList: any[] = [];
     for (const uid of userIds) {
       const salary = await prisma.salaryStructure.findUnique({ where: { userId: uid } });
-      const basic = salary?.basic || 45000;
-      const hra = salary?.hra || 18000;
-      const allowances = salary?.allowances || 12000;
-      const bonus = salary?.bonus || 5000;
-      const deductions = salary?.deductions || 4000;
+      const basic = salary?.basic || 0;
+      const hra = salary?.hra || 0;
+      const allowances = salary?.allowances || 0;
+      const bonus = salary?.bonus || 0;
+      const deductions = salary?.deductions || 0;
       const gross = basic + hra + allowances + bonus;
       const net = Math.max(0, gross - deductions);
 
@@ -196,6 +154,7 @@ export async function POST(request: NextRequest) {
       message: `Generated ${generatedList.length} payslip(s) for ${month}/${year}`,
     });
   } catch (error: any) {
+    console.error("POST payslips error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to generate payslips" } }, { status: 500 });
   }
 }

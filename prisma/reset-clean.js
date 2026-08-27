@@ -3,7 +3,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🧹 Clearing all dummy data from Neon PostgreSQL database...");
 
   // Delete all child and parent records in strict foreign key order
   await prisma.activity.deleteMany({});
@@ -34,7 +33,6 @@ async function main() {
   await prisma.sentEmailLog.deleteMany({});
   await prisma.user.deleteMany({});
 
-  console.log("✨ All dummy data removed! The database is 100% clean and ready for your real account and real projects.");
 }
 
 main()

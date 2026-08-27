@@ -72,8 +72,21 @@ export async function POST(request: NextRequest) {
 
     const normPortal = portal?.trim()?.toUpperCase()?.replace(/[^A-Z]/g, "_");
     if (userCount === 0 || normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
+      const superAdminCount = await withDbRetry(() => prisma.user.count({ where: { role: "SUPER_ADMIN" } }));
+      if (superAdminCount >= 2) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "SUPER_ADMIN_LIMIT_REACHED",
+              message: "Maximum limit of 2 Super Admin accounts has been reached. No additional Super Admin accounts can be created.",
+            },
+          },
+          { status: 403 }
+        );
+      }
       assignedRole = "SUPER_ADMIN";
-      hrmsStatus = "ACTIVE";
+      hrmsStatus = "INACTIVE"; // Super admin account is strictly for platform/super admin portal
       defaultDesignation = jobTitle?.trim() || "Super Administrator";
       defaultDepartment = department?.trim() || "Executive Management";
     } else if (normPortal === "HRMS_SUPER_ADMIN" || normPortal === "HRMSSUPERADMIN") {

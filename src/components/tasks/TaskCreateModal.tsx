@@ -70,28 +70,36 @@ export function TaskCreateModal({
   const [priority, setPriority] = useState("MEDIUM");
   const [status, setStatus] = useState(defaultStatus);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+  const [accountableId, setAccountableId] = useState<string>("");
   const [sprintId, setSprintId] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [dueDate, setDueDate] = useState<string>("");
   const [estimatedHours, setEstimatedHours] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
+  const [category, setCategory] = useState<string>("");
+  const [version, setVersion] = useState<string>("");
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync project ID when modal opens or defaultProjectId / allowedProjects changes
+  const prevIsOpenRef = React.useRef(isOpen);
+
+  // Sync project ID when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       const selected = defaultProjectId
         ? allowedProjects.find((p) => p.id === defaultProjectId) || allowedProjects[0]
         : allowedProjects[0];
       setProjectId(selected?.id || "");
       setStatus(defaultStatus || "TODO");
       setAssigneeIds([]);
+      setAccountableId("");
       setError(null);
     }
+    prevIsOpenRef.current = isOpen;
   }, [isOpen, defaultProjectId, defaultStatus, allowedProjects]);
-
-  if (!isOpen) return null;
 
   const currentProject = allowedProjects.find((p) => p.id === projectId) || projects.find((p) => p.id === projectId);
   const availableSprints = currentProject?.sprints || [];
@@ -104,14 +112,14 @@ export function TaskCreateModal({
     // 1. Add members explicitly assigned to project
     if (Array.isArray(currentProject.members)) {
       currentProject.members.forEach((m: any) => {
-        const id = m.id || m.userId;
+        const id = m.user?.id || m.userId || m.id;
         if (id) {
           memberMap.set(id, {
             id,
-            name: m.name || m.user?.name || "Member",
-            email: m.email || m.user?.email || "",
-            role: m.projectRole || m.role || "MEMBER",
-            avatarUrl: m.avatarUrl || m.user?.avatarUrl,
+            name: m.user?.name || m.name || "Member",
+            email: m.user?.email || m.email || "",
+            role: m.projectRole || m.role || m.user?.role || "MEMBER",
+            avatarUrl: m.user?.avatarUrl || m.avatarUrl,
           });
         }
       });
@@ -180,6 +188,16 @@ export function TaskCreateModal({
       return;
     }
 
+    if (assigneeIds.length === 0) {
+      setError("Please assign at least one project member to this task.");
+      return;
+    }
+
+    if (!accountableId) {
+      setError("Please select an Accountable person for this task.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -196,9 +214,15 @@ export function TaskCreateModal({
           priority,
           status,
           assigneeIds,
-          sprintId: sprintId || null,
-          dueDate: dueDate || null,
+          accountableId: accountableId || null,
+          startDate: startDate || null,
+          endDate: endDate || dueDate || null,
+          dueDate: dueDate || endDate || null,
           estimatedHours: Number(estimatedHours) || 0,
+          progress: Number(progress) || 0,
+          category: category.trim() || null,
+          version: version.trim() || null,
+          sprintId: sprintId || null,
           subtasks,
         }),
       });
@@ -214,6 +238,13 @@ export function TaskCreateModal({
         setAcceptanceCriteria("");
         setSubtasks([]);
         setAssigneeIds([]);
+        setAccountableId("");
+        setStartDate("");
+        setEndDate("");
+        setDueDate("");
+        setProgress(0);
+        setCategory("");
+        setVersion("");
       } else {
         setError(json.error?.message || "Failed to create task");
       }
@@ -224,6 +255,8 @@ export function TaskCreateModal({
       setLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -396,7 +429,55 @@ export function TaskCreateModal({
             />
           </div>
 
-          {/* Row 6: Priority, Status, Due Date, Estimate */}
+          {/* Row 6: Accountable & Dates */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5">
+                Accountable <span className="text-[#FF6200]">*</span>
+              </label>
+              <select
+                required
+                value={accountableId}
+                onChange={(e) => setAccountableId(e.target.value)}
+                className={`w-full bg-[#1A1A1A] border rounded-xl px-3 py-2 text-white focus:outline-none ${
+                  !accountableId ? "border-amber-500/50" : "border-[#2E2E2E] focus:border-[#FF6200]"
+                }`}
+              >
+                <option value="">Select Accountable Person *</option>
+                {projectMembers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              >
+              </input>
+            </div>
+
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5">Finish / Due Date</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => {
+                  setDueDate(e.target.value);
+                  setEndDate(e.target.value);
+                }}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              />
+            </div>
+          </div>
+
+          {/* Row 7: Priority, Status, Est. Hours, % Complete */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="block text-[#ACACB8] font-semibold mb-1.5">Priority</label>
@@ -428,16 +509,6 @@ export function TaskCreateModal({
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Due Date</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
-              />
-            </div>
-
-            <div>
               <label className="block text-[#ACACB8] font-semibold mb-1.5">Est. Hours</label>
               <input
                 type="number"
@@ -447,6 +518,19 @@ export function TaskCreateModal({
                 value={estimatedHours}
                 onChange={(e) => setEstimatedHours(Number(e.target.value))}
                 className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#ACACB8] font-semibold mb-1.5">% Complete ({progress}%)</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="10"
+                value={progress}
+                onChange={(e) => setProgress(Number(e.target.value))}
+                className="w-full accent-[#00875A] mt-2"
               />
             </div>
           </div>

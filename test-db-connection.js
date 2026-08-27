@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 
 async function testConnection() {
-  console.log("Testing PostgreSQL connection string...");
   const prisma = new PrismaClient({
     datasources: {
       db: {
@@ -12,13 +11,10 @@ async function testConnection() {
 
   try {
     const userCount = await prisma.user.count();
-    console.log("✓ Connected to PostgreSQL successfully!");
-    console.log("Current total users in DB:", userCount);
     
     const users = await prisma.user.findMany({
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     });
-    console.log("Users in database:", users);
   } catch (err) {
     console.error("❌ Database connection error:", err);
   } finally {

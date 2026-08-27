@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding Domain Expansion Enterprise Task Management + QA + HRMS Platform...");
 
   // Clean existing data in dependency order
   await prisma.activity.deleteMany({});
@@ -278,7 +277,6 @@ async function main() {
     },
   });
 
-  console.log("✅ 6 Roles & Users created with Manager & Team Lead hierarchy!");
 
   // 2. Create Projects
   const projectWeb = await prisma.project.create({
@@ -812,7 +810,6 @@ async function main() {
     },
   });
 
-  console.log("🚀 Complete Domain Expansion Enterprise Database Seeded Successfully!");
 }
 
 main()

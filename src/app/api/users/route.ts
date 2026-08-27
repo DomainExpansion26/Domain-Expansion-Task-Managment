@@ -101,6 +101,22 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (role === "SUPER_ADMIN") {
+      const superAdminCount = await prisma.user.count({ where: { role: "SUPER_ADMIN", id: { not: targetUserId } } });
+      if (superAdminCount >= 2) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "SUPER_ADMIN_LIMIT_REACHED",
+              message: "Maximum limit of 2 Super Admin accounts has been reached.",
+            },
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const updateData: any = {};
     if (role && isSuper) updateData.role = role;
     if (jobTitle !== undefined) updateData.jobTitle = jobTitle.trim();

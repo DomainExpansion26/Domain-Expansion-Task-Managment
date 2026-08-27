@@ -90,20 +90,19 @@ export async function POST(request: NextRequest) {
     // Portal Authorization Verification
     const normPortal = portal?.trim()?.toUpperCase()?.replace(/[^A-Z]/g, "_");
     
-    // Super Admins have universal master access across all portals
-    if (isSuperAdmin(user.role)) {
-      // Unrestricted entry
-    } else if (normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "FORBIDDEN",
-            message: "Access Denied: Super Admin credentials required to access the Super Admin portal.",
+    if (normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
+      if (!isSuperAdmin(user.role)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "FORBIDDEN",
+              message: "Access Denied: Super Admin credentials required to access the Super Admin portal.",
+            },
           },
-        },
-        { status: 403 }
-      );
+          { status: 403 }
+        );
+      }
     } else if (normPortal === "HRMS_SUPER_ADMIN" || normPortal === "HRMSSUPERADMIN") {
       if (!isHRAdmin(user.role)) {
         return NextResponse.json(
@@ -118,6 +117,20 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (normPortal === "HRMS") {
+      // Super Admin accounts cannot be used as employee accounts for HRMS
+      if (user.role === "SUPER_ADMIN") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "SUPER_ADMIN_PORTAL_RESTRICTION",
+              message: "This account is registered exclusively for Super Admin portal administration. To access the HRMS portal, please create and log in with a member employee account.",
+            },
+          },
+          { status: 403 }
+        );
+      }
+
       if (!isHRMSActive(user)) {
         try {
           if (!user.hrProfile) {

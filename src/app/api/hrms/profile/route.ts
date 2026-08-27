@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       data: user,
     });
   } catch (error: any) {
+    console.error("Fetch profile error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch HR profile" } }, { status: 500 });
   }
 }
@@ -54,27 +55,50 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    const { userId, phone, emergencyContact, address, dateOfBirth } = await request.json();
+    const body = await request.json();
+    const { userId, name, avatarUrl, phone, emergencyContact, address, dateOfBirth, gender, designation, department, employeeId, joiningDate, status } = body;
 
-    const targetUserId = userId && (isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role))
-      ? userId
-      : currentUser.id;
+    const isAdmin = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
+    const targetUserId = userId && isAdmin ? userId : currentUser.id;
+
+    // 1. Update User basic info if allowed
+    const userUpdate: any = {};
+    if (avatarUrl !== undefined) userUpdate.avatarUrl = avatarUrl;
+    if (isAdmin) {
+      if (name !== undefined) userUpdate.name = name;
+      if (department !== undefined) userUpdate.department = department;
+      if (designation !== undefined) userUpdate.jobTitle = designation;
+    }
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.update({
+        where: { id: targetUserId },
+        data: userUpdate,
+      });
+    }
+
+    // 2. Update / Upsert HRProfile
+    const hrProfileData: any = {};
+    if (phone !== undefined) hrProfileData.phone = phone || null;
+    if (emergencyContact !== undefined) hrProfileData.emergencyContact = emergencyContact || null;
+    if (address !== undefined) hrProfileData.address = address || null;
+    if (dateOfBirth !== undefined) hrProfileData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+    
+    if (isAdmin) {
+      if (department !== undefined) hrProfileData.department = department;
+      if (designation !== undefined) hrProfileData.designation = designation;
+      if (employeeId !== undefined) hrProfileData.employeeId = employeeId || null;
+      if (joiningDate !== undefined) hrProfileData.joiningDate = joiningDate ? new Date(joiningDate) : null;
+      if (status !== undefined) hrProfileData.status = status;
+    }
 
     const profile = await prisma.hRProfile.upsert({
       where: { userId: targetUserId },
       create: {
         userId: targetUserId,
-        phone: phone || null,
-        emergencyContact: emergencyContact || null,
-        address: address || null,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        ...hrProfileData,
       },
-      update: {
-        ...(phone !== undefined ? { phone } : {}),
-        ...(emergencyContact !== undefined ? { emergencyContact } : {}),
-        ...(address !== undefined ? { address } : {}),
-        ...(dateOfBirth !== undefined ? { dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null } : {}),
-      },
+      update: hrProfileData,
     });
 
     return NextResponse.json({
@@ -83,6 +107,7 @@ export async function PATCH(request: NextRequest) {
       message: "HR Profile updated successfully",
     });
   } catch (error: any) {
+    console.error("Update profile error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to update HR profile" } }, { status: 500 });
   }
 }

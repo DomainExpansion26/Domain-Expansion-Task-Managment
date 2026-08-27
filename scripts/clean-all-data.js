@@ -11,9 +11,6 @@ const prisma = new PrismaClient({
 });
 
 async function cleanAllDummyData() {
-  console.log("==========================================================================");
-  console.log("🧹 PURGING ALL DUMMY DATA (TASKS, PROJECTS, HRMS, MEMBERS, LOGS, ETC.)");
-  console.log("==========================================================================\n");
 
   const countsBefore = {
     users: await prisma.user.count(),
@@ -41,9 +38,7 @@ async function cleanAllDummyData() {
     aiConversations: await prisma.aIConversation.count(),
   };
 
-  console.log("Current Database Record Counts:", JSON.stringify(countsBefore, null, 2));
 
-  console.log("\nDeleting all records in strict dependency order...");
 
   // 1. Delete QA bugs & tickets
   await prisma.qABug.deleteMany({});
@@ -88,8 +83,6 @@ async function cleanAllDummyData() {
   // 7. Delete all users
   await prisma.user.deleteMany({});
 
-  console.log("\n✅ ALL DUMMY DATA HAS BEEN COMPLETELY REMOVED!");
-  console.log("The database is now 100% clean and ready for fresh registration and real data.\n");
 }
 
 cleanAllDummyData()

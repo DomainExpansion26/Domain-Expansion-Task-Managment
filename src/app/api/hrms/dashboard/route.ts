@@ -10,19 +10,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
     const isHRorSuper = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
     const isLeadOrManager = isManager(currentUser.role) || isTeamLead(currentUser.role);
 
-    // 1. Common data needed across dashboards
+    // 1. Fetch real DB entities
     const [
       myTodayPunch,
       myLeaves,
       upcomingHolidays,
       activeAnnouncements,
-      todayBirthdays,
+      allProfiles,
       myHRProfile,
     ] = await Promise.all([
       prisma.attendance.findUnique({
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       prisma.holiday.findMany({
         where: { date: { gte: today } },
         orderBy: { date: "asc" },
-        take: 5,
+        take: 6,
       }),
       prisma.hRAnnouncement.findMany({
         where: {
@@ -49,22 +49,117 @@ export async function GET(request: NextRequest) {
         take: 5,
       }),
       prisma.hRProfile.findMany({
-        where: { dateOfBirth: { not: null }, status: "ACTIVE" },
-        include: { user: { select: { id: true, name: true, jobTitle: true, department: true, avatarUrl: true } } },
+        include: {
+          user: {
+            select: { id: true, name: true, jobTitle: true, department: true, avatarUrl: true, isActive: true },
+          },
+        },
       }),
       prisma.hRProfile.findUnique({
         where: { userId: currentUser.id },
       }),
     ]);
 
-    // Format today/tomorrow birthdays
-    const bdayTodayList = todayBirthdays.filter((p) => {
-      if (!p.dateOfBirth) return false;
-      const dob = new Date(p.dateOfBirth);
-      return dob.getUTCMonth() === today.getUTCMonth() && dob.getUTCDate() === today.getUTCDate();
-    });
+    // 2. Compute Upcoming Birthdays & Today's Birthdays (Robust date math)
+    const upcomingBirthdays: any[] = [];
+    const todayBirthdays: any[] = [];
+    let isMyBirthday = false;
 
-    // 2. Executive HR Dashboard Data (if Super Admin or HR Admin)
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0 - 11
+    const currentDate = now.getDate(); // 1 - 31
+
+    for (const p of allProfiles) {
+      if (p.dateOfBirth && p.user?.name) {
+        const dob = new Date(p.dateOfBirth);
+        // Handle timezone shift safely by using UTC / local components
+        const bMonth = dob.getUTCMonth();
+        const bDay = dob.getUTCDate();
+
+        // Calculate days difference
+        let bdayDateThisYear = new Date(currentYear, bMonth, bDay);
+        const todayDateObj = new Date(currentYear, currentMonth, currentDate);
+        
+        let diffMs = bdayDateThisYear.getTime() - todayDateObj.getTime();
+        let diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+          // Birthday already passed this year, compute for next year
+          bdayDateThisYear = new Date(currentYear + 1, bMonth, bDay);
+          diffMs = bdayDateThisYear.getTime() - todayDateObj.getTime();
+          diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        }
+
+        const isToday = diffDays === 0;
+
+        if (isToday && p.userId === currentUser.id) {
+          isMyBirthday = true;
+        }
+
+        const bdayInfo = {
+          id: p.userId,
+          name: p.user.name,
+          avatarUrl: p.user.avatarUrl,
+          department: p.department || p.user.department || "General",
+          jobTitle: p.designation || p.user.jobTitle || "Employee",
+          dateOfBirth: p.dateOfBirth,
+          day: bDay,
+          month: new Date(2000, bMonth, 1).toLocaleString("default", { month: "short" }),
+          isToday,
+          daysUntil: diffDays,
+        };
+
+        if (isToday) {
+          todayBirthdays.push(bdayInfo);
+        }
+
+        if (diffDays >= 0 && diffDays <= 45) {
+          upcomingBirthdays.push(bdayInfo);
+        }
+      }
+    }
+    upcomingBirthdays.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    // 3. Compute Upcoming Work Anniversaries
+    const upcomingAnniversaries: any[] = [];
+    for (const p of allProfiles) {
+      if (p.joiningDate && p.user?.name) {
+        const jDate = new Date(p.joiningDate);
+        const jMonth = jDate.getUTCMonth();
+        const jDay = jDate.getUTCDate();
+
+        let annivDateThisYear = new Date(currentYear, jMonth, jDay);
+        const todayDateObj = new Date(currentYear, currentMonth, currentDate);
+        
+        let diffMs = annivDateThisYear.getTime() - todayDateObj.getTime();
+        let diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        let years = currentYear - jDate.getUTCFullYear();
+
+        if (diffDays < 0) {
+          annivDateThisYear = new Date(currentYear + 1, jMonth, jDay);
+          diffMs = annivDateThisYear.getTime() - todayDateObj.getTime();
+          diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+          years += 1;
+        }
+
+        if (diffDays >= 0 && diffDays <= 45 && years > 0) {
+          upcomingAnniversaries.push({
+            id: p.userId,
+            name: p.user.name,
+            avatarUrl: p.user.avatarUrl,
+            department: p.department || p.user.department || "General",
+            jobTitle: p.designation || p.user.jobTitle || "Employee",
+            joiningDate: p.joiningDate,
+            yearsCompleted: years,
+            isToday: diffDays === 0,
+            daysUntil: diffDays,
+          });
+        }
+      }
+    }
+    upcomingAnniversaries.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    // 4. Executive HR Dashboard Data (if Super Admin or HR Admin)
     let adminMetrics: any = null;
     if (isHRorSuper) {
       const [
@@ -76,7 +171,6 @@ export async function GET(request: NextRequest) {
         approvedLeavesCount,
         pendingRequestsCount,
         departments,
-        recentActivities,
       ] = await Promise.all([
         prisma.user.count(),
         prisma.user.count({ where: { isActive: true } }),
@@ -89,12 +183,6 @@ export async function GET(request: NextRequest) {
         prisma.leave.count({ where: { status: "APPROVED" } }),
         prisma.hRRequest.count({ where: { status: "PENDING" } }),
         prisma.department.findMany({ where: { isActive: true } }),
-        prisma.auditLog.findMany({
-          where: { entityType: { in: ["EMPLOYEE", "LEAVE", "ATTENDANCE", "PAYROLL", "HR_REQUEST"] } },
-          orderBy: { createdAt: "desc" },
-          take: 8,
-          include: { user: { select: { name: true, avatarUrl: true } } },
-        }),
       ]);
 
       const presentCount = allTodayAttendance.filter((a) => a.status === "PRESENT" || a.status === "FULL_DAY" || a.status === "HALF_DAY").length;
@@ -102,14 +190,6 @@ export async function GET(request: NextRequest) {
       const halfDayCount = allTodayAttendance.filter((a) => a.status === "HALF_DAY").length;
       const onLeaveCount = allTodayAttendance.filter((a) => a.status === "LEAVE").length;
       const absentCount = Math.max(0, activeEmployees - presentCount - onLeaveCount);
-
-      // Late mark logic (e.g. punchIn > 09:30 AM)
-      const lateEmployees = allTodayAttendance.filter((a) => {
-        if (!a.punchIn) return false;
-        const punch = new Date(a.punchIn);
-        const punchHour = punch.getUTCHours() * 60 + punch.getUTCMinutes();
-        return punchHour > 9 * 60 + 30; // After 9:30 AM UTC/Local
-      });
 
       adminMetrics = {
         totalEmployees,
@@ -120,17 +200,14 @@ export async function GET(request: NextRequest) {
         todayHalfDay: halfDayCount,
         todayOnLeave: onLeaveCount,
         todayAbsent: absentCount,
-        lateEmployeesCount: lateEmployees.length,
         pendingLeavesCount,
         approvedLeavesCount,
         pendingRequestsCount,
         departmentsCount: departments.length,
-        todayAttendanceList: allTodayAttendance,
-        recentActivities,
       };
     }
 
-    // 3. Employee Self-Service Stats
+    // 5. Employee Self-Service Stats
     const approvedLeaveDays = myLeaves
       .filter((l) => l.status === "APPROVED")
       .reduce((sum, l) => sum + (l.daysCount || 1), 0);
@@ -157,12 +234,10 @@ export async function GET(request: NextRequest) {
       myLeaves,
       upcomingHolidays,
       announcements: activeAnnouncements,
-      todayBirthdays: bdayTodayList.map((b) => ({
-        name: b.user.name,
-        jobTitle: b.user.jobTitle,
-        department: b.user.department,
-        avatarUrl: b.user.avatarUrl,
-      })),
+      todayBirthdays,
+      upcomingBirthdays,
+      upcomingAnniversaries,
+      isMyBirthday,
       profileSummary: {
         employeeId: myHRProfile?.employeeId || "EMP-" + currentUser.id.slice(0, 5),
         designation: myHRProfile?.designation || currentUser.jobTitle || "Team Member",

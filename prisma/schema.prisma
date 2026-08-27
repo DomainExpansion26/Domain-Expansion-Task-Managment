@@ -41,6 +41,10 @@ model User {
   projectMembers   ProjectMember[]
   reportedTasks    Task[]      @relation("TaskReporter")
   assignedTasks    TaskAssignee[]
+  accountableTasks Task[]      @relation("TaskAccountable")
+  watchedTasks     TaskWatcher[]
+  sharedTasks      TaskShare[] @relation("TaskSharedWith")
+  sharedByTasks    TaskShare[] @relation("TaskSharedBy")
   comments         Comment[]
   activities       Activity[]
   notifications    Notification[]
@@ -210,16 +214,23 @@ model Task {
   
   reporterId         String?
   reporter           User?          @relation("TaskReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  accountableId      String?
+  accountable        User?          @relation("TaskAccountable", fields: [accountableId], references: [id], onDelete: SetNull)
   startDate          DateTime?
   dueDate            DateTime?
   endDate            DateTime?
   estimatedHours     Float?         @default(0)
   loggedHours        Float?         @default(0)
+  progress           Int?           @default(0)
+  category           String?
+  version            String?
   position           Int            @default(0)
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
   assignees          TaskAssignee[]
+  watchers           TaskWatcher[]
+  shares             TaskShare[]
   subtasks           Subtask[]
   comments           Comment[]
   attachments        Attachment[]
@@ -304,6 +315,30 @@ model TaskAssignee {
   task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+}
+
+model TaskWatcher {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, userId])
+}
+
+model TaskShare {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("TaskSharedWith", fields: [userId], references: [id], onDelete: Cascade)
+  sharedById String
+  sharedBy   User     @relation("TaskSharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
   @@unique([taskId, userId])
 }

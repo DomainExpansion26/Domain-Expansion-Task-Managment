@@ -18,15 +18,21 @@ export async function GET(request: NextRequest) {
     let where: any = {};
     if (status) where.status = status;
 
-    if (viewAll && (isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role))) {
-      // HR Admin and Super Admin can view all leaves
-    } else if (viewAll && (isManager(currentUser.role) || isTeamLead(currentUser.role))) {
-      // Managers / Team Leads can view their subordinates' leaves
-      where.OR = [
-        { userId: currentUser.id },
-        { user: { managerId: currentUser.id } },
-        { user: { teamLeadId: currentUser.id } },
-      ];
+    const isSuper = isSuperAdmin(currentUser.role);
+    const isHR = isHRAdmin(currentUser.role);
+    const isLead = isTeamLead(currentUser.role) || isManager(currentUser.role);
+
+    if (viewAll && (isSuper || isHR)) {
+      // Super Admin & HR Admin can view all leaves
+    } else if (isLead || viewAll) {
+      // Team Leads & Managers: view own leaves + team members' leaves
+      const conditions: any[] = [{ userId: currentUser.id }];
+      conditions.push({ user: { teamLeadId: currentUser.id } });
+      conditions.push({ user: { managerId: currentUser.id } });
+      if (currentUser.department) {
+        conditions.push({ user: { department: currentUser.department } });
+      }
+      where.OR = conditions;
     } else {
       // Regular users view only their own leaves
       where.userId = currentUser.id;
@@ -45,6 +51,7 @@ export async function GET(request: NextRequest) {
       data: leaves,
     });
   } catch (error: any) {
+    console.error("Fetch leaves error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to fetch leaves" } }, { status: 500 });
   }
 }
@@ -58,7 +65,6 @@ export async function POST(request: NextRequest) {
 
     const { leaveType, startDate, endDate, reason } = await request.json();
 
-    // Master Prompt Section 28 & 39: Mandatory validation
     if (!leaveType || !startDate || !endDate || !reason?.trim()) {
       return NextResponse.json(
         { success: false, error: { code: "INVALID_INPUT", message: "Leave type, start date, end date, and reason are required" } },
@@ -84,23 +90,55 @@ export async function POST(request: NextRequest) {
       include: { user: true },
     });
 
-    // Notify Manager or Team Lead if assigned
-    const userWithLeads = await prisma.user.findUnique({
-      where: { id: currentUser.id },
-      select: { managerId: true, teamLeadId: true },
-    });
+    // Notification routing:
+    const applicantRole = currentUser.role;
+    const isHigherTier =
+      applicantRole === "TEAM_LEAD" ||
+      applicantRole === "MANAGER" ||
+      applicantRole === "PROJECT_MANAGER" ||
+      applicantRole === "HR_ADMIN";
 
-    const approverIds = [userWithLeads?.managerId, userWithLeads?.teamLeadId].filter(Boolean) as string[];
-    for (const approverId of approverIds) {
-      await prisma.notification.create({
-        data: {
-          userId: approverId,
-          title: "New Leave Application Pending Review",
-          message: `${currentUser.name} applied for ${daysCount} day(s) ${leaveType} leave (${start.toLocaleDateString()} - ${end.toLocaleDateString()}).`,
-          type: "LEAVE_UPDATE",
-          link: "/hrms/leave",
-        },
+    if (isHigherTier) {
+      // Notify Super Admins
+      const superAdmins = await prisma.user.findMany({ where: { role: "SUPER_ADMIN" }, select: { id: true } });
+      for (const sa of superAdmins) {
+        await prisma.notification.create({
+          data: {
+            userId: sa.id,
+            title: `Executive Leave Request: ${currentUser.name} (${applicantRole})`,
+            message: `${currentUser.name} (${applicantRole}) applied for ${daysCount} day(s) ${leaveType} leave. Requires Super Admin approval.`,
+            type: "LEAVE_UPDATE",
+            link: "/hrms/leave",
+          },
+        });
+      }
+    } else {
+      // Notify Team Lead & Manager
+      const userWithLeads = await prisma.user.findUnique({
+        where: { id: currentUser.id },
+        select: { managerId: true, teamLeadId: true, department: true },
       });
+
+      const approverIds = [userWithLeads?.managerId, userWithLeads?.teamLeadId].filter(Boolean) as string[];
+      if (approverIds.length === 0 && userWithLeads?.department) {
+        const deptLeads = await prisma.user.findMany({
+          where: { department: userWithLeads.department, role: { in: ["TEAM_LEAD", "MANAGER", "PROJECT_MANAGER"] } },
+          select: { id: true },
+        });
+        approverIds.push(...deptLeads.map((l) => l.id));
+      }
+
+      for (const approverId of approverIds) {
+        await prisma.notification.create({
+          data: {
+            userId: approverId,
+            title: "New Team Member Leave Application",
+            message: `${currentUser.name} applied for ${daysCount} day(s) ${leaveType} leave (${start.toLocaleDateString()} - ${end.toLocaleDateString()}).`,
+            type: "LEAVE_UPDATE",
+            link: "/hrms/dashboard?tab=leaves",
+          },
+        });
+      }
     }
 
     emitPlatformEvent({
@@ -111,7 +149,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: leave,
-      message: "Leave application submitted successfully for review.",
+      message: isHigherTier
+        ? "Leave application submitted. Executive leave requires Super Admin approval."
+        : "Leave application submitted. Sent to your Team Lead for review.",
     });
   } catch (error: any) {
     console.error("Apply leave error:", error);
@@ -142,19 +182,53 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "NOT_FOUND", message: "Leave application not found" } }, { status: 404 });
     }
 
-    // Permission check: User can cancel their own pending leave. Otherwise must be Manager/TeamLead of employee, HR_ADMIN, or SUPER_ADMIN.
     const isSelfCancel = status === "CANCELLED" && leave.userId === currentUser.id;
-    const isAuthorizedApprover =
-      isSuperAdmin(currentUser.role) ||
-      isHRAdmin(currentUser.role) ||
-      leave.user.managerId === currentUser.id ||
-      leave.user.teamLeadId === currentUser.id;
 
-    if (!isSelfCancel && !isAuthorizedApprover) {
-      return NextResponse.json(
-        { success: false, error: { code: "FORBIDDEN", message: "You lack authority to approve/reject this leave request" } },
-        { status: 403 }
-      );
+    if (!isSelfCancel) {
+      const applicantRole = leave.user.role;
+      const isHigherTierApplicant =
+        applicantRole === "TEAM_LEAD" ||
+        applicantRole === "MANAGER" ||
+        applicantRole === "PROJECT_MANAGER" ||
+        applicantRole === "HR_ADMIN";
+
+      if (isSuperAdmin(currentUser.role)) {
+        // Super Admin can approve ANY leave
+      } else if (isHigherTierApplicant) {
+        // Team Lead / Manager / HR Admin leaves REQUIRE Super Admin!
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "SUPER_ADMIN_REQUIRED",
+              message: `Leave applications for ${applicantRole} (${leave.user.name}) can only be approved by the Super Admin.`,
+            },
+          },
+          { status: 403 }
+        );
+      } else {
+        // Regular members: Team Lead, Manager, or HR Admin can approve
+        const isAuthorized =
+          isHRAdmin(currentUser.role) ||
+          isTeamLead(currentUser.role) ||
+          isManager(currentUser.role) ||
+          leave.user.teamLeadId === currentUser.id ||
+          leave.user.managerId === currentUser.id ||
+          (Boolean(currentUser.department) && currentUser.department === leave.user.department);
+
+        if (!isAuthorized) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: "FORBIDDEN",
+                message: "You lack authority to approve/reject this leave request.",
+              },
+            },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     const updated = await prisma.leave.update({
@@ -205,7 +279,7 @@ export async function PATCH(request: NextRequest) {
         title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
         message: `${currentUser.name} has ${status.toLowerCase()} your ${leave.leaveType} leave request (${new Date(leave.startDate).toLocaleDateString()} - ${new Date(leave.endDate).toLocaleDateString()}).`,
         type: "LEAVE_UPDATE",
-        link: "/hrms/leave",
+        link: "/hrms/dashboard?tab=leaves",
       },
     });
 
@@ -218,7 +292,9 @@ export async function PATCH(request: NextRequest) {
         entityId: leave.id,
         detailsJson: JSON.stringify({
           applicant: leave.user.name,
+          applicantRole: leave.user.role,
           approver: currentUser.name,
+          approverRole: currentUser.role,
           decision: status,
           comments: approverComment,
         }),
@@ -233,7 +309,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: updated,
-      message: `Leave application ${status.toLowerCase()}`,
+      message: `Leave application ${status.toLowerCase()} successfully. ${status === "APPROVED" ? `${leave.daysCount} day(s) deducted from leave balance.` : ""}`,
     });
   } catch (error: any) {
     console.error("Leave decision error:", error);

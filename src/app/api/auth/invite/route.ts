@@ -57,6 +57,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (normalizedTargetRole === "SUPER_ADMIN") {
+      const superAdminCount = await withDbRetry(() => prisma.user.count({ where: { role: "SUPER_ADMIN" } }));
+      if (superAdminCount >= 2) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "SUPER_ADMIN_LIMIT_REACHED",
+              message: "Maximum limit of 2 Super Admin accounts has been reached.",
+            },
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Check if user already exists
     const existing = await withDbRetry(() =>
       prisma.user.findUnique({

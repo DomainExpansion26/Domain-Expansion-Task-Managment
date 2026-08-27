@@ -48,13 +48,11 @@ function request(path, options = {}) {
 }
 
 async function runTests() {
-  console.log("=== STARTING COMPLETE HRMS & AUTH E2E TEST ===");
   let passed = 0;
   let failed = 0;
 
   function assert(condition, message) {
     if (condition) {
-      console.log(`  ✅ PASS: ${message}`);
       passed++;
     } else {
       console.error(`  ❌ FAIL: ${message}`);
@@ -69,7 +67,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 1: Register Normal Member
   // --------------------------------------------------------------------------
-  console.log("\n[1] Registering Normal Member...");
   const regRes = await request("/api/auth/register", {
     method: "POST",
     body: {
@@ -88,7 +85,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 2: Login as Normal Member & Cookie Handling
   // --------------------------------------------------------------------------
-  console.log("\n[2] Logging in as Normal Member...");
   const loginRes = await request("/api/auth/login", {
     method: "POST",
     body: {
@@ -112,7 +108,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 3: Verify Session & Role-Based Permissions
   // --------------------------------------------------------------------------
-  console.log("\n[3] Checking Member Session & Role Permissions...");
   const meRes = await request("/api/auth/me", { headers: memberHeaders });
   assert(meRes.status === 200 && meRes.data?.success, "Session retrieved successfully from /api/auth/me");
   assert(meRes.data?.data?.user?.role === "MEMBER", "Current user role is verified as MEMBER");
@@ -125,7 +120,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 4: Verify Protected Route Restrictions
   // --------------------------------------------------------------------------
-  console.log("\n[4] Testing Backend Route Restrictions for Normal Member...");
   const adminRes = await request("/api/admin/members", { headers: memberHeaders });
   assert(adminRes.status === 403 || adminRes.status === 401, "Normal member blocked from /api/admin/members (403/401 Forbidden)");
 
@@ -138,7 +132,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 5: Real Attendance Flow - Punch In / Punch Out
   // --------------------------------------------------------------------------
-  console.log("\n[5] Testing Punch In / Punch Out Endpoints...");
   // 5.1 Initial Punch status
   const initPunchRes = await request("/api/hrms/punch", { headers: memberHeaders });
   assert(initPunchRes.status === 200 && initPunchRes.data?.success, "Fetched initial punch status from /api/hrms/punch");
@@ -194,7 +187,6 @@ async function runTests() {
   // --------------------------------------------------------------------------
   // TEST 6: Super Admin / HR Admin Authorization
   // --------------------------------------------------------------------------
-  console.log("\n[6] Testing Super Admin Login and Administrative Access...");
   const saLoginRes = await request("/api/auth/login", {
     method: "POST",
     body: {
@@ -228,13 +220,11 @@ async function runTests() {
     });
     assert(correctRes.status === 200 && correctRes.data?.success, "Super Admin successfully performed attendance correction");
   } else {
-    console.log("  ⚠️ Note: Seed admin user password check skipped if not pre-seeded.");
   }
 
   // --------------------------------------------------------------------------
   // TEST 7: Logout Flow & Session Invalidation
   // --------------------------------------------------------------------------
-  console.log("\n[7] Testing Logout & Session Clearing...");
   const logoutRes = await request("/api/auth/logout", {
     method: "POST",
     headers: memberHeaders,
@@ -252,10 +242,6 @@ async function runTests() {
   });
   assert(postLogoutRes.status === 401, "Protected /api/auth/me correctly rejects cleared session (401 Unauthorized)");
 
-  console.log("\n==========================================");
-  console.log(`TOTAL PASSED: ${passed}`);
-  console.log(`TOTAL FAILED: ${failed}`);
-  console.log("==========================================");
 
   if (failed > 0) {
     process.exit(1);

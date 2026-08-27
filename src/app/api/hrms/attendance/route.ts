@@ -13,10 +13,55 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const userIdParam = searchParams.get("userId");
+    const viewAll = searchParams.get("viewAll") === "true";
+    const dateParam = searchParams.get("date"); // YYYY-MM-DD
+    const departmentParam = searchParams.get("department");
     const month = searchParams.get("month"); // 1 - 12
     const year = searchParams.get("year");   // e.g. 2026
 
-    const targetUserId = userIdParam && (isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role))
+    const isHRorSuper = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
+
+    // If HR admin requesting viewAll for a specific date or department
+    if (viewAll && isHRorSuper) {
+      const where: any = {};
+      if (dateParam) {
+        const d = new Date(dateParam);
+        const start = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+        const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+        where.date = { gte: start, lte: end };
+      }
+      if (userIdParam) {
+        where.userId = userIdParam;
+      }
+      if (departmentParam && departmentParam !== "ALL") {
+        where.user = { department: departmentParam };
+      }
+
+      const records = await prisma.attendance.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+              department: true,
+              jobTitle: true,
+              hrProfile: { select: { employeeId: true } },
+            },
+          },
+        },
+        orderBy: { date: "desc" },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: records,
+      });
+    }
+
+    const targetUserId = userIdParam && isHRorSuper
       ? userIdParam
       : currentUser.id;
 
