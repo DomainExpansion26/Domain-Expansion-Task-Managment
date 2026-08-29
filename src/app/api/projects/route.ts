@@ -63,16 +63,20 @@ export async function GET(request: NextRequest) {
       const myProjRole = myMembership ? normalizeProjectRole(myMembership.role) : (isSuper ? "PROJECT_MANAGER" : null);
 
       let canManageMembers = false;
-      if (isSuper) {
+      if (
+        isSuper ||
+        hasPermission(currentUser.role, "admin.members.manage") ||
+        hasPermission(currentUser.role, "project.update") ||
+        userGlobalRole === "MANAGER" ||
+        userGlobalRole === "PROJECT_MANAGER" ||
+        userGlobalRole === "TEAM_LEAD" ||
+        p.managerId === currentUser.id ||
+        p.leadId === currentUser.id ||
+        p.teamLeadId === currentUser.id ||
+        myProjRole === "PROJECT_MANAGER" ||
+        myProjRole === "TEAM_LEAD"
+      ) {
         canManageMembers = true;
-      } else if (userGlobalRole === "MANAGER" || userGlobalRole === "PROJECT_MANAGER") {
-        if (p.managerId === currentUser.id || p.leadId === currentUser.id || myProjRole === "PROJECT_MANAGER" || myProjRole === "TEAM_LEAD") {
-          canManageMembers = true;
-        }
-      } else if (userGlobalRole === "TEAM_LEAD") {
-        if (p.teamLeadId === currentUser.id || p.leadId === currentUser.id || myProjRole === "TEAM_LEAD") {
-          canManageMembers = true;
-        }
       }
 
       return {

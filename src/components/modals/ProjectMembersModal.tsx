@@ -41,6 +41,7 @@ export function ProjectMembersModal({
 }: ProjectMembersModalProps) {
   const [members, setMembers] = useState<any[]>([]);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [canManageMembersState, setCanManageMembersState] = useState<boolean>(canManage ?? true);
   const [selectedAddUserId, setSelectedAddUserId] = useState<string>("");
   const [selectedAddRole, setSelectedAddRole] = useState<ProjectRole>("DEVELOPER");
   const [loading, setLoading] = useState(false);
@@ -58,6 +59,9 @@ export function ProjectMembersModal({
       if (json.success) {
         setMembers(json.data.members || []);
         setAvailableUsers(json.data.availableUsers || []);
+        if (typeof json.data?.canManageMembers === "boolean") {
+          setCanManageMembersState(json.data.canManageMembers);
+        }
       } else {
         setError(json.error?.message || "Failed to load project members");
       }
@@ -71,13 +75,16 @@ export function ProjectMembersModal({
 
   useEffect(() => {
     if (isOpen && projectId) {
+      setCanManageMembersState(canManage ?? true);
       fetchProjectMembers();
       setSelectedAddUserId("");
       setSelectedAddRole("DEVELOPER");
       setError(null);
       setSuccessMsg(null);
     }
-  }, [isOpen, projectId]);
+  }, [isOpen, projectId, canManage]);
+
+  const effectiveCanManage = canManage || canManageMembersState;
 
   if (!isOpen) return null;
 
@@ -212,7 +219,7 @@ export function ProjectMembersModal({
           )}
 
           {/* Add New Member Section (Requirement #1 & #2) */}
-          {canManage && (
+          {effectiveCanManage && (
             <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
@@ -326,7 +333,7 @@ export function ProjectMembersModal({
 
                       {/* Project Role & Actions */}
                       <div className="flex items-center gap-2 sm:self-center self-end">
-                        {canManage ? (
+                        {effectiveCanManage ? (
                           <>
                             <select
                               value={m.projectRole}

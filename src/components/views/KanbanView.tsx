@@ -26,9 +26,11 @@ import {
   ListFilter,
   Flame,
   Building,
+  UserPlus,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
+import { ProjectMembersModal } from "@/components/modals/ProjectMembersModal";
 
 interface KanbanViewProps {
   tasks: any[];
@@ -37,6 +39,7 @@ interface KanbanViewProps {
   onSelectTask: (key: string) => void;
   onStatusChange: (taskKey: string, newStatus: string) => void;
   onOpenCreateTask: (defaultStatus?: string) => void;
+  onRefreshData?: () => void;
 }
 
 const COLUMNS = [
@@ -54,6 +57,7 @@ export function KanbanView({
   onSelectTask,
   onStatusChange,
   onOpenCreateTask,
+  onRefreshData,
 }: KanbanViewProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("ALL");
@@ -66,8 +70,9 @@ export function KanbanView({
   const [draggedTaskKey, setDraggedTaskKey] = useState<string | null>(null);
   const [showWorkload, setShowWorkload] = useState(false);
 
-  // Relations modal
+  // Relations and Members modal
   const [relationsTaskKey, setRelationsTaskKey] = useState<string | null>(null);
+  const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<any | null>(null);
   const [activeMenuKey, setActiveMenuKey] = useState<string | null>(null);
 
   const now = new Date();
@@ -216,18 +221,36 @@ export function KanbanView({
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#141414] border border-[#2E2E2E]">
         <div className="flex flex-wrap items-center gap-2">
           {/* Project Selector */}
-          <select
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
-          >
-            <option value="ALL">All Projects</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.key})
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-1.5">
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            >
+              <option value="ALL">All Projects</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.key})
+                </option>
+              ))}
+            </select>
+
+            {selectedProjectId !== "ALL" && (() => {
+              const currentProj = projects.find((p) => p.id === selectedProjectId);
+              if (!currentProj) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => setSelectedProjectForMembers(currentProj)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#252525] hover:bg-[#FF6200] text-[#E0E0E0] hover:text-white text-xs font-semibold border border-[#2E2E2E] transition-all cursor-pointer shadow-sm hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                  title="View and manage project team members"
+                >
+                  <Users className="w-3.5 h-3.5 text-[#FF8C42]" />
+                  <span>Members ({currentProj.members?.length || 0})</span>
+                </button>
+              );
+            })()}
+          </div>
 
           {/* Only My Tasks Toggle */}
           <button
@@ -652,6 +675,21 @@ export function KanbanView({
           isOpen={Boolean(relationsTaskKey)}
           onClose={() => setRelationsTaskKey(null)}
           onSelectTask={(key) => onSelectTask(key)}
+        />
+      )}
+
+      {/* Project Members Modal */}
+      {selectedProjectForMembers && (
+        <ProjectMembersModal
+          isOpen={Boolean(selectedProjectForMembers)}
+          onClose={() => setSelectedProjectForMembers(null)}
+          projectId={selectedProjectForMembers.id}
+          projectName={selectedProjectForMembers.name}
+          projectKey={selectedProjectForMembers.key}
+          canManage={selectedProjectForMembers.canManageMembers ?? true}
+          onMembersUpdated={() => {
+            if (onRefreshData) onRefreshData();
+          }}
         />
       )}
     </div>

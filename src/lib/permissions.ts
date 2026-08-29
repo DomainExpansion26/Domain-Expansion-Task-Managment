@@ -277,6 +277,7 @@ export type ProjectRole =
   | "DEVELOPER"
   | "DESIGNER"
   | "TESTER"
+  | "MARKETING_INTERN"
   | "MEMBER"
   | "OTHER";
 
@@ -286,6 +287,7 @@ export const PROJECT_ROLES: ProjectRole[] = [
   "DEVELOPER",
   "DESIGNER",
   "TESTER",
+  "MARKETING_INTERN",
   "MEMBER",
   "OTHER",
 ];
@@ -296,14 +298,16 @@ export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
   DEVELOPER: "Developer",
   DESIGNER: "Designer",
   TESTER: "Tester / QA",
+  MARKETING_INTERN: "Marketing Intern",
   MEMBER: "Member",
   OTHER: "Contributor",
 };
 
 export function normalizeProjectRole(role?: string): ProjectRole {
   if (!role) return "MEMBER";
-  const r = role.toUpperCase();
+  const r = role.toUpperCase().trim().replace(/\s+/g, "_");
   if (r === "LEAD") return "TEAM_LEAD";
+  if (r === "MARKETING" || r === "INTERN" || r === "MARKETING_INTERN") return "MARKETING_INTERN";
   if (PROJECT_ROLES.includes(r as ProjectRole)) return r as ProjectRole;
   return "MEMBER";
 }

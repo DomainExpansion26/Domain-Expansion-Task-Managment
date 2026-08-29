@@ -345,6 +345,7 @@ export default function Home() {
             setCreateTaskStatus(defaultStatus || "TODO");
             setIsCreateTaskOpen(true);
           }}
+          onRefreshData={fetchAppData}
         />
       )}
 

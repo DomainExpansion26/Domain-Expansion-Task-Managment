@@ -218,12 +218,24 @@ export function ProjectsView({
                   </p>
                 </div>
 
-                {/* Assigned Members Mini Avatars */}
-                {project.members && project.members.length > 0 && (
-                  <div className="pt-2">
-                    <div className="text-[10px] text-[#888898] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                      <span>Assigned Team ({project.members.length})</span>
-                    </div>
+                {/* Assigned Members Section & Add Member Trigger */}
+                <div className="pt-2">
+                  <div className="text-[10px] text-[#888898] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>Assigned Team ({project.members?.length || 0})</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProjectForMembers(project);
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] text-[#FF8C42] hover:text-white font-bold transition-colors cursor-pointer"
+                      title="Add member to project"
+                    >
+                      <UserPlus className="w-3 h-3" />
+                      <span>+ Add Member</span>
+                    </button>
+                  </div>
+                  {project.members && project.members.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
                       {project.members.slice(0, 4).map((m: any) => (
                         <span
@@ -241,8 +253,10 @@ export function ProjectsView({
                         </span>
                       )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-[11px] text-[#666] italic">No members assigned yet &bull; Click + Add Member</p>
+                  )}
+                </div>
 
                 {/* Progress Bar */}
                 <div className="space-y-1.5 pt-2 border-t border-[#2E2E2E]/60">
@@ -278,20 +292,18 @@ export function ProjectsView({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {project.canManageMembers && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProjectForMembers(project);
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#252525] hover:bg-[#FF6200] text-[#ACACB8] hover:text-white text-[11px] font-semibold transition-all border border-[#2E2E2E] cursor-pointer"
-                        title="Manage Project Members"
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                        <span>Members</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProjectForMembers(project);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#252525] hover:bg-[#FF6200] text-[#E0E0E0] hover:text-white text-[11px] font-semibold transition-all border border-[#2E2E2E] cursor-pointer hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                      title="Manage Project Members"
+                    >
+                      <Users className="w-3.5 h-3.5 text-[#FF8C42]" />
+                      <span>Members</span>
+                    </button>
                     <div className="flex items-center gap-1 text-[#FF8C42] font-semibold group-hover:translate-x-0.5 transition-transform">
                       <span>Board</span>
                       <ArrowRight className="w-3 h-3" />

@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { isSuperAdmin, normalizeProjectRole, ProjectRole } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead, hasPermission, normalizeProjectRole, ProjectRole } from "@/lib/permissions";
 
 /**
  * Checks if currentUser has permission to manage members of the specified project.
- * Super Admin: Can manage members of any project.
- * Project Manager: Can manage members only if they are the project's manager, lead, or have PROJECT_MANAGER role in project.
- * Team Lead: Can manage members only if they are the project's teamLead, lead, or have TEAM_LEAD role in project.
+ * - Super Admin: Can manage members of any project.
+ * - Project Manager / Manager: Can manage project members.
+ * - Team Lead: Can manage project members.
+ * - Project Lead / Designated Manager / Team Lead on project: Can manage members.
+ * - Project-level PROJECT_MANAGER or TEAM_LEAD: Can manage members.
  */
 async function canUserManageProjectMembers(currentUser: any, projectId: string) {
   if (!currentUser) return false;
-  if (isSuperAdmin(currentUser.role)) return true;
+  
+  const userRole = (currentUser.role || "").toUpperCase();
+  if (isSuperAdmin(currentUser.role) || userRole === "SUPER_ADMIN") return true;
+  if (hasPermission(currentUser.role, "admin.members.manage") || hasPermission(currentUser.role, "project.update")) {
+    return true;
+  }
+  if (isManager(currentUser.role) || userRole === "MANAGER" || userRole === "PROJECT_MANAGER") {
+    return true;
+  }
+  if (isTeamLead(currentUser.role) || userRole === "TEAM_LEAD") {
+    return true;
+  }
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -24,31 +37,21 @@ async function canUserManageProjectMembers(currentUser: any, projectId: string) 
 
   if (!project) return false;
 
-  const userRole = (currentUser.role || "").toUpperCase();
   const membership = project.members[0];
   const projectRole = membership ? normalizeProjectRole(membership.role) : null;
 
-  // Project Manager permissions
-  if (userRole === "MANAGER" || userRole === "PROJECT_MANAGER") {
-    if (
-      project.managerId === currentUser.id ||
-      project.leadId === currentUser.id ||
-      projectRole === "PROJECT_MANAGER" ||
-      projectRole === "TEAM_LEAD"
-    ) {
-      return true;
-    }
+  // Direct designated role on project
+  if (
+    project.leadId === currentUser.id ||
+    project.managerId === currentUser.id ||
+    project.teamLeadId === currentUser.id
+  ) {
+    return true;
   }
 
-  // Team Lead permissions
-  if (userRole === "TEAM_LEAD") {
-    if (
-      project.teamLeadId === currentUser.id ||
-      project.leadId === currentUser.id ||
-      projectRole === "TEAM_LEAD"
-    ) {
-      return true;
-    }
+  // Project-level assigned roles
+  if (projectRole === "PROJECT_MANAGER" || projectRole === "TEAM_LEAD") {
+    return true;
   }
 
   return false;
@@ -69,6 +72,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const project = await prisma.project.findFirst({
       where: { OR: [{ id }, { key: id.toUpperCase() }] },
       include: {
+        lead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
+        manager: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
+        teamLead: { select: { id: true, name: true, email: true, avatarUrl: true, role: true, jobTitle: true, department: true } },
         members: {
           include: {
             user: {
@@ -95,20 +101,31 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    // Check if user can view: Super Admin or Member of project
+    const canManage = await canUserManageProjectMembers(currentUser, project.id);
     const isMember = project.members.some((m) => m.userId === currentUser.id);
-    if (!isSuperAdmin(currentUser.role) && !isMember) {
+    const isDesignated =
+      project.leadId === currentUser.id ||
+      project.managerId === currentUser.id ||
+      project.teamLeadId === currentUser.id;
+    const canView =
+      isSuperAdmin(currentUser.role) ||
+      canManage ||
+      isMember ||
+      isDesignated ||
+      hasPermission(currentUser.role, "project.view");
+
+    if (!canView) {
       return NextResponse.json(
         { success: false, error: { code: "FORBIDDEN", message: "Access denied" } },
         { status: 403 }
       );
     }
 
-    const canManage = await canUserManageProjectMembers(currentUser, project.id);
-
-    // Get all registered active organization users
+    // Get all registered organization users who are active
     const allUsers = await prisma.user.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: { not: false },
+      },
       select: {
         id: true,
         name: true,

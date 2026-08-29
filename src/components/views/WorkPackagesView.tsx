@@ -27,8 +27,10 @@ import {
   Eye,
   SlidersHorizontal,
   FileText,
+  UserPlus,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
+import { ProjectMembersModal } from "@/components/modals/ProjectMembersModal";
 
 interface WorkPackagesViewProps {
   tasks: any[];
@@ -51,6 +53,7 @@ export function WorkPackagesView({
 }: WorkPackagesViewProps) {
   const [activeFilterView, setActiveFilterView] = useState<string>("all-open");
   const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -299,6 +302,18 @@ export function WorkPackagesView({
 
           {/* Action Bar */}
           <div className="flex flex-wrap items-center gap-2.5">
+            {currentProject && (
+              <button
+                type="button"
+                onClick={() => setSelectedProjectForMembers(currentProject)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-[#1A1A1A] hover:bg-[#FF6200] hover:text-white border border-gray-200 dark:border-[#2E2E2E] text-xs font-bold text-gray-700 dark:text-[#ACACB8] transition-all cursor-pointer shadow-sm hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                title="View & manage project members"
+              >
+                <Users className="w-3.5 h-3.5 text-[#FF8C42]" />
+                <span>Members ({currentProject.members?.length || 0})</span>
+              </button>
+            )}
+
             <button
               onClick={() => onOpenCreateTask(selectedProjectId !== "ALL" ? selectedProjectId : undefined)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00875A] hover:bg-[#00704A] text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
@@ -682,6 +697,21 @@ export function WorkPackagesView({
           )}
         </div>
       </div>
+
+      {/* Project Members Modal */}
+      {selectedProjectForMembers && (
+        <ProjectMembersModal
+          isOpen={Boolean(selectedProjectForMembers)}
+          onClose={() => setSelectedProjectForMembers(null)}
+          projectId={selectedProjectForMembers.id}
+          projectName={selectedProjectForMembers.name}
+          projectKey={selectedProjectForMembers.key}
+          canManage={selectedProjectForMembers.canManageMembers ?? true}
+          onMembersUpdated={() => {
+            if (onRefreshData) onRefreshData();
+          }}
+        />
+      )}
     </div>
   );
 }
