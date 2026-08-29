@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
   Plus,
@@ -22,10 +22,10 @@ import { isSuperAdmin, isTeamLead } from "@/lib/permissions";
 interface TaskCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projects: any[];
-  users: any[];
+  projects?: any[];
+  users?: any[];
   currentUser?: any;
-  onTaskCreated: (task: any) => void;
+  onTaskCreated?: (task: any) => void;
   defaultProjectId?: string;
   defaultStatus?: string;
 }
@@ -33,42 +33,58 @@ interface TaskCreateModalProps {
 export function TaskCreateModal({
   isOpen,
   onClose,
-  projects,
-  users,
+  projects = [],
+  users = [],
   currentUser,
   onTaskCreated,
   defaultProjectId,
   defaultStatus = "TODO",
 }: TaskCreateModalProps) {
-  // Filter projects if currentUser is Team Lead (Requirement #4)
+  const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
+  const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
+
+  // Filter projects if currentUser is Team Lead
   const isSuper = isSuperAdmin(currentUser?.role);
   const userGlobalRole = (currentUser?.role || "").toUpperCase();
 
-  const allowedProjects = React.useMemo(() => {
-    if (isSuper) return projects;
+  const allowedProjects = useMemo(() => {
+    if (safeProjects.length === 0) return [];
+    if (isSuper) return safeProjects;
     if (userGlobalRole === "TEAM_LEAD") {
-      return projects.filter(
+      const leadProjects = safeProjects.filter(
         (p) =>
-          p.teamLeadId === currentUser?.id ||
-          p.leadId === currentUser?.id ||
-          p.managerId === currentUser?.id ||
-          p.members?.some((m: any) => (m.id || m.userId) === currentUser?.id)
+          p &&
+          (p.teamLeadId === currentUser?.id ||
+            p.leadId === currentUser?.id ||
+            p.managerId === currentUser?.id ||
+            (Array.isArray(p.members) &&
+              p.members.some((m: any) => (m?.id || m?.userId || m?.user?.id) === currentUser?.id)))
+      );
+      return leadProjects.length > 0 ? leadProjects : safeProjects;
+    }
+    return safeProjects;
+  }, [safeProjects, isSuper, userGlobalRole, currentUser?.id]);
+
+  const initialProject = useMemo(() => {
+    if (defaultProjectId) {
+      return (
+        allowedProjects.find((p) => p && p.id === defaultProjectId) ||
+        safeProjects.find((p) => p && p.id === defaultProjectId) ||
+        allowedProjects[0] ||
+        safeProjects[0] ||
+        null
       );
     }
-    return projects;
-  }, [projects, isSuper, userGlobalRole, currentUser?.id]);
+    return allowedProjects[0] || safeProjects[0] || null;
+  }, [defaultProjectId, allowedProjects, safeProjects]);
 
-  const initialProject = defaultProjectId
-    ? allowedProjects.find((p) => p.id === defaultProjectId) || allowedProjects[0]
-    : allowedProjects[0];
-
-  const [projectId, setProjectId] = useState<string>(initialProject?.id || "");
+  const [projectId, setProjectId] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [taskType, setTaskType] = useState("TASK");
   const [priority, setPriority] = useState("MEDIUM");
-  const [status, setStatus] = useState(defaultStatus);
+  const [status, setStatus] = useState(defaultStatus || "TODO");
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [accountableId, setAccountableId] = useState<string>("");
   const [sprintId, setSprintId] = useState<string>("");
@@ -84,82 +100,128 @@ export function TaskCreateModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const prevIsOpenRef = React.useRef(isOpen);
-
-  // Sync project ID when modal opens
+  // Sync project ID and form when modal opens or projects change
   useEffect(() => {
-    if (isOpen && !prevIsOpenRef.current) {
+    if (isOpen) {
       const selected = defaultProjectId
-        ? allowedProjects.find((p) => p.id === defaultProjectId) || allowedProjects[0]
-        : allowedProjects[0];
-      setProjectId(selected?.id || "");
+        ? allowedProjects.find((p) => p && p.id === defaultProjectId) ||
+          safeProjects.find((p) => p && p.id === defaultProjectId) ||
+          allowedProjects[0] ||
+          safeProjects[0]
+        : allowedProjects[0] || safeProjects[0];
+
+      if (selected?.id) {
+        setProjectId(selected.id);
+      }
       setStatus(defaultStatus || "TODO");
-      setAssigneeIds([]);
-      setAccountableId("");
       setError(null);
     }
-    prevIsOpenRef.current = isOpen;
-  }, [isOpen, defaultProjectId, defaultStatus, allowedProjects]);
+  }, [isOpen, defaultProjectId, defaultStatus, allowedProjects, safeProjects]);
 
-  const currentProject = allowedProjects.find((p) => p.id === projectId) || projects.find((p) => p.id === projectId);
-  const availableSprints = currentProject?.sprints || [];
+  const currentProject = useMemo(() => {
+    return (
+      allowedProjects.find((p) => p && p.id === projectId) ||
+      safeProjects.find((p) => p && p.id === projectId) ||
+      initialProject ||
+      null
+    );
+  }, [allowedProjects, safeProjects, projectId, initialProject]);
 
-  // Dynamically extract ONLY members belonging to the currently selected project (Requirement #3 & #4)
-  const projectMembers: any[] = React.useMemo(() => {
-    if (!currentProject) return [];
+  const availableSprints = useMemo(() => {
+    return Array.isArray(currentProject?.sprints) ? currentProject.sprints : [];
+  }, [currentProject]);
+
+  // Dynamically extract members belonging to project with full fallbacks
+  const projectMembers: any[] = useMemo(() => {
     const memberMap = new Map<string, any>();
 
-    // 1. Add members explicitly assigned to project
-    if (Array.isArray(currentProject.members)) {
-      currentProject.members.forEach((m: any) => {
-        const id = m.user?.id || m.userId || m.id;
-        if (id) {
-          memberMap.set(id, {
-            id,
-            name: m.user?.name || m.name || "Member",
-            email: m.user?.email || m.email || "",
-            role: m.projectRole || m.role || m.user?.role || "MEMBER",
-            avatarUrl: m.user?.avatarUrl || m.avatarUrl,
+    if (currentProject) {
+      // 1. Add members explicitly assigned to project
+      if (Array.isArray(currentProject.members)) {
+        currentProject.members.forEach((m: any) => {
+          if (!m) return;
+          const id = m.user?.id || m.userId || m.id;
+          if (id) {
+            memberMap.set(id, {
+              id,
+              name: m.user?.name || m.name || "Member",
+              email: m.user?.email || m.email || "",
+              role: m.projectRole || m.role || m.user?.role || "MEMBER",
+              avatarUrl: m.user?.avatarUrl || m.avatarUrl,
+            });
+          }
+        });
+      }
+
+      // 2. Include project lead / manager / team lead if specified
+      if (currentProject.lead && currentProject.lead.id) {
+        memberMap.set(currentProject.lead.id, {
+          id: currentProject.lead.id,
+          name: currentProject.lead.name || "Project Lead",
+          email: currentProject.lead.email || "",
+          role: "TEAM_LEAD",
+          avatarUrl: currentProject.lead.avatarUrl,
+        });
+      }
+      if (currentProject.teamLead && currentProject.teamLead.id) {
+        memberMap.set(currentProject.teamLead.id, {
+          id: currentProject.teamLead.id,
+          name: currentProject.teamLead.name || "Team Lead",
+          email: currentProject.teamLead.email || "",
+          role: "TEAM_LEAD",
+          avatarUrl: currentProject.teamLead.avatarUrl,
+        });
+      }
+      if (currentProject.manager && currentProject.manager.id) {
+        memberMap.set(currentProject.manager.id, {
+          id: currentProject.manager.id,
+          name: currentProject.manager.name || "Project Manager",
+          email: currentProject.manager.email || "",
+          role: "PROJECT_MANAGER",
+          avatarUrl: currentProject.manager.avatarUrl,
+        });
+      }
+    }
+
+    // 3. Fallback to workspace users if no project members configured yet
+    if (memberMap.size === 0 && safeUsers.length > 0) {
+      safeUsers.forEach((u: any) => {
+        if (u && u.id) {
+          memberMap.set(u.id, {
+            id: u.id,
+            name: u.name || "User",
+            email: u.email || "",
+            role: u.role || "MEMBER",
+            avatarUrl: u.avatarUrl,
           });
         }
       });
     }
 
-    // 2. Include project lead / manager / team lead if specified
-    if (currentProject.lead && currentProject.lead.id) {
-      memberMap.set(currentProject.lead.id, {
-        id: currentProject.lead.id,
-        name: currentProject.lead.name,
-        email: currentProject.lead.email,
-        role: "TEAM_LEAD",
-        avatarUrl: currentProject.lead.avatarUrl,
-      });
-    }
-    if (currentProject.teamLead && currentProject.teamLead.id) {
-      memberMap.set(currentProject.teamLead.id, {
-        id: currentProject.teamLead.id,
-        name: currentProject.teamLead.name,
-        email: currentProject.teamLead.email,
-        role: "TEAM_LEAD",
-        avatarUrl: currentProject.teamLead.avatarUrl,
-      });
-    }
-    if (currentProject.manager && currentProject.manager.id) {
-      memberMap.set(currentProject.manager.id, {
-        id: currentProject.manager.id,
-        name: currentProject.manager.name,
-        email: currentProject.manager.email,
-        role: "PROJECT_MANAGER",
-        avatarUrl: currentProject.manager.avatarUrl,
+    // 4. Fallback to current logged-in user
+    if (memberMap.size === 0 && currentUser?.id) {
+      memberMap.set(currentUser.id, {
+        id: currentUser.id,
+        name: currentUser.name || "You",
+        email: currentUser.email || "",
+        role: currentUser.role || "MEMBER",
+        avatarUrl: currentUser.avatarUrl,
       });
     }
 
     return Array.from(memberMap.values());
-  }, [currentProject]);
+  }, [currentProject, safeUsers, currentUser]);
+
+  // Auto-set default accountable if not chosen
+  useEffect(() => {
+    if (projectMembers.length > 0 && !accountableId) {
+      setAccountableId(projectMembers[0].id);
+    }
+  }, [projectMembers, accountableId]);
 
   const handleProjectChange = (newProjId: string) => {
     setProjectId(newProjId);
-    setAssigneeIds([]); // Reset assignees to prevent cross-project invalid members
+    setAssigneeIds([]);
     setSprintId("");
   };
 
@@ -183,19 +245,32 @@ export function TaskCreateModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !projectId) {
-      setError("Please provide a task title and select a project.");
+
+    const targetProjectId = projectId || currentProject?.id || allowedProjects[0]?.id || safeProjects[0]?.id;
+
+    if (!title.trim()) {
+      setError("Please enter a task title.");
       return;
     }
 
-    if (assigneeIds.length === 0) {
-      setError("Please assign at least one project member to this task.");
+    if (!targetProjectId) {
+      setError("Please select a project.");
       return;
     }
 
-    if (!accountableId) {
-      setError("Please select an Accountable person for this task.");
-      return;
+    // Resolve assignees and accountable gracefully
+    let effectiveAssignees = [...assigneeIds];
+    if (effectiveAssignees.length === 0) {
+      if (projectMembers.length > 0) {
+        effectiveAssignees = [projectMembers[0].id];
+      } else if (currentUser?.id) {
+        effectiveAssignees = [currentUser.id];
+      }
+    }
+
+    let effectiveAccountable = accountableId;
+    if (!effectiveAccountable) {
+      effectiveAccountable = effectiveAssignees[0] || (currentUser?.id ? currentUser.id : "");
     }
 
     setLoading(true);
@@ -209,12 +284,12 @@ export function TaskCreateModal({
           title: title.trim(),
           description: description.trim(),
           acceptanceCriteria: acceptanceCriteria.trim(),
-          projectId,
+          projectId: targetProjectId,
           taskType,
           priority,
           status,
-          assigneeIds,
-          accountableId: accountableId || null,
+          assigneeIds: effectiveAssignees,
+          accountableId: effectiveAccountable || null,
           startDate: startDate || null,
           endDate: endDate || dueDate || null,
           dueDate: dueDate || endDate || null,
@@ -227,10 +302,12 @@ export function TaskCreateModal({
         }),
       });
 
-      const json = await res.json();
+      const json = await res.json().catch(() => ({ success: false, error: { message: "Server response parse error" } }));
 
-      if (json.success) {
-        onTaskCreated(json.data);
+      if (json && json.success) {
+        if (typeof onTaskCreated === "function") {
+          onTaskCreated(json.data);
+        }
         onClose();
         // Reset form
         setTitle("");
@@ -246,11 +323,11 @@ export function TaskCreateModal({
         setCategory("");
         setVersion("");
       } else {
-        setError(json.error?.message || "Failed to create task");
+        setError(json?.error?.message || json?.message || "Failed to create task");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Create task error:", err);
-      setError("Network error creating task");
+      setError("Network error creating task. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -274,7 +351,7 @@ export function TaskCreateModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -298,17 +375,17 @@ export function TaskCreateModal({
               </label>
               {allowedProjects.length === 0 ? (
                 <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs">
-                  No projects available. Please ask your administrator to assign you to a project.
+                  No projects available. Please create a project first or contact your administrator.
                 </div>
               ) : (
                 <select
-                  value={projectId}
+                  value={projectId || allowedProjects[0]?.id || ""}
                   onChange={(e) => handleProjectChange(e.target.value)}
                   className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#FF6200]"
                 >
                   {allowedProjects.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.key})
+                      {p.name} ({p.key || "PRJ"})
                     </option>
                   ))}
                 </select>
@@ -345,22 +422,22 @@ export function TaskCreateModal({
             />
           </div>
 
-          {/* Row 3: Assigned Members (Scoped strictly to Selected Project) - Requirement #3 & #4 */}
+          {/* Row 3: Assigned Members */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-[#ACACB8] font-semibold flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-[#FF6200]" />
-                <span>Assign Project Member{projectMembers.length > 1 ? "s" : ""}</span>
+                <span>Assign Member{projectMembers.length > 1 ? "s" : ""}</span>
               </label>
               <span className="text-[11px] text-[#888898]">
-                {projectMembers.length} member{projectMembers.length === 1 ? "" : "s"} assigned to {currentProject?.name || "this project"}
+                {projectMembers.length} member{projectMembers.length === 1 ? "" : "s"} available
               </span>
             </div>
 
             <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] min-h-[50px]">
               {projectMembers.length === 0 ? (
                 <div className="text-[#888898] italic text-center py-2">
-                  No members assigned to this project yet. Use "Manage Members" in Projects View to add members.
+                  No members assigned to this project yet.
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
@@ -380,22 +457,24 @@ export function TaskCreateModal({
                         {member.avatarUrl ? (
                           <img
                             src={member.avatarUrl}
-                            alt={member.name}
+                            alt={member.name || "Member"}
                             className="w-4 h-4 rounded-full object-cover"
                           />
                         ) : (
                           <div
                             className={`w-4 h-4 rounded-full bg-gradient-to-tr ${getAvatarGradient(
-                              member.name
+                              member.name || "User"
                             )} flex items-center justify-center text-[7px] font-black text-white uppercase flex-shrink-0`}
                           >
-                            {getInitials(member.name)}
+                            {getInitials(member.name || "User")}
                           </div>
                         )}
-                        <span>{member.name}</span>
-                        <span className="text-[10px] opacity-75 font-mono">
-                          ({member.role?.substring(0, 4)})
-                        </span>
+                        <span>{member.name || "Member"}</span>
+                        {member.role && (
+                          <span className="text-[10px] opacity-75 font-mono">
+                            ({String(member.role).substring(0, 4)})
+                          </span>
+                        )}
                         {isSelected && <Check className="w-3.5 h-3.5 ml-0.5" />}
                       </button>
                     );
@@ -436,19 +515,19 @@ export function TaskCreateModal({
                 Accountable <span className="text-[#FF6200]">*</span>
               </label>
               <select
-                required
-                value={accountableId}
+                value={accountableId || (projectMembers[0]?.id || "")}
                 onChange={(e) => setAccountableId(e.target.value)}
-                className={`w-full bg-[#1A1A1A] border rounded-xl px-3 py-2 text-white focus:outline-none ${
-                  !accountableId ? "border-amber-500/50" : "border-[#2E2E2E] focus:border-[#FF6200]"
-                }`}
+                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
               >
-                <option value="">Select Accountable Person *</option>
-                {projectMembers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.role})
-                  </option>
-                ))}
+                {projectMembers.length === 0 ? (
+                  <option value={currentUser?.id || ""}>{currentUser?.name || "You"}</option>
+                ) : (
+                  projectMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.role || "Member"})
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -459,8 +538,7 @@ export function TaskCreateModal({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
-              >
-              </input>
+              />
             </div>
 
             <div>
@@ -530,7 +608,7 @@ export function TaskCreateModal({
                 step="10"
                 value={progress}
                 onChange={(e) => setProgress(Number(e.target.value))}
-                className="w-full accent-[#00875A] mt-2"
+                className="w-full accent-[#00875A] mt-2 cursor-pointer"
               />
             </div>
           </div>
@@ -567,7 +645,7 @@ export function TaskCreateModal({
                   <button
                     type="button"
                     onClick={() => handleRemoveSubtask(idx)}
-                    className="text-[#888898] hover:text-red-400 p-1 transition-colors"
+                    className="text-[#888898] hover:text-red-400 p-1 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -590,7 +668,7 @@ export function TaskCreateModal({
                 <button
                   type="button"
                   onClick={handleAddSubtask}
-                  className="px-4 py-2 rounded-xl bg-[#252525] border border-[#2E2E2E] text-white hover:bg-[#333] font-semibold transition-colors"
+                  className="px-4 py-2 rounded-xl bg-[#252525] border border-[#2E2E2E] text-white hover:bg-[#333] font-semibold transition-colors cursor-pointer"
                 >
                   Add Subtask
                 </button>
@@ -603,14 +681,14 @@ export function TaskCreateModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs font-semibold text-[#ACACB8] hover:text-white transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs font-semibold text-[#ACACB8] hover:text-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[#FF6200]/25 transition-all"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[#FF6200]/25 transition-all cursor-pointer disabled:opacity-50"
             >
               {loading ? "Creating..." : "Create Task"}
             </button>

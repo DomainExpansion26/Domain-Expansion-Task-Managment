@@ -256,19 +256,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!assigneeIds || (Array.isArray(assigneeIds) && assigneeIds.length === 0)) {
-      return NextResponse.json(
-        { success: false, error: { code: "INVALID_INPUT", message: "Please assign at least one project member to this task" } },
-        { status: 400 }
-      );
-    }
-
-    if (!accountableId) {
-      return NextResponse.json(
-        { success: false, error: { code: "INVALID_INPUT", message: "Accountable person is mandatory for this task" } },
-        { status: 400 }
-      );
-    }
+    const rawAssigneeList: string[] = Array.isArray(assigneeIds)
+      ? assigneeIds
+      : assigneeIds
+      ? [assigneeIds]
+      : [currentUser.id];
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -307,10 +299,16 @@ export async function POST(request: NextRequest) {
     if (project.teamLeadId) projectMemberUserIds.add(project.teamLeadId);
 
     // Deduplicate and filter assignees
-    const rawAssigneeList: string[] = Array.isArray(assigneeIds) ? assigneeIds : [];
-    const uniqueAssigneeIds = Array.from(new Set(rawAssigneeList)).filter(
-      (uId: string) => isSuper || projectMemberUserIds.has(uId)
+    let uniqueAssigneeIds = Array.from(new Set(rawAssigneeList)).filter(
+      (uId: string) => isSuper || projectMemberUserIds.size === 0 || projectMemberUserIds.has(uId)
     );
+
+    if (uniqueAssigneeIds.length === 0 && rawAssigneeList.length > 0) {
+      uniqueAssigneeIds = rawAssigneeList;
+    }
+    if (uniqueAssigneeIds.length === 0 && currentUser.id) {
+      uniqueAssigneeIds = [currentUser.id];
+    }
 
     // Generate collision-proof unique sequential task key (e.g. TGB-103)
     const existingTasks = await prisma.task.findMany({
