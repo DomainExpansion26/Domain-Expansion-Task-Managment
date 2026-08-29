@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { HRMSShell } from "@/components/layout/HRMSShell";
@@ -9,7 +9,7 @@ import { HRAdminView } from "@/components/views/HRAdminView";
 import { isHRAdmin, isSuperAdmin } from "@/lib/permissions";
 import { Clock } from "lucide-react";
 
-export default function HRMSDashboardPage() {
+function HRMSDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "overview";
@@ -81,5 +81,22 @@ export default function HRMSDashboardPage() {
         />
       )}
     </HRMSShell>
+  );
+}
+
+export default function HRMSDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-screen flex items-center justify-center bg-[#0D0D0D] text-white text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            <span>Loading HRMS Portal...</span>
+          </div>
+        </div>
+      }
+    >
+      <HRMSDashboardContent />
+    </Suspense>
   );
 }
