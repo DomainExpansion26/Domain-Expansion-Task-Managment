@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   Download,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
 import { EmployeeDetailModal } from "@/components/modals/EmployeeDetailModal";
@@ -594,6 +595,39 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
       {/* TAB 3: LEAVE APPROVALS */}
       {activeTab === "leaves" && (
         <div className="space-y-6">
+          {/* Corporate Policy Specification Reference */}
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 dark:from-[#161616] dark:via-[#141414] dark:to-[#1A1A1A] border border-cyan-200/80 dark:border-[#2E2E2E] shadow-sm space-y-3 text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-100 dark:border-[#282828] pb-2.5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                <h3 className="font-bold text-gray-900 dark:text-white">
+                  Corporate Leave Policy: 24 Days / Year (2 Leaves Accrued Monthly on 1st)
+                </h3>
+              </div>
+              <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                Dec Year-End Carry Forward Enabled
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                <strong className="text-cyan-600 dark:text-cyan-400 block">Casual/Sick (CL/SL): 12 Days</strong>
+                <span className="text-gray-500 text-[10px]">1 day/month on 1st &bull; Carry forward active</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                <strong className="text-emerald-600 dark:text-emerald-400 block">Privilege (PL/EL): 12 Days</strong>
+                <span className="text-gray-500 text-[10px]">1 day/month on 1st &bull; Carry forward active</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                <strong className="text-pink-600 dark:text-pink-400 block">Maternity: 26 Weeks (182d)</strong>
+                <span className="text-gray-500 text-[10px]">Maternity Benefit Act 2017</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                <strong className="text-blue-600 dark:text-blue-400 block">Paternity: 10 Days Paid</strong>
+                <span className="text-gray-500 text-[10px]">Company Paternity Policy</span>
+              </div>
+            </div>
+          </div>
+
           {/* Pending Approvals Section */}
           <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-sm">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">

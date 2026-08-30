@@ -43,6 +43,7 @@ import {
   Megaphone,
   Sparkles,
   Heart,
+  ShieldCheck,
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
 import { LeaveApplyModal } from "@/components/modals/LeaveApplyModal";
@@ -608,13 +609,13 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
 
       {/* TODAY'S COLLEAGUES BIRTHDAYS BANNER */}
       {todayBirthdays.length > 0 && !isMyBirthday && (
-        <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-600/15 via-pink-600/15 to-rose-600/15 border border-pink-500/30 text-xs shadow-md space-y-3">
+        <div className="p-5 rounded-3xl bg-pink-50/90 dark:bg-gradient-to-r dark:from-purple-600/15 dark:via-pink-600/15 dark:to-rose-600/15 border border-pink-200 dark:border-pink-500/30 text-xs shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Cake className="w-4 h-4 text-pink-500" />
               <span>🎉 Today's Birthday Celebration in the Team!</span>
             </h2>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500 text-white uppercase">
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-pink-600 text-white uppercase">
               Today's Special
             </span>
           </div>
@@ -629,13 +630,13 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                   <div
                     className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
                       b.name
-                    )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0`}
+                    )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0 shadow-sm`}
                   >
                     {getInitials(b.name)}
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-gray-900 dark:text-white truncate">{b.name}</div>
-                    <div className="text-[10px] text-gray-400 truncate">{b.jobTitle}</div>
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{b.jobTitle}</div>
                   </div>
                 </div>
 
@@ -756,32 +757,32 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828]">
-                  <div className="text-[10px] text-gray-400 font-semibold uppercase">First Punch In</div>
+                <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">First Punch In</div>
                   <div className="text-sm font-bold font-mono text-gray-900 dark:text-white mt-1">
                     {punchData?.punchIn ? new Date(punchData.punchIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828]">
-                  <div className="text-[10px] text-gray-400 font-semibold uppercase">Latest Punch Out</div>
+                <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">Latest Punch Out</div>
                   <div className="text-sm font-bold font-mono text-gray-900 dark:text-white mt-1">
                     {punchData?.punchOut ? new Date(punchData.punchOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : punchData?.punchIn ? "In Progress" : "--:--"}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828]">
-                  <div className="text-[10px] text-gray-400 font-semibold uppercase">Break Time</div>
+                <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">Break Time</div>
                   <div className="text-sm font-bold font-mono text-gray-900 dark:text-white mt-1">
-                    {punchData?.breakDurationMinutes ?? 60}m <span className="text-[10px] text-gray-400 font-normal">(1h allowed)</span>
+                    {punchData?.breakDurationMinutes ?? 60}m <span className="text-[10px] text-gray-500 dark:text-gray-400 font-normal">(1h allowed)</span>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828]">
-                  <div className="text-[10px] text-gray-400 font-semibold uppercase">Logged Hours</div>
+                <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">Logged Hours</div>
                   <div className="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-1">
                     {punchData?.totalWorkingHours ? `${punchData.totalWorkingHours}h` : "0.0h"}{" "}
-                    <span className="text-[10px] font-normal text-gray-400">/ 8.0h</span>
+                    <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">/ 8.0h</span>
                   </div>
                 </div>
               </div>
@@ -882,15 +883,25 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
             </div>
           </div>
 
-          {/* Leave Balances Quick Cards */}
+          {/* Leave Balances Quick Cards (24-Day Annual Quota: 2 Leaves Monthly on 1st) */}
           <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] p-6 rounded-3xl shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                My Leave Balances (Annual Quota)
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                    My Leave Balances (24 Days / Year Quota)
+                  </h2>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                    2 Leaves Accrued Monthly on 1st
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-[#888898] mt-0.5">
+                  1 Casual/Sick Leave (CL/SL) + 1 Privilege Leave (PL/EL) credited monthly on 1st &bull; Dec Year-End Carry Forward
+                </p>
+              </div>
               <button
                 onClick={() => setIsLeaveModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm cursor-pointer transition-all self-start sm:self-auto"
               >
                 + Apply for Leave
               </button>
@@ -902,20 +913,36 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {leaveBalances.map((bal) => (
-                  <div
-                    key={bal.id}
-                    className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] text-xs space-y-1"
-                  >
-                    <div className="font-semibold text-gray-500 dark:text-[#888898] truncate">{bal.name}</div>
-                    <div className="text-2xl font-black text-gray-900 dark:text-white font-mono">
-                      {bal.remainingDays} <span className="text-xs font-normal text-gray-400">/ {bal.daysAllowed}</span>
+                {leaveBalances.map((bal) => {
+                  const isMonthly = bal.code === "CL" || bal.code === "PL" || bal.code === "EL";
+                  return (
+                    <div
+                      key={bal.id}
+                      className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] text-xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-gray-700 dark:text-gray-200 truncate">{bal.name}</div>
+                        {bal.carryForward && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-semibold" title="Carries forward to next calendar year">
+                            CF
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-2xl font-black text-gray-900 dark:text-white font-mono">
+                        {bal.remainingDays}{" "}
+                        <span className="text-xs font-normal text-gray-400">
+                          / {isMonthly ? `${bal.accruedDays || bal.daysAllowed} accrued` : bal.daysAllowed}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-400 flex items-center justify-between">
+                        <span>{bal.approvedDays} used &bull; {bal.pendingDays} pending</span>
+                        <span className="font-mono text-[9px] text-cyan-600 dark:text-cyan-400 font-semibold">
+                          {isMonthly ? `${bal.daysAllowed}/yr` : "Statutory"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-[10px] text-gray-400">
-                      {bal.approvedDays} used &bull; {bal.pendingDays} pending
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -945,8 +972,8 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                       key={b.id || b.userId || `upcoming-bday-${idx}`}
                       className={`p-3 rounded-2xl border flex items-center justify-between gap-3 ${
                         b.id === currentUser?.id
-                          ? "bg-rose-500/10 border-rose-500/30"
-                          : "bg-gray-50 dark:bg-[#1A1A1A] border-gray-100 dark:border-[#282828]"
+                          ? "bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30"
+                          : "bg-gray-50/80 dark:bg-[#1A1A1A] border-gray-200 dark:border-[#282828]"
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -961,12 +988,12 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                           <div className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5 truncate">
                             <span>{b.name}</span>
                             {b.id === currentUser?.id && (
-                              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500 text-white font-bold">
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold">
                                 You
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-gray-400 truncate">
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                             {b.jobTitle} &bull; {b.department}
                           </div>
                         </div>
@@ -979,7 +1006,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                           </div>
                           <div
                             className={`text-[10px] font-bold ${
-                              b.isToday ? "text-rose-500 font-extrabold animate-pulse" : "text-gray-400"
+                              b.isToday ? "text-rose-600 dark:text-rose-500 font-extrabold animate-pulse" : "text-gray-500 dark:text-gray-400"
                             }`}
                           >
                             {b.isToday ? "🎉 Today!" : `In ${b.daysUntil} day(s)`}
@@ -991,7 +1018,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                             onClick={() => handleSendWish(b.id, b.name)}
                             disabled={sendingWishId === b.id}
                             title="Send Birthday Wish"
-                            className="p-1.5 rounded-xl bg-pink-500/15 hover:bg-pink-500 text-pink-600 hover:text-white border border-pink-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                            className="p-1.5 rounded-xl bg-pink-50 dark:bg-pink-500/15 hover:bg-pink-600 hover:text-white text-pink-600 border border-pink-200 dark:border-pink-500/30 transition-colors cursor-pointer disabled:opacity-50"
                           >
                             <Heart className="w-3.5 h-3.5" />
                           </button>
@@ -1010,13 +1037,13 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                   <PartyPopper className="w-4 h-4 text-amber-500" />
                   <span>Work Anniversaries (Next 45 Days)</span>
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20">
                   {upcomingAnniversaries.length}
                 </span>
               </div>
 
               {upcomingAnniversaries.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 dark:text-[#666] italic">
+                <div className="py-8 text-center text-gray-500 dark:text-[#666] italic">
                   No work anniversaries upcoming in the next 45 days.
                 </div>
               ) : (
@@ -1024,29 +1051,29 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                   {upcomingAnniversaries.map((a: any, idx: number) => (
                     <div
                       key={a.id || a.userId || `anniv-${idx}`}
-                      className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] flex items-center justify-between gap-3"
+                      className="p-3 rounded-2xl bg-gray-50/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`w-9 h-9 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
                             a.name
-                          )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0`}
+                          )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0 shadow-sm`}
                         >
                           {getInitials(a.name)}
                         </div>
                         <div className="min-w-0">
                           <div className="font-bold text-gray-900 dark:text-white truncate">{a.name}</div>
-                          <div className="text-[10px] text-gray-400 truncate">
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                             {a.jobTitle} &bull; {a.department}
                           </div>
                         </div>
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <div className="font-mono font-bold text-amber-500">
+                        <div className="font-mono font-bold text-amber-600 dark:text-amber-500">
                           {a.yearsCompleted} Year{a.yearsCompleted > 1 ? "s" : ""}
                         </div>
-                        <div className="text-[10px] text-gray-400">
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">
                           {a.isToday ? "Today!" : `In ${a.daysUntil} day(s)`}
                         </div>
                       </div>
@@ -1067,7 +1094,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               </h2>
 
               {upcomingHolidays.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 dark:text-[#666] italic">
+                <div className="py-8 text-center text-gray-500 dark:text-[#666] italic">
                   No upcoming holidays scheduled.
                 </div>
               ) : (
@@ -1075,11 +1102,11 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                   {upcomingHolidays.map((h: any, idx: number) => (
                     <div
                       key={h.id || `holiday-${idx}`}
-                      className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] flex items-center justify-between"
+                      className="p-3 rounded-2xl bg-gray-50/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] flex items-center justify-between"
                     >
                       <div>
                         <div className="font-bold text-gray-900 dark:text-white">{h.name}</div>
-                        <div className="text-[10px] text-gray-400">{h.description || "Official Holiday"}</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">{h.description || "Official Holiday"}</div>
                       </div>
                       <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400 text-xs">
                         {formatDate(h.date)}
@@ -1098,7 +1125,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               </h2>
 
               {announcements.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 dark:text-[#666] italic">
+                <div className="py-8 text-center text-gray-500 dark:text-[#666] italic">
                   No company announcements at this time.
                 </div>
               ) : (
@@ -1106,11 +1133,11 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                   {announcements.map((ann: any, idx: number) => (
                     <div
                       key={ann.id || `announcement-${idx}`}
-                      className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] space-y-1"
+                      className="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] space-y-1"
                     >
                       <div className="flex items-center justify-between">
                         <div className="font-bold text-gray-900 dark:text-white">{ann.title}</div>
-                        <span className="text-[10px] text-gray-400 font-mono">{formatDate(ann.createdAt)}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 font-mono">{formatDate(ann.createdAt)}</span>
                       </div>
                       <p className="text-gray-600 dark:text-[#ACACB8] text-[11px] leading-relaxed">{ann.content}</p>
                     </div>
@@ -1357,6 +1384,70 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               <Plus className="w-4 h-4" />
               <span>Apply for Leave</span>
             </button>
+          </div>
+
+          {/* CORPORATE LEAVE POLICY & MONTHLY ACCRUAL SPECIFICATION CARD */}
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 dark:from-[#161616] dark:via-[#141414] dark:to-[#1A1A1A] border border-cyan-200/80 dark:border-[#2E2E2E] shadow-sm space-y-4 text-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-cyan-100 dark:border-[#282828] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/30">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+                    Corporate Leave Policy & Monthly Accrual Rules (Full-Time Members)
+                  </h3>
+                  <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                    24-Day Annual Quota &bull; 2 Leaves Credited Monthly on 1st &bull; Year-End Carry Forward Protection
+                  </p>
+                </div>
+              </div>
+              <span className="self-start md:self-auto text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                Active Corporate Policy
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+              <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-cyan-600 dark:text-cyan-400 text-[11px]">Casual / Sick Leave (CL/SL)</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-600">12 Days/Yr</span>
+                </div>
+                <p className="text-[11px] text-gray-600 dark:text-[#ACACB8] leading-relaxed">
+                  <strong>1 working day credited on the 1st of every month</strong> for personal exigencies and medical recovery. Unused days carry forward past December 31st.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">Privilege / Earned (PL/EL)</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600">12 Days/Yr</span>
+                </div>
+                <p className="text-[11px] text-gray-600 dark:text-[#ACACB8] leading-relaxed">
+                  <strong>1 working day credited on the 1st of every month</strong> for planned vacations. Unused balance carries forward to the next calendar year without lapsing.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-pink-600 dark:text-pink-400 text-[11px]">Maternity Benefit (ML)</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-600">26 Weeks Paid</span>
+                </div>
+                <p className="text-[11px] text-gray-600 dark:text-[#ACACB8] leading-relaxed">
+                  Administered per the <strong>Maternity Benefit (Amendment) Act, 2017</strong> (26 weeks / 182 days paid leave) with 100% salary continuation.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">Paternity Benefit (PTL)</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600">10 Days Paid</span>
+                </div>
+                <p className="text-[11px] text-gray-600 dark:text-[#ACACB8] leading-relaxed">
+                  Administered per <strong>Company Paternity Policy</strong>. 10 paid working days upon childbirth or legal adoption of a child.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* TEAM LEAVE APPROVALS SECTION (Visible to Team Leads, Managers, HR Admins) */}

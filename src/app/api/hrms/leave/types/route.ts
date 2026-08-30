@@ -20,24 +20,44 @@ export async function GET(request: NextRequest) {
       prisma.leave.findMany({ where: { userId } }),
     ]);
 
-    // Calculate balances for each leave type
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1 to 12
+
+    // Calculate balances for each leave type based on monthly accrual
     const balances = types.map((lt) => {
-      const matchingLeaves = userLeaves.filter((l) => (l.leaveType || "").toUpperCase() === lt.code || (l.leaveType || "").toLowerCase() === lt.name.toLowerCase());
+      const isMonthlyAccrual = lt.code === "CL" || lt.code === "PL" || lt.code === "EL" || lt.code === "SL";
+      const accruedDays = isMonthlyAccrual ? Math.min(lt.daysAllowed, currentMonth * 1) : lt.daysAllowed;
+
+      const matchingLeaves = userLeaves.filter(
+        (l) =>
+          (l.leaveType || "").toUpperCase() === lt.code ||
+          (l.leaveType || "").toLowerCase() === lt.name.toLowerCase() ||
+          (lt.code === "CL" && (l.leaveType === "CASUAL" || l.leaveType === "SICK")) ||
+          (lt.code === "PL" && (l.leaveType === "PAID" || l.leaveType === "EARNED")) ||
+          (lt.code === "ML" && l.leaveType === "MATERNITY") ||
+          (lt.code === "PTL" && l.leaveType === "PATERNITY")
+      );
+
       const approvedDays = matchingLeaves.filter((l) => l.status === "APPROVED").reduce((sum, l) => sum + (l.daysCount || 1), 0);
       const pendingDays = matchingLeaves.filter((l) => l.status === "PENDING").reduce((sum, l) => sum + (l.daysCount || 1), 0);
-      const remainingDays = Math.max(0, lt.daysAllowed - approvedDays);
+      const remainingDays = Math.max(0, accruedDays - approvedDays);
+      const annualRemaining = Math.max(0, lt.daysAllowed - approvedDays);
 
       return {
         id: lt.id,
         name: lt.name,
         code: lt.code,
         daysAllowed: lt.daysAllowed,
+        accruedDays,
+        accrualRate: isMonthlyAccrual ? "1 day credited on the 1st of every month" : "Allocated per statutory policy",
         isPaid: lt.isPaid,
         carryForward: lt.carryForward,
         maxConsecutive: lt.maxConsecutive,
         approvedDays,
         pendingDays,
         remainingDays,
+        annualRemaining,
+        currentMonthAccrual: isMonthlyAccrual ? currentMonth : null,
       };
     });
 
@@ -57,7 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "HR Admin or Super Admin permission required" } }, { status: 403 });
     }
 
-    const { name, code, daysAllowed = 12, isPaid = true, carryForward = false, maxConsecutive = 5 } = await request.json();
+    const { name, code, daysAllowed = 12, isPaid = true, carryForward = true, maxConsecutive = 5 } = await request.json();
 
     if (!name?.trim() || !code?.trim()) {
       return NextResponse.json({ success: false, error: { code: "INVALID_INPUT", message: "Name and code are required" } }, { status: 400 });

@@ -9,35 +9,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    // Retrieve holidays recorded in AuditLog or settings
-    const holidayLogs = await prisma.auditLog.findMany({
-      where: {
-        entityType: "COMPANY_HOLIDAY",
-      },
-      orderBy: { createdAt: "desc" },
+    // 1. Retrieve holidays directly from Holiday table
+    const dbHolidays = await prisma.holiday.findMany({
+      orderBy: { date: "asc" },
     });
 
-    const holidays = holidayLogs.map((log) => {
-      try {
-        const parsed = JSON.parse(log.detailsJson || "{}");
-        return {
-          id: log.id,
-          name: parsed.name,
-          date: parsed.date,
-          day: parsed.day,
-          type: parsed.type || "Gazetted",
-          createdAt: log.createdAt,
-        };
-      } catch {
-        return {
-          id: log.id,
-          name: "Holiday",
-          date: log.createdAt.toISOString().split("T")[0],
-          day: "—",
-          type: "Gazetted",
-          createdAt: log.createdAt,
-        };
-      }
+    const holidays = dbHolidays.map((h) => {
+      const d = new Date(h.date);
+      const dayName = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+      return {
+        id: h.id,
+        name: h.name,
+        date: h.date.toISOString().split("T")[0],
+        day: dayName,
+        type: h.holidayType || "Gazetted",
+        year: h.year,
+        description: h.description,
+        createdAt: h.createdAt,
+      };
     });
 
     return NextResponse.json({
@@ -52,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const currentUser = await requireHRAdmin(request);
-    const { name, date, type = "Gazetted" } = await request.json();
+    const { name, date, type = "Gazetted", description = "" } = await request.json();
 
     if (!name || !date) {
       return NextResponse.json(
@@ -61,15 +50,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const d = new Date(date);
-    const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+    const d = new Date(`${date}T00:00:00.000Z`);
+    const dayName = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
+    const year = d.getUTCFullYear();
 
-    const log = await prisma.auditLog.create({
+    const holiday = await prisma.holiday.create({
+      data: {
+        name: name.trim(),
+        date: d,
+        holidayType: type,
+        year,
+        description: description || `${name.trim()} Celebration`,
+      },
+    });
+
+    // Also write an audit log
+    await prisma.auditLog.create({
       data: {
         userId: currentUser.id,
         action: "HOLIDAY_CREATED",
         entityType: "COMPANY_HOLIDAY",
-        entityId: `holiday-${Date.now()}`,
+        entityId: holiday.id,
         detailsJson: JSON.stringify({
           name: name.trim(),
           date,
@@ -82,11 +83,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        id: log.id,
-        name: name.trim(),
+        id: holiday.id,
+        name: holiday.name,
         date,
         day: dayName,
-        type,
+        type: holiday.holidayType,
+        year: holiday.year,
+        description: holiday.description,
       },
       message: `Holiday ${name} created successfully`,
     });

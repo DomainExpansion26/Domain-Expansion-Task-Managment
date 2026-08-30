@@ -62,8 +62,8 @@ export default function Home() {
     }
   }, [dispatch]);
 
-  // App Data
-  const currentTab = uiState.activeTab || "dashboard";
+  // App Data (Ensure 'overview' or undefined cleanly normalizes to 'dashboard')
+  const currentTab = !uiState.activeTab || uiState.activeTab === "overview" ? "dashboard" : uiState.activeTab;
   const setCurrentTab = (tab: string) => dispatch(setReduxTab(tab));
 
   const tasks = tasksState.items || [];
@@ -283,7 +283,7 @@ export default function Home() {
       onLogout={handleLogout}
     >
       {/* Dynamic Views */}
-      {currentTab === "dashboard" && (
+      {(currentTab === "dashboard" || currentTab === "overview" || !currentTab) && (
         <DashboardView
           tasks={tasks}
           projects={projects}

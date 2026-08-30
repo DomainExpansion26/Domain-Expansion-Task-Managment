@@ -86,18 +86,18 @@ export function DashboardView({
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Welcome & Slogan Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#2E2E2E] bg-gradient-to-r from-[#141414] via-[#1A1A1A] to-[#141414] p-6 sm:p-8">
+      <div className="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-[#2E2E2E] bg-gradient-to-r from-orange-50/60 via-white to-orange-50/40 dark:from-[#141414] dark:via-[#1A1A1A] dark:to-[#141414] p-6 sm:p-8 shadow-sm">
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#FF6200]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF6200]/15 border border-[#FF6200]/30 text-[10px] font-mono uppercase tracking-widest text-[#FF8C42] mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF6200]/15 border border-[#FF6200]/30 text-[10px] font-mono uppercase tracking-widest text-[#FF6200] dark:text-[#FF8C42] mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF6200] animate-pulse" />
               Domain Expansion Platform
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
               Think <span className="text-gradient-orange">Outside The Box</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[#ACACB8] mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-[#ACACB8] mt-1 max-w-xl">
               Enterprise Jira-style workflow engine, sprint tracking, real-time collaboration, and DX AI assistant.
             </p>
           </div>

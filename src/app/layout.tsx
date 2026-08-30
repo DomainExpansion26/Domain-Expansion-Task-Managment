@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { StoreProvider } from "@/store/StoreProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,8 +15,6 @@ export const viewport: Viewport = {
   maximumScale: 5,
   themeColor: "#0D0D0D",
 };
-
-import { StoreProvider } from "@/store/StoreProvider";
 
 export default function RootLayout({
   children,

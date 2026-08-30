@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Provider } from "react-redux";
-import { store } from "./index";
-import { setCredentials, setAuthLoaded, logout } from "./slices/authSlice";
-import { loadFromLocalStorage, STORAGE_KEYS, saveToLocalStorage } from "./localStorage";
-import { useAppSelector } from "./hooks";
+import { makeStore, AppStore } from "./index";
+import { setCredentials, setAuthLoaded } from "./slices/authSlice";
+import { loadFromLocalStorage, STORAGE_KEYS } from "./localStorage";
+import { useAppDispatch, useAppSelector } from "./hooks";
 
 function ThemeInitializer() {
   const theme = useAppSelector((state) => state.ui?.theme || "dark");
@@ -40,53 +40,60 @@ function ThemeInitializer() {
 }
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    // 1. Initial rehydration from LocalStorage
-    const savedAuth = loadFromLocalStorage<any>(STORAGE_KEYS.AUTH, null);
-    if (savedAuth && savedAuth.user && savedAuth.token) {
-      store.dispatch(
-        setCredentials({
-          user: savedAuth.user,
-          token: savedAuth.token,
-          permissions: savedAuth.permissions || [],
-          portal: savedAuth.portal || "MAIN",
-        })
-      );
-    }
+  const dispatch = useAppDispatch();
 
-    // 2. Fetch live session from server to ensure token & permissions are fully verified
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.data?.user) {
-          store.dispatch(
-            setCredentials({
-              user: json.data.user,
-              token: savedAuth?.token || "session-active",
-              permissions: json.data.permissions || [],
-            })
-          );
-        } else {
-          // If server says unauthorized, clear invalid local state
-          if (savedAuth && !window.location.pathname.includes("/login") && !window.location.pathname.includes("/create-account") && !window.location.pathname.includes("/signup")) {
-            // Keep local state unless explicitly invalid
+  useEffect(() => {
+    try {
+      // 1. Initial rehydration from LocalStorage
+      const savedAuth = loadFromLocalStorage<any>(STORAGE_KEYS.AUTH, null);
+      if (savedAuth && savedAuth.user && savedAuth.token) {
+        dispatch(
+          setCredentials({
+            user: savedAuth.user,
+            token: savedAuth.token,
+            permissions: savedAuth.permissions || [],
+            portal: savedAuth.portal || "MAIN",
+          })
+        );
+      }
+
+      // 2. Fetch live session from server
+      fetch("/api/auth/me")
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data?.user) {
+            dispatch(
+              setCredentials({
+                user: json.data.user,
+                token: savedAuth?.token || "session-active",
+                permissions: json.data.permissions || [],
+              })
+            );
           }
-        }
-      })
-      .catch((err) => {
-        console.warn("[StoreProvider] Background session verification warning:", err);
-      })
-      .finally(() => {
-        store.dispatch(setAuthLoaded(true));
-      });
-  }, []);
+        })
+        .catch((err) => {
+          console.warn("[StoreProvider] Background session verification warning:", err);
+        })
+        .finally(() => {
+          dispatch(setAuthLoaded(true));
+        });
+    } catch (e) {
+      console.warn("[StoreProvider] Initialization error:", e);
+      dispatch(setAuthLoaded(true));
+    }
+  }, [dispatch]);
 
   return <>{children}</>;
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const storeRef = useRef<AppStore | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = makeStore();
+  }
+
   return (
-    <Provider store={store}>
+    <Provider store={storeRef.current}>
       <ThemeInitializer />
       <AuthInitializer>{children}</AuthInitializer>
     </Provider>

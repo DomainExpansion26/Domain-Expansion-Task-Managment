@@ -98,7 +98,7 @@ export function HRMSShell({
 
         {/* Navigation Links */}
         <nav className="p-3 space-y-1">
-          <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 dark:text-[#666] uppercase tracking-wider">
+          <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-500 dark:text-[#666] uppercase tracking-wider">
             Workforce Management
           </div>
 
@@ -112,13 +112,13 @@ export function HRMSShell({
                 onClick={() => handleNavClick(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-xs transition-all cursor-pointer ${
                   isActive
-                    ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/30"
-                    : "text-gray-600 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1C1C1C]"
+                    ? "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 font-bold border border-cyan-500/30"
+                    : "text-gray-700 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1C1C1C]"
                 }`}
               >
                 <Icon
                   className={`w-4 h-4 transition-transform duration-200 ${
-                    isActive ? "text-cyan-600 dark:text-cyan-400 scale-110" : ""
+                    isActive ? "text-cyan-600 dark:text-cyan-400 scale-110" : "text-gray-500 dark:text-[#888898]"
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
@@ -143,12 +143,12 @@ export function HRMSShell({
         </Link>
 
         {/* User Card & Logout */}
-        <div className="flex items-center justify-between p-2 rounded-xl bg-gray-50 dark:bg-[#161616]">
+        <div className="flex items-center justify-between p-2 rounded-xl bg-gray-50/90 dark:bg-[#161616] border border-gray-200 dark:border-transparent">
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className={`w-8 h-8 rounded-full bg-gradient-to-tr ${getAvatarGradient(
                 currentUser?.name || "User"
-              )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0`}
+              )} flex items-center justify-center text-xs font-black text-white uppercase flex-shrink-0 shadow-sm`}
             >
               {getInitials(currentUser?.name || "U")}
             </div>
@@ -165,7 +165,7 @@ export function HRMSShell({
           <button
             onClick={onLogout}
             title="Sign Out"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+            className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
           >
             <LogOut className="w-4 h-4" />
           </button>

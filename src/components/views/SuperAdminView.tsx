@@ -273,17 +273,17 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
       {activeTab === "members" && (
         <div className="space-y-4">
           {/* Role & Hierarchy Guide Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1A1A1A] via-[#141414] to-[#1A1A1A] border border-[#2E2E2E] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-white dark:bg-gradient-to-r dark:from-[#1A1A1A] dark:via-[#141414] dark:to-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 mt-0.5">
+              <div className="p-2.5 rounded-xl bg-[#FF6200]/15 text-[#FF6200] dark:text-[#FF8C42] border border-[#FF6200]/30 mt-0.5">
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <span>How to Assign Roles & Hierarchy</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Super Admin Controls</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Super Admin Controls</span>
                 </h3>
-                <p className="text-xs text-[#888898] mt-0.5">
+                <p className="text-xs text-gray-600 dark:text-[#888898] mt-0.5">
                   Set any employee as <strong>Normal Member</strong>, <strong>Team Lead</strong>, or <strong>Project Manager</strong> directly using the <strong>Role dropdown</strong> in the table below, or click <strong>&ldquo;Set Role & Hierarchy&rdquo;</strong> to link reporting managers and leads.
                 </p>
               </div>

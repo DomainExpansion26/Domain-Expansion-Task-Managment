@@ -240,21 +240,21 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
   ).sort((a, b) => a - b);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in pb-12 text-[#F3F4F6]">
+    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in pb-12 text-gray-900 dark:text-[#F3F4F6]">
       {/* Top Header & Welcome Banner */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-br from-[#141414] to-[#1A1A1A] border border-[#2E2E2E] shadow-xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-br from-orange-50/60 via-white to-orange-50/40 dark:from-[#141414] dark:to-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] shadow-sm dark:shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-lg shadow-[#FF6200]/25 flex-shrink-0">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-white tracking-tight">Company Documentation Portal</h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 font-mono text-[10px] font-bold uppercase">
+              <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Company Documentation Portal</h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF6200] dark:text-[#FF8C42] border border-[#FF6200]/30 font-mono text-[10px] font-bold uppercase">
                 {superAdmin ? "Super Admin Control" : `${currentUser?.department || "Team"} Access`}
               </span>
             </div>
-            <p className="text-xs text-[#888898] mt-0.5">
+            <p className="text-xs text-gray-600 dark:text-[#888898] mt-0.5">
               Official technical specifications, architecture blueprints, UI/UX guidelines, QA standards, and team milestone phases
             </p>
           </div>

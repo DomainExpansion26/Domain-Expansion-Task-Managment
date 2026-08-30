@@ -28,7 +28,7 @@
     --text-primary: #0F172A;
     --text-secondary: #334155;
     --text-muted: #64748B;
-    --input-bg: #F8FAFC;
+    --input-bg: #FFFFFF;
     --modal-bg: #FFFFFF;
   }
 
@@ -84,7 +84,7 @@ html.light ::-webkit-scrollbar-thumb:hover,
 
 html.light .glass-panel,
 [data-theme="light"] .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -141,34 +141,42 @@ html.light body,
   color: #0F172A !important;
 }
 
-/* 1. Surfaces & Layout Containers */
+/* 1. Surfaces & Layout Containers in Light Mode */
 html.light .bg-\[\#0D0D0D\],
 html.light [class*="bg-[#0D0D0D]"],
+html.light .bg-\[\#0B0C0E\],
+html.light [class*="bg-[#0B0C0E]"],
 [data-theme="light"] .bg-\[\#0D0D0D\],
-[data-theme="light"] [class*="bg-[#0D0D0D]"] {
+[data-theme="light"] [class*="bg-[#0D0D0D]"],
+[data-theme="light"] .bg-\[\#0B0C0E\],
+[data-theme="light"] [class*="bg-[#0B0C0E]"] {
   background-color: #F8FAFC !important;
 }
 
 html.light .bg-\[\#101010\],
 html.light [class*="bg-[#101010]"],
-[data-theme="light"] .bg-\[\#101010\],
-[data-theme="light"] [class*="bg-[#101010]"] {
-  background-color: #FFFFFF !important;
-}
-
+html.light .bg-\[\#121212\],
+html.light [class*="bg-[#121212]"],
 html.light .bg-\[\#141414\],
 html.light [class*="bg-[#141414]"],
-[data-theme="light"] .bg-\[\#141414\],
-[data-theme="light"] [class*="bg-[#141414]"] {
-  background-color: #FFFFFF !important;
-  border-color: #E2E8F0 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
+html.light .bg-\[\#161616\],
+html.light [class*="bg-[#161616]"],
 html.light .bg-\[\#1A1A1A\],
 html.light [class*="bg-[#1A1A1A]"],
+html.light .bg-\[\#181818\],
+html.light [class*="bg-[#181818]"],
+[data-theme="light"] .bg-\[\#101010\],
+[data-theme="light"] [class*="bg-[#101010]"],
+[data-theme="light"] .bg-\[\#121212\],
+[data-theme="light"] [class*="bg-[#121212]"],
+[data-theme="light"] .bg-\[\#141414\],
+[data-theme="light"] [class*="bg-[#141414]"],
+[data-theme="light"] .bg-\[\#161616\],
+[data-theme="light"] [class*="bg-[#161616]"],
 [data-theme="light"] .bg-\[\#1A1A1A\],
-[data-theme="light"] [class*="bg-[#1A1A1A]"] {
+[data-theme="light"] [class*="bg-[#1A1A1A]"],
+[data-theme="light"] .bg-\[\#181818\],
+[data-theme="light"] [class*="bg-[#181818]"] {
   background-color: #FFFFFF !important;
   border-color: #E2E8F0 !important;
 }
@@ -177,33 +185,63 @@ html.light .bg-\[\#1C1C1C\],
 html.light [class*="bg-[#1C1C1C]"],
 html.light .bg-\[\#1E1E1E\],
 html.light [class*="bg-[#1E1E1E]"],
+html.light .bg-\[\#202020\],
+html.light [class*="bg-[#202020]"],
 [data-theme="light"] .bg-\[\#1C1C1C\],
 [data-theme="light"] [class*="bg-[#1C1C1C]"],
 [data-theme="light"] .bg-\[\#1E1E1E\],
-[data-theme="light"] [class*="bg-[#1E1E1E]"] {
+[data-theme="light"] [class*="bg-[#1E1E1E]"],
+[data-theme="light"] .bg-\[\#202020\],
+[data-theme="light"] [class*="bg-[#202020]"] {
   background-color: #F8FAFC !important;
   border-color: #E2E8F0 !important;
 }
 
+html.light .bg-\[\#222\],
+html.light [class*="bg-[#222]"],
 html.light .bg-\[\#252525\],
 html.light [class*="bg-[#252525]"],
+html.light .bg-\[\#282828\],
+html.light [class*="bg-[#282828]"],
+html.light .bg-\[\#2A2A2A\],
+html.light [class*="bg-[#2A2A2A]"],
+html.light .bg-\[\#303030\],
+html.light [class*="bg-[#303030]"],
+[data-theme="light"] .bg-\[\#222\],
+[data-theme="light"] [class*="bg-[#222]"],
 [data-theme="light"] .bg-\[\#252525\],
-[data-theme="light"] [class*="bg-[#252525]"] {
+[data-theme="light"] [class*="bg-[#252525]"],
+[data-theme="light"] .bg-\[\#282828\],
+[data-theme="light"] [class*="bg-[#282828]"],
+[data-theme="light"] .bg-\[\#2A2A2A\],
+[data-theme="light"] [class*="bg-[#2A2A2A]"],
+[data-theme="light"] .bg-\[\#303030\],
+[data-theme="light"] [class*="bg-[#303030]"] {
   background-color: #F1F5F9 !important;
   border-color: #CBD5E1 !important;
   color: #1E293B !important;
 }
 
-html.light .bg-\[\#2A2A2A\],
-html.light [class*="bg-[#2A2A2A]"],
-html.light .bg-\[\#303030\],
-html.light [class*="bg-[#303030]"],
-[data-theme="light"] .bg-\[\#2A2A2A\],
-[data-theme="light"] [class*="bg-[#2A2A2A]"] {
-  background-color: #E2E8F0 !important;
+/* Gradient background stops adapting to light theme */
+html.light [class*="from-[#141414]"],
+html.light [class*="from-[#1A1A1A]"],
+html.light [class*="via-[#141414]"],
+html.light [class*="via-[#1A1A1A]"],
+html.light [class*="to-[#141414]"],
+html.light [class*="to-[#1A1A1A]"],
+html.light [class*="to-[#222]"],
+[data-theme="light"] [class*="from-[#141414]"],
+[data-theme="light"] [class*="from-[#1A1A1A]"],
+[data-theme="light"] [class*="via-[#141414]"],
+[data-theme="light"] [class*="via-[#1A1A1A]"],
+[data-theme="light"] [class*="to-[#141414]"],
+[data-theme="light"] [class*="to-[#1A1A1A]"],
+[data-theme="light"] [class*="to-[#222]"] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
 }
 
-/* 2. Borders & Dividers */
+/* 2. Borders & Dividers in Light Mode */
 html.light *,
 [data-theme="light"] * {
   border-color: #E2E8F0;
@@ -211,27 +249,38 @@ html.light *,
 
 html.light .border-\[\#2E2E2E\],
 html.light [class*="border-[#2E2E2E]"],
-[data-theme="light"] .border-\[\#2E2E2E\],
-[data-theme="light"] [class*="border-[#2E2E2E]"] {
-  border-color: #E2E8F0 !important;
-}
-
 html.light .border-\[\#222\],
 html.light [class*="border-[#222]"],
+html.light .border-\[\#252525\],
+html.light [class*="border-[#252525]"],
+html.light .border-\[\#282828\],
+html.light [class*="border-[#282828]"],
+[data-theme="light"] .border-\[\#2E2E2E\],
+[data-theme="light"] [class*="border-[#2E2E2E]"],
 [data-theme="light"] .border-\[\#222\],
-[data-theme="light"] [class*="border-[#222]"] {
+[data-theme="light"] [class*="border-[#222]"],
+[data-theme="light"] .border-\[\#252525\],
+[data-theme="light"] [class*="border-[#252525]"],
+[data-theme="light"] .border-\[\#282828\],
+[data-theme="light"] [class*="border-[#282828]"] {
   border-color: #E2E8F0 !important;
 }
 
 html.light .border-\[\#333\],
 html.light [class*="border-[#333]"],
+html.light .border-\[\#444\],
+html.light [class*="border-[#444]"],
 [data-theme="light"] .border-\[\#333\],
-[data-theme="light"] [class*="border-[#333]"] {
+[data-theme="light"] [class*="border-[#333]"],
+[data-theme="light"] .border-\[\#444\],
+[data-theme="light"] [class*="border-[#444]"] {
   border-color: #CBD5E1 !important;
 }
 
 html.light .divide-\[\#2E2E2E\] > * + *,
-[data-theme="light"] .divide-\[\#2E2E2E\] > * + * {
+html.light .divide-\[\#252525\] > * + *,
+[data-theme="light"] .divide-\[\#2E2E2E\] > * + *,
+[data-theme="light"] .divide-\[\#252525\] > * + * {
   border-color: #E2E8F0 !important;
 }
 
@@ -248,43 +297,39 @@ html.light h6,
 [data-theme="light"] h4,
 [data-theme="light"] h5,
 [data-theme="light"] h6 {
-  color: #0F172A !important;
+  color: #0F172A;
 }
 
-html.light .text-white,
-html.light .text-slate-100,
-html.light .text-slate-200,
-html.light .text-slate-300,
-html.light .text-gray-100,
-html.light .text-gray-200,
-html.light .text-gray-300,
-html.light .text-zinc-100,
-html.light .text-zinc-200,
-html.light .text-zinc-300,
-[data-theme="light"] .text-white,
-[data-theme="light"] .text-slate-100,
-[data-theme="light"] .text-slate-200,
-[data-theme="light"] .text-slate-300,
-[data-theme="light"] .text-gray-100,
-[data-theme="light"] .text-gray-200,
-[data-theme="light"] .text-gray-300,
-[data-theme="light"] .text-zinc-100,
-[data-theme="light"] .text-zinc-200,
-[data-theme="light"] .text-zinc-300 {
-  color: #0F172A !important;
-}
-
+/* Dark mode utility text colors adapted for light theme surfaces */
 html.light .text-\[\#F3F4F6\],
 html.light [class*="text-[#F3F4F6]"],
+html.light .text-\[\#FFF\],
+html.light .text-\[\#FFFFFF\],
+html.light .text-white\/90,
+html.light .text-white\/80,
+html.light .text-white\/70,
+html.light .text-white\/60,
 [data-theme="light"] .text-\[\#F3F4F6\],
-[data-theme="light"] [class*="text-[#F3F4F6]"] {
+[data-theme="light"] [class*="text-[#F3F4F6]"],
+[data-theme="light"] .text-\[\#FFF\],
+[data-theme="light"] .text-\[\#FFFFFF\],
+[data-theme="light"] .text-white\/90,
+[data-theme="light"] .text-white\/80,
+[data-theme="light"] .text-white\/70,
+[data-theme="light"] .text-white\/60 {
   color: #0F172A !important;
 }
 
 html.light .text-\[\#ACACB8\],
 html.light [class*="text-[#ACACB8]"],
+html.light .text-\[\#AAA\],
+html.light .text-\[\#BBB\],
+html.light .text-\[\#D1D5DB\],
 [data-theme="light"] .text-\[\#ACACB8\],
-[data-theme="light"] [class*="text-[#ACACB8]"] {
+[data-theme="light"] [class*="text-[#ACACB8]"],
+[data-theme="light"] .text-\[\#AAA\],
+[data-theme="light"] .text-\[\#BBB\],
+[data-theme="light"] .text-\[\#D1D5DB\] {
   color: #334155 !important;
 }
 
@@ -294,65 +339,105 @@ html.light .text-\[\#666\],
 html.light [class*="text-[#666]"],
 html.light .text-\[\#999\],
 html.light [class*="text-[#999]"],
-html.light .text-slate-400,
-html.light .text-zinc-400,
-html.light .text-gray-400,
+html.light .text-\[\#777\],
 [data-theme="light"] .text-\[\#888898\],
 [data-theme="light"] [class*="text-[#888898]"],
 [data-theme="light"] .text-\[\#666\],
 [data-theme="light"] [class*="text-[#666]"],
 [data-theme="light"] .text-\[\#999\],
 [data-theme="light"] [class*="text-[#999]"],
-[data-theme="light"] .text-slate-400,
-[data-theme="light"] .text-zinc-400,
-[data-theme="light"] .text-gray-400 {
-  color: #475569 !important;
+[data-theme="light"] .text-\[\#777\] {
+  color: #64748B !important;
 }
 
-/* 4. PROTECT FILLED BUTTONS, GRADIENT BADGES & AVATARS (Pure White Text) */
+/* 4. SOLID ACTION BUTTONS, GRADIENT BADGES & AVATAR INITIALS (Pure White Text) */
+html.light button.bg-emerald-600,
+html.light button.bg-rose-600,
+html.light button.bg-red-600,
+html.light button.bg-cyan-600,
+html.light button.bg-pink-600,
+html.light button.bg-purple-600,
+html.light button.bg-blue-600,
+html.light button.bg-amber-600,
+html.light button[class*="bg-emerald-600"],
+html.light button[class*="bg-rose-600"],
+html.light button[class*="bg-red-600"],
+html.light button[class*="bg-cyan-600"],
+html.light button[class*="bg-pink-600"],
+html.light button[class*="bg-[#FF6200]"],
 html.light button.bg-gradient-to-r,
-html.light button[class*="from-"],
-html.light [class*="bg-gradient-"],
-html.light .bg-\[\#FF6200\],
-html.light [class*="bg-[#FF6200]"],
-html.light .bg-emerald-600,
-html.light .bg-red-600,
-html.light .bg-blue-600,
-html.light .bg-purple-600,
-html.light .bg-pink-600,
+html.light a.bg-gradient-to-r,
+html.light .bg-pink-500.text-white,
+html.light .bg-pink-600.text-white,
+html.light .bg-rose-500.text-white,
+html.light .bg-rose-600.text-white,
+html.light .bg-amber-500.text-white,
+html.light .bg-cyan-600.text-white,
+html.light .bg-emerald-600.text-white,
+html.light [class*="bg-gradient-to-tr"][class*="rounded-full"],
+html.light [class*="bg-gradient-to-tr"][class*="rounded-xl"],
+html.light [class*="bg-gradient-to-tr"][class*="rounded-2xl"],
+[data-theme="light"] button.bg-emerald-600,
+[data-theme="light"] button.bg-rose-600,
+[data-theme="light"] button.bg-red-600,
+[data-theme="light"] button.bg-cyan-600,
+[data-theme="light"] button.bg-pink-600,
+[data-theme="light"] button.bg-purple-600,
+[data-theme="light"] button.bg-blue-600,
+[data-theme="light"] button.bg-amber-600,
+[data-theme="light"] button[class*="bg-emerald-600"],
+[data-theme="light"] button[class*="bg-rose-600"],
+[data-theme="light"] button[class*="bg-red-600"],
+[data-theme="light"] button[class*="bg-cyan-600"],
+[data-theme="light"] button[class*="bg-pink-600"],
+[data-theme="light"] button[class*="bg-[#FF6200]"],
 [data-theme="light"] button.bg-gradient-to-r,
-[data-theme="light"] button[class*="from-"],
-[data-theme="light"] [class*="bg-gradient-"],
-[data-theme="light"] .bg-\[\#FF6200\],
-[data-theme="light"] [class*="bg-[#FF6200]"],
-[data-theme="light"] .bg-emerald-600,
-[data-theme="light"] .bg-red-600,
-[data-theme="light"] .bg-blue-600,
-[data-theme="light"] .bg-purple-600,
-[data-theme="light"] .bg-pink-600 {
+[data-theme="light"] a.bg-gradient-to-r,
+[data-theme="light"] .bg-pink-500.text-white,
+[data-theme="light"] .bg-pink-600.text-white,
+[data-theme="light"] .bg-rose-500.text-white,
+[data-theme="light"] .bg-rose-600.text-white,
+[data-theme="light"] .bg-amber-500.text-white,
+[data-theme="light"] .bg-cyan-600.text-white,
+[data-theme="light"] .bg-emerald-600.text-white,
+[data-theme="light"] [class*="bg-gradient-to-tr"][class*="rounded-full"],
+[data-theme="light"] [class*="bg-gradient-to-tr"][class*="rounded-xl"],
+[data-theme="light"] [class*="bg-gradient-to-tr"][class*="rounded-2xl"] {
   color: #FFFFFF !important;
 }
 
+html.light button.bg-emerald-600 *,
+html.light button.bg-rose-600 *,
+html.light button.bg-red-600 *,
+html.light button.bg-cyan-600 *,
+html.light button.bg-pink-600 *,
+html.light button.bg-purple-600 *,
+html.light button.bg-blue-600 *,
+html.light button.bg-amber-600 *,
+html.light button[class*="bg-emerald-600"] *,
+html.light button[class*="bg-rose-600"] *,
+html.light button[class*="bg-red-600"] *,
+html.light button[class*="bg-cyan-600"] *,
+html.light button[class*="bg-pink-600"] *,
+html.light button[class*="bg-[#FF6200]"] *,
 html.light button.bg-gradient-to-r *,
-html.light button[class*="from-"] *,
-html.light [class*="bg-gradient-"] *,
-html.light .bg-\[\#FF6200\] *,
-html.light [class*="bg-[#FF6200]"] *,
-html.light .bg-emerald-600 *,
-html.light .bg-red-600 *,
-html.light .bg-blue-600 *,
-html.light .bg-purple-600 *,
-html.light .bg-pink-600 *,
+html.light a.bg-gradient-to-r *,
+[data-theme="light"] button.bg-emerald-600 *,
+[data-theme="light"] button.bg-rose-600 *,
+[data-theme="light"] button.bg-red-600 *,
+[data-theme="light"] button.bg-cyan-600 *,
+[data-theme="light"] button.bg-pink-600 *,
+[data-theme="light"] button.bg-purple-600 *,
+[data-theme="light"] button.bg-blue-600 *,
+[data-theme="light"] button.bg-amber-600 *,
+[data-theme="light"] button[class*="bg-emerald-600"] *,
+[data-theme="light"] button[class*="bg-rose-600"] *,
+[data-theme="light"] button[class*="bg-red-600"] *,
+[data-theme="light"] button[class*="bg-cyan-600"] *,
+[data-theme="light"] button[class*="bg-pink-600"] *,
+[data-theme="light"] button[class*="bg-[#FF6200]"] *,
 [data-theme="light"] button.bg-gradient-to-r *,
-[data-theme="light"] button[class*="from-"] *,
-[data-theme="light"] [class*="bg-gradient-"] *,
-[data-theme="light"] .bg-\[\#FF6200\] *,
-[data-theme="light"] [class*="bg-[#FF6200]"] *,
-[data-theme="light"] .bg-emerald-600 *,
-[data-theme="light"] .bg-red-600 *,
-[data-theme="light"] .bg-blue-600 *,
-[data-theme="light"] .bg-purple-600 *,
-[data-theme="light"] .bg-pink-600 * {
+[data-theme="light"] a.bg-gradient-to-r * {
   color: #FFFFFF !important;
 }
 
@@ -362,12 +447,31 @@ html.light .bg-emerald-500\/10,
 [data-theme="light"] .bg-emerald-500\/15,
 [data-theme="light"] .bg-emerald-500\/10 {
   background-color: #ECFDF5 !important;
-  color: #059669 !important;
+  color: #047857 !important;
   border-color: #A7F3D0 !important;
 }
 html.light .text-emerald-400,
-[data-theme="light"] .text-emerald-400 {
-  color: #059669 !important;
+html.light .text-emerald-500,
+[data-theme="light"] .text-emerald-400,
+[data-theme="light"] .text-emerald-500 {
+  color: #047857 !important;
+}
+
+html.light .bg-cyan-500\/15,
+html.light .bg-cyan-500\/10,
+[data-theme="light"] .bg-cyan-500\/15,
+[data-theme="light"] .bg-cyan-500\/10 {
+  background-color: #ECFEFF !important;
+  color: #0891B2 !important;
+  border-color: #A5F3FC !important;
+}
+html.light .text-cyan-400,
+html.light .text-cyan-500,
+html.light .text-cyan-600,
+[data-theme="light"] .text-cyan-400,
+[data-theme="light"] .text-cyan-500,
+[data-theme="light"] .text-cyan-600 {
+  color: #0891B2 !important;
 }
 
 html.light .bg-purple-500\/15,
@@ -409,9 +513,13 @@ html.light .bg-red-500\/10,
   border-color: #FECACA !important;
 }
 html.light .text-rose-400,
+html.light .text-rose-500,
 html.light .text-red-400,
+html.light .text-red-500,
 [data-theme="light"] .text-rose-400,
-[data-theme="light"] .text-red-400 {
+[data-theme="light"] .text-rose-500,
+[data-theme="light"] .text-red-400,
+[data-theme="light"] .text-red-500 {
   color: #DC2626 !important;
 }
 
@@ -428,8 +536,10 @@ html.light .bg-yellow-500\/10,
   border-color: #FDE68A !important;
 }
 html.light .text-amber-400,
+html.light .text-amber-500,
 html.light .text-yellow-400,
 [data-theme="light"] .text-amber-400,
+[data-theme="light"] .text-amber-500,
 [data-theme="light"] .text-yellow-400 {
   color: #B45309 !important;
 }
@@ -443,7 +553,9 @@ html.light .bg-pink-500\/10,
   border-color: #FBCFE8 !important;
 }
 html.light .text-pink-400,
-[data-theme="light"] .text-pink-400 {
+html.light .text-pink-500,
+[data-theme="light"] .text-pink-400,
+[data-theme="light"] .text-pink-500 {
   color: #BE185D !important;
 }
 
@@ -494,6 +606,29 @@ html.light aside nav button:hover svg,
   color: #FF6200 !important;
 }
 
+/* HRMS Active Sidebar Item (Cyan) */
+html.light aside nav button.bg-cyan-500\/15,
+html.light aside nav button[class*="bg-cyan-500/15"],
+[data-theme="light"] aside nav button.bg-cyan-500\/15,
+[data-theme="light"] aside nav button[class*="bg-cyan-500/15"] {
+  background-color: #ECFEFF !important;
+  border-color: #A5F3FC !important;
+}
+html.light aside nav button.bg-cyan-500\/15 span,
+html.light aside nav button[class*="bg-cyan-500/15"] span,
+[data-theme="light"] aside nav button.bg-cyan-500\/15 span,
+[data-theme="light"] aside nav button[class*="bg-cyan-500/15"] span {
+  color: #0891B2 !important;
+  font-weight: 700 !important;
+}
+html.light aside nav button.bg-cyan-500\/15 svg,
+html.light aside nav button[class*="bg-cyan-500/15"] svg,
+[data-theme="light"] aside nav button.bg-cyan-500\/15 svg,
+[data-theme="light"] aside nav button[class*="bg-cyan-500/15"] svg {
+  color: #0891B2 !important;
+}
+
+/* Task Portal Active Sidebar Item (Orange) */
 html.light aside nav button.bg-\[\#FF6200\]\/15,
 html.light aside nav button[class*="bg-[#FF6200]/15"],
 [data-theme="light"] aside nav button.bg-\[\#FF6200\]\/15,
@@ -577,9 +712,9 @@ html.light select:focus,
 [data-theme="light"] input:focus,
 [data-theme="light"] textarea:focus,
 [data-theme="light"] select:focus {
-  border-color: #FF6200 !important;
+  border-color: #06B6D4 !important;
   background-color: #FFFFFF !important;
-  box-shadow: 0 0 0 2px rgba(255, 98, 0, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.15) !important;
 }
 
 /* Member Chips, Density Buttons & Department Pills */
@@ -614,12 +749,12 @@ html.light tbody tr:hover,
 /* 10. Modals & Backdrop in light mode */
 html.light .backdrop-blur-md,
 [data-theme="light"] .backdrop-blur-md {
-  background-color: rgba(15, 23, 42, 0.6) !important;
+  background-color: rgba(15, 23, 42, 0.5) !important;
 }
 
 html.light .bg-black\/80,
 html.light .bg-black\/85,
 [data-theme="light"] .bg-black\/80,
 [data-theme="light"] .bg-black\/85 {
-  background-color: rgba(15, 23, 42, 0.6) !important;
+  background-color: rgba(15, 23, 42, 0.5) !important;
 }

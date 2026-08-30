@@ -186,7 +186,7 @@ export function AppShell({
         <nav className="px-3 py-2 space-y-1 overflow-y-auto max-h-[calc(100vh-280px)]">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentTab === item.id;
+            const isActive = currentTab === item.id || (item.id === "dashboard" && (!currentTab || currentTab === "overview"));
 
             if (item.superAdminOnly && !isSuper) return null;
             if (item.hrOnly && !(isHR || isSuper)) return null;

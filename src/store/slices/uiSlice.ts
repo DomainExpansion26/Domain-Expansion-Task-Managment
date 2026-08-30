@@ -16,7 +16,7 @@ export interface UIState {
 const initialSavedUI = loadFromLocalStorage<Partial<UIState>>(STORAGE_KEYS.UI, {});
 
 const initialState: UIState = {
-  activeTab: initialSavedUI.activeTab || "overview",
+  activeTab: (initialSavedUI.activeTab === "overview" ? "dashboard" : initialSavedUI.activeTab) || "dashboard",
   activeWorkspace: initialSavedUI.activeWorkspace || "MAIN",
   activeProjectId: initialSavedUI.activeProjectId || null,
   sidebarCollapsed: initialSavedUI.sidebarCollapsed || false,

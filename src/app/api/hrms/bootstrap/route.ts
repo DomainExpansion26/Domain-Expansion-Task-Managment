@@ -240,12 +240,20 @@ export async function GET(request: NextRequest) {
       ),
     ]);
 
-    // Calculate leave balances from configs and user leaves
+    // Calculate leave balances from configs and user leaves with monthly accrual
+    const currentMonthNum = new Date().getMonth() + 1; // 1 to 12
     const leaveBalances = leaveTypeConfigs.map((lt) => {
+      const isMonthlyAccrual = lt.code === "CL" || lt.code === "PL" || lt.code === "EL" || lt.code === "SL";
+      const accruedDays = isMonthlyAccrual ? Math.min(lt.daysAllowed, currentMonthNum * 1) : lt.daysAllowed;
+
       const matchingLeaves = userLeaves.filter(
         (l) =>
           (l.leaveType || "").toUpperCase() === lt.code ||
-          (l.leaveType || "").toLowerCase() === lt.name.toLowerCase()
+          (l.leaveType || "").toLowerCase() === lt.name.toLowerCase() ||
+          (lt.code === "CL" && (l.leaveType === "CASUAL" || l.leaveType === "SICK")) ||
+          (lt.code === "PL" && (l.leaveType === "PAID" || l.leaveType === "EARNED")) ||
+          (lt.code === "ML" && l.leaveType === "MATERNITY") ||
+          (lt.code === "PTL" && l.leaveType === "PATERNITY")
       );
       const approvedDays = matchingLeaves
         .filter((l) => l.status === "APPROVED")
@@ -253,19 +261,24 @@ export async function GET(request: NextRequest) {
       const pendingDays = matchingLeaves
         .filter((l) => l.status === "PENDING")
         .reduce((sum, l) => sum + (l.daysCount || 1), 0);
-      const remainingDays = Math.max(0, lt.daysAllowed - approvedDays);
+      const remainingDays = Math.max(0, accruedDays - approvedDays);
+      const annualRemaining = Math.max(0, lt.daysAllowed - approvedDays);
 
       return {
         id: lt.id,
         name: lt.name,
         code: lt.code,
         daysAllowed: lt.daysAllowed,
+        accruedDays,
+        accrualRate: isMonthlyAccrual ? "1 day credited on the 1st of every month" : "Allocated per statutory policy",
         isPaid: lt.isPaid,
         carryForward: lt.carryForward,
         maxConsecutive: lt.maxConsecutive,
         approvedDays,
         pendingDays,
         remainingDays,
+        annualRemaining,
+        currentMonthAccrual: isMonthlyAccrual ? currentMonthNum : null,
       };
     });
 

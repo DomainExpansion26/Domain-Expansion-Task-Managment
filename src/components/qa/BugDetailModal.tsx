@@ -353,7 +353,7 @@ export function BugDetailModal({
                     onClose();
                   }
                 }}
-                className="p-4 rounded-xl bg-gradient-to-r from-[#1A1A1A] to-[#222] border border-[#333] hover:border-[#FF6200]/50 transition-all cursor-pointer group"
+                className="p-4 rounded-xl bg-gray-50/80 dark:bg-gradient-to-r dark:from-[#1A1A1A] dark:to-[#222] border border-gray-200 dark:border-[#333] hover:border-[#FF6200]/50 transition-all cursor-pointer group shadow-sm"
               >
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
