@@ -44,6 +44,46 @@ export function verifySessionToken(token: string): UserSession | null {
   }
 }
 
+export function signPasswordResetToken(user: { id: string; email: string; passwordHash: string }): string {
+  // Signs a token with 1 hour expiration using a dynamic secret that incorporates the user's current passwordHash
+  // This automatically invalidates the token once the password is reset!
+  const secret = `${JWT_SECRET}:${user.passwordHash}`;
+  return jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      type: "PASSWORD_RESET",
+    },
+    secret,
+    { expiresIn: "1h" }
+  );
+}
+
+export function decodePasswordResetToken(token: string): { userId: string; email: string } | null {
+  try {
+    const decoded = jwt.decode(token) as any;
+    if (decoded && decoded.userId && decoded.email) {
+      return { userId: decoded.userId, email: decoded.email };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function verifyPasswordResetToken(token: string, passwordHash: string): { userId: string; email: string } | null {
+  try {
+    const secret = `${JWT_SECRET}:${passwordHash}`;
+    const payload = jwt.verify(token, secret) as any;
+    if (payload && payload.type === "PASSWORD_RESET") {
+      return { userId: payload.userId, email: payload.email };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getCurrentUserFromRequest(request?: NextRequest) {
   let token: string | undefined;
 

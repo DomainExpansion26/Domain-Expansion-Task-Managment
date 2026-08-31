@@ -161,8 +161,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           email: empEmail.trim(),
           password: empPassword.trim(),
           employeeId: empEmployeeId.trim() || undefined,
-          jobTitle: empJobTitle.trim() || "Employee",
-          department: empDepartment.trim() || "General",
+          jobTitle: empJobTitle.trim() || undefined,
+          department: empDepartment.trim() || undefined,
           role: empRole,
         }),
       });

@@ -56,23 +56,20 @@ const holidaysToAdd = [
 ];
 
 async function main() {
-  console.log("Connecting to database...");
-  
+
   // 1. Check existing Holiday records
   const existingHolidays = await prisma.holiday.findMany();
-  console.log(`Found ${existingHolidays.length} existing holiday record(s) in Holiday table:`);
   existingHolidays.forEach((h) => console.log(` - [${h.id}] ${h.name} on ${h.date.toISOString()}`));
 
   for (const h of holidaysToAdd) {
     const targetDate = new Date(`${h.dateStr}T00:00:00.000Z`);
-    
+
     // Check if holiday already exists on this date or with this name in Holiday table
     const existing = existingHolidays.find(
       (eh) => eh.name.toLowerCase() === h.name.toLowerCase() || eh.date.toISOString().split('T')[0] === h.dateStr
     );
 
     if (existing) {
-      console.log(`Updating existing holiday: ${h.name} (${h.dateStr})...`);
       await prisma.holiday.update({
         where: { id: existing.id },
         data: {
@@ -84,7 +81,6 @@ async function main() {
         },
       });
     } else {
-      console.log(`Creating new holiday: ${h.name} (${h.dateStr})...`);
       await prisma.holiday.create({
         data: {
           name: h.name,
@@ -127,12 +123,10 @@ async function main() {
     orderBy: { date: "asc" },
   });
 
-  console.log("\nAll holidays in Holiday table now:");
   allHolidaysAfter.forEach((h) => {
     console.log(` - ${h.name} | ${h.date.toISOString().split('T')[0]} (${h.holidayType})`);
   });
 
-  console.log("\nSuccessfully populated 2026 holiday calendar without removing any database data!");
 }
 
 main()

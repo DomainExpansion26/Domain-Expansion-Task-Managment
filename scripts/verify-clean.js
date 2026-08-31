@@ -2,13 +2,7 @@ require("dotenv").config({ path: ".env.local" });
 require("dotenv").config({ path: ".env" });
 const { PrismaClient } = require("@prisma/client");
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL || "postgresql://neondb_owner:npg_UqW4Otx6eaPs@ep-bold-feather-at6voxuk-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 async function verifyEmpty() {
   const counts = {

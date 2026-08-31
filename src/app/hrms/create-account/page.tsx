@@ -47,8 +47,8 @@ export default function HRMSCreateAccountPage() {
           email: email.trim(),
           password,
           confirmPassword,
-          jobTitle: jobTitle.trim() || "Employee",
-          department: department.trim() || "Operations",
+          jobTitle: jobTitle.trim() || undefined,
+          department: department.trim() || undefined,
           portal: "HRMS",
         }),
       });

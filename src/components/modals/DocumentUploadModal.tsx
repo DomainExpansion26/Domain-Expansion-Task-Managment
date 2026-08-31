@@ -49,7 +49,7 @@ export function DocumentUploadModal({
   const [version, setVersion] = useState("1.0");
   const [status, setStatus] = useState("PUBLISHED");
   const [visibility, setVisibility] = useState("DEPARTMENT");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -74,15 +74,33 @@ export function DocumentUploadModal({
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const dropped = Array.from(e.dataTransfer.files);
+      setFiles((prev) => [...prev, ...dropped]);
+      if (!title && dropped[0]) {
+        setTitle(dropped[0].name.replace(/\.[^/.]+$/, ""));
+      }
     }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selected = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...selected]);
+      if (!title && selected[0]) {
+        setTitle(selected[0].name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title.trim() || !department) {
-      setErrorMsg("Please provide a Title, select a Department, and attach a file.");
+    if (files.length === 0 || !title.trim() || !department) {
+      setErrorMsg("Please provide a Title, select a Department, and attach at least one file.");
       return;
     }
 
@@ -93,7 +111,7 @@ export function DocumentUploadModal({
       const activeCategory = category === "CUSTOM" ? customCategory.trim() || "General" : category;
 
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((f) => formData.append("files", f));
       formData.append("title", title.trim());
       if (description.trim()) formData.append("description", description.trim());
       formData.append("department", department);
@@ -114,11 +132,11 @@ export function DocumentUploadModal({
       if (json.success) {
         setTitle("");
         setDescription("");
-        setFile(null);
+        setFiles([]);
         onUploaded();
         onClose();
       } else {
-        setErrorMsg(json.error?.message || "Failed to upload document");
+        setErrorMsg(json.error?.message || "Failed to upload document(s)");
       }
     } catch (err: any) {
       setErrorMsg(err.message || "Network error occurred");
@@ -316,7 +334,7 @@ export function DocumentUploadModal({
           {/* Row 6: File Upload Area */}
           <div>
             <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
-              File Attachment * (PDF, DOCX, XLSX, TXT, JSON, Markdown, Images, ZIP)
+              File Attachment(s) * (PDF, DOCX, XLSX, TXT, JSON, Markdown, Images, ZIP)
             </label>
             <div
               onDragOver={(e) => {
@@ -329,7 +347,7 @@ export function DocumentUploadModal({
               className={`p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center space-y-2 ${
                 dragOver
                   ? "border-[#FF6200] bg-[#FF6200]/10"
-                  : file
+                  : files.length > 0
                   ? "border-emerald-500/50 bg-emerald-500/5"
                   : "border-[#2E2E2E] bg-[#1A1A1A] hover:border-[#FF6200]/50"
               }`}
@@ -337,28 +355,55 @@ export function DocumentUploadModal({
               <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 className="hidden"
-                onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
+                onChange={handleFileSelect}
               />
               <div className="flex justify-center">
-                {file ? (
+                {files.length > 0 ? (
                   <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                 ) : (
                   <UploadCloud className="w-8 h-8 text-[#888898]" />
                 )}
               </div>
-              {file ? (
-                <div>
-                  <div className="font-bold text-white text-xs">{file.name}</div>
-                  <div className="text-[10px] text-[#888898]">{(file.size / 1024).toFixed(1)} KB</div>
+              <div>
+                <div className="font-semibold text-white text-xs">
+                  {files.length > 0 ? `${files.length} file(s) selected - click or drop to add more` : "Click to browse multiple files or drop them here"}
                 </div>
-              ) : (
-                <div>
-                  <div className="font-semibold text-white text-xs">Click to browse or drop file here</div>
-                  <div className="text-[10px] text-[#888898]">Supported: PDF, DOC, DOCX, XLSX, TXT, JSON, MD, PNG, ZIP</div>
-                </div>
-              )}
+                <div className="text-[10px] text-[#888898]">Supported: PDF, DOC, DOCX, XLSX, TXT, JSON, MD, PNG, ZIP</div>
+              </div>
             </div>
+
+            {/* List of Selected Files */}
+            {files.length > 0 && (
+              <div className="mt-3 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {files.map((f, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <FileText className="w-4 h-4 text-[#FF6200] flex-shrink-0" />
+                      <span className="text-white truncate font-medium">{f.name}</span>
+                      <span className="text-[10px] text-[#888898] flex-shrink-0">
+                        ({(f.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(i);
+                      }}
+                      className="p-1 rounded hover:bg-red-500/20 text-[#888898] hover:text-red-400"
+                      title="Remove file"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Footer Submit */}

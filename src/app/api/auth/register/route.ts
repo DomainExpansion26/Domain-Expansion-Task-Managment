@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
     const userCount = await withDbRetry(() => prisma.user.count());
     let assignedRole = "MEMBER";
     let hrmsStatus = "ACTIVE";
-    let defaultDesignation = jobTitle?.trim() || "Software Engineer";
-    let defaultDepartment = department?.trim() || "Engineering";
+    const userJobTitle = jobTitle?.trim() || null;
+    const userDepartment = department?.trim() || null;
 
     const normPortal = portal?.trim()?.toUpperCase()?.replace(/[^A-Z]/g, "_");
     if (userCount === 0 || normPortal === "SUPER_ADMIN" || normPortal === "SUPERADMIN") {
@@ -87,13 +87,9 @@ export async function POST(request: NextRequest) {
       }
       assignedRole = "SUPER_ADMIN";
       hrmsStatus = "INACTIVE"; // Super admin account is strictly for platform/super admin portal
-      defaultDesignation = jobTitle?.trim() || "Super Administrator";
-      defaultDepartment = department?.trim() || "Executive Management";
     } else if (normPortal === "HRMS_SUPER_ADMIN" || normPortal === "HRMSSUPERADMIN") {
       assignedRole = "HR_ADMIN";
       hrmsStatus = "ACTIVE";
-      defaultDesignation = jobTitle?.trim() || "HR Super Administrator";
-      defaultDepartment = department?.trim() || "Human Resources";
     } else {
       // Normal Member registration
       assignedRole = "MEMBER";
@@ -111,16 +107,16 @@ export async function POST(request: NextRequest) {
           email: cleanEmail,
           passwordHash,
           role: assignedRole,
-          jobTitle: defaultDesignation,
-          department: defaultDepartment,
+          jobTitle: userJobTitle,
+          department: userDepartment,
           avatarUrl: null,
           isEmailVerified: true,
           isActive: true,
           hrProfile: {
             create: {
               employeeId: uniqueEmpId,
-              designation: defaultDesignation,
-              department: defaultDepartment,
+              designation: userJobTitle,
+              department: userDepartment,
               status: hrmsStatus,
             },
           },

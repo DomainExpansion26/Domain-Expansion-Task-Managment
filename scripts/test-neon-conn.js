@@ -3,8 +3,8 @@ require("dotenv").config({ path: ".env" });
 const { PrismaClient } = require("@prisma/client");
 
 async function testNeon() {
-  const poolerUrl = "postgresql://neondb_owner:npg_UqW4Otx6eaPs@ep-bold-feather-at6voxuk-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
-  const directUrl = "postgresql://neondb_owner:npg_UqW4Otx6eaPs@ep-bold-feather-at6voxuk.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  const poolerUrl = process.env.DATABASE_URL || "";
+  const directUrl = process.env.DIRECT_URL || "";
 
   try {
     const prismaPooler = new PrismaClient({ datasources: { db: { url: poolerUrl } } });

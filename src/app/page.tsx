@@ -433,7 +433,18 @@ export default function Home() {
                       return;
                     }
                     const match = n.link.match(/tasks\/([^?]+)/);
-                    if (match && match[1]) setSelectedTaskKey(match[1]);
+                    if (match && match[1]) {
+                      setSelectedTaskKey(match[1]);
+                      return;
+                    }
+                  }
+                  if (n.taskId) {
+                    setSelectedTaskKey(n.taskId);
+                    return;
+                  }
+                  const keyMatch = (n.title + " " + n.message).match(/#?([A-Za-z0-9]+-[0-9]+)/);
+                  if (keyMatch && keyMatch[1]) {
+                    setSelectedTaskKey(keyMatch[1]);
                   }
                 }}
                 className={`p-4 rounded-xl border transition-all cursor-pointer ${

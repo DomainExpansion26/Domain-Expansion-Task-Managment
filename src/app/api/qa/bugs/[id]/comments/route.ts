@@ -145,3 +145,109 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to add comment" } }, { status: 500 });
   }
 }
+
+// PATCH /api/qa/bugs/[id]/comments - Edit & Update Bug Comment
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { commentId, content } = body;
+
+    if (!commentId || !content || !content.trim()) {
+      return NextResponse.json({ success: false, error: { code: "INVALID_INPUT", message: "Comment ID and updated content are required" } }, { status: 400 });
+    }
+
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: { author: true },
+    });
+
+    if (!existingComment) {
+      return NextResponse.json({ success: false, error: { code: "NOT_FOUND", message: "Comment not found" } }, { status: 404 });
+    }
+
+    const isSuper = currentUser.role === "SUPER_ADMIN";
+    if (existingComment.authorId !== currentUser.id && !isSuper) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Only the author of this message can edit it." } },
+        { status: 403 }
+      );
+    }
+
+    const updatedComment = await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        content: content.trim(),
+        updatedAt: new Date(),
+      },
+      include: {
+        author: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updatedComment,
+      message: "Comment updated successfully",
+    });
+  } catch (error: any) {
+    console.error("Update bug comment error:", error);
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to update comment" } }, { status: 500 });
+  }
+}
+
+// DELETE /api/qa/bugs/[id]/comments - Delete Bug Comment
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    let commentId = searchParams.get("commentId");
+
+    if (!commentId) {
+      try {
+        const body = await request.json();
+        commentId = body?.commentId;
+      } catch {}
+    }
+
+    if (!commentId) {
+      return NextResponse.json({ success: false, error: { code: "INVALID_INPUT", message: "Comment ID is required" } }, { status: 400 });
+    }
+
+    const existingComment = await prisma.comment.findUnique({
+      where: { id: commentId },
+    });
+
+    if (!existingComment) {
+      return NextResponse.json({ success: false, error: { code: "NOT_FOUND", message: "Comment not found" } }, { status: 404 });
+    }
+
+    const isSuper = currentUser.role === "SUPER_ADMIN";
+    if (existingComment.authorId !== currentUser.id && !isSuper) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Only the author of this message can delete it." } },
+        { status: 403 }
+      );
+    }
+
+    await prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
+  } catch (error: any) {
+    console.error("Delete bug comment error:", error);
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to delete comment" } }, { status: 500 });
+  }
+}

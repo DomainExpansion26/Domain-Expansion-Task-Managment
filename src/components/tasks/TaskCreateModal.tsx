@@ -183,15 +183,16 @@ export function TaskCreateModal({
       }
     }
 
-    // 3. Fallback to workspace users if no project members configured yet
-    if (memberMap.size === 0 && safeUsers.length > 0) {
+    // 3. Include all workspace users with their department for universal assignment
+    if (safeUsers.length > 0) {
       safeUsers.forEach((u: any) => {
-        if (u && u.id) {
+        if (u && u.id && !memberMap.has(u.id)) {
           memberMap.set(u.id, {
             id: u.id,
             name: u.name || "User",
             email: u.email || "",
             role: u.role || "MEMBER",
+            department: u.department || "General",
             avatarUrl: u.avatarUrl,
           });
         }

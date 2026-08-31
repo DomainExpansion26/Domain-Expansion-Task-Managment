@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Bug,
@@ -16,6 +16,7 @@ import {
   Send,
   User,
   ShieldAlert,
+  ShieldCheck,
   ArrowRight,
   ExternalLink,
   ChevronRight,
@@ -23,9 +24,13 @@ import {
   Check,
   Tag,
   Play,
-  RotateCcw,
-  ShieldCheck,
+  Edit2,
+  Trash2,
+  Upload,
+  File,
+  Download,
   Terminal,
+  RotateCcw,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
 import { QABugFailModal } from "@/components/modals/QABugFailModal";
@@ -55,8 +60,52 @@ export function BugDetailModal({
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+  const [isSavingCommentEdit, setIsSavingCommentEdit] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isFailModalOpen, setIsFailModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement> | File[]) => {
+    let filesToUpload: File[] = [];
+    if (Array.isArray(e)) {
+      filesToUpload = e;
+    } else if (e.target.files) {
+      filesToUpload = Array.from(e.target.files);
+    }
+
+    if (filesToUpload.length === 0 || !bug) return;
+
+    setIsUploadingFiles(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      filesToUpload.forEach((file) => formData.append("files", file));
+      formData.append("bugId", bug.id);
+      if (bug.projectId) formData.append("projectId", bug.projectId);
+      if (bug.relatedTaskId) formData.append("taskId", bug.relatedTaskId);
+
+      const res = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchBugDetails();
+        if (onBugUpdated) onBugUpdated();
+      } else {
+        setUploadError(json.error?.message || "Failed to upload file(s)");
+      }
+    } catch (err: any) {
+      setUploadError(err.message || "File upload failed");
+    } finally {
+      setIsUploadingFiles(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const fetchBugDetails = async () => {
     if (!bugKey) return;
@@ -120,6 +169,45 @@ export function BugDetailModal({
       console.error("Failed to add comment:", err);
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  const handleSaveEditComment = async (commentId: string) => {
+    if (!editingCommentText.trim()) return;
+    setIsSavingCommentEdit(true);
+    try {
+      const res = await fetch(`/api/qa/bugs/${bugKey}/comments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId, content: editingCommentText.trim() }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setEditingCommentId(null);
+        setEditingCommentText("");
+        fetchBugDetails();
+        if (onBugUpdated) onBugUpdated();
+      }
+    } catch (err) {
+      console.error("Failed to update comment:", err);
+    } finally {
+      setIsSavingCommentEdit(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await fetch(`/api/qa/bugs/${bugKey}/comments?commentId=${commentId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchBugDetails();
+        if (onBugUpdated) onBugUpdated();
+      }
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
     }
   };
 
@@ -454,7 +542,18 @@ export function BugDetailModal({
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  <span>Comments & Mentions ({bug?.comments?.length || 0})</span>
+                  <span>Comments ({bug?.comments?.length || 0})</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("ATTACHMENTS")}
+                  className={`flex items-center gap-2 pb-2 font-bold transition-colors ${
+                    activeTab === "ATTACHMENTS"
+                      ? "text-[#FF8C42] border-b-2 border-[#FF6200]"
+                      : "text-[#888898] hover:text-white"
+                  }`}
+                >
+                  <Paperclip className="w-4 h-4" />
+                  <span>Files &amp; Attachments ({bug?.attachments?.length || 0})</span>
                 </button>
               </div>
 
@@ -492,27 +591,94 @@ export function BugDetailModal({
               {activeTab === "COMMENTS" && (
                 <div className="pt-4 space-y-4">
                   <div className="space-y-3">
-                    {bug?.comments?.map((c: any) => (
-                      <div key={c.id} className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-6 h-6 rounded-full bg-gradient-to-tr ${getAvatarGradient(
-                                c.author?.name
-                              )} text-[10px] font-bold text-white flex items-center justify-center`}
-                            >
-                              {getInitials(c.author?.name)}
+                    {bug?.comments?.map((c: any) => {
+                      const isAuthor = c.authorId === currentUser?.id || currentUser?.role === "SUPER_ADMIN";
+                      const isEditing = editingCommentId === c.id;
+                      const isEdited = c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 1000;
+
+                      return (
+                        <div key={c.id} className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-1.5 group">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-6 h-6 rounded-full bg-gradient-to-tr ${getAvatarGradient(
+                                  c.author?.name
+                                )} text-[10px] font-bold text-white flex items-center justify-center`}
+                              >
+                                {getInitials(c.author?.name)}
+                              </div>
+                              <span className="font-bold text-white">{c.author?.name}</span>
+                              <span className="text-[10px] text-[#888898]">{c.author?.role?.replace("_", " ")}</span>
+                              <span className="text-[10px] text-[#888898]">&bull; {formatDateTime(c.createdAt)}</span>
+                              {isEdited && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#252525] text-[#FF8C42] font-mono">
+                                  (edited)
+                                </span>
+                              )}
                             </div>
-                            <span className="font-bold text-white">{c.author?.name}</span>
-                            <span className="text-[10px] text-[#888898]">{c.author?.role?.replace("_", " ")}</span>
+
+                            {isAuthor && !isEditing && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCommentId(c.id);
+                                    setEditingCommentText(c.content || "");
+                                  }}
+                                  className="p-1 rounded hover:bg-[#252525] text-[#888898] hover:text-[#FF6200]"
+                                  title="Edit comment"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteComment(c.id)}
+                                  className="p-1 rounded hover:bg-red-500/15 text-[#888898] hover:text-red-400"
+                                  title="Delete comment"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[10px] text-[#888898]">{formatDateTime(c.createdAt)}</span>
+
+                          {isEditing ? (
+                            <div className="pl-8 space-y-2 pt-1">
+                              <textarea
+                                rows={2}
+                                value={editingCommentText}
+                                onChange={(e) => setEditingCommentText(e.target.value)}
+                                className="w-full p-2 text-xs text-white bg-[#141414] border border-[#FF6200] rounded-xl focus:outline-none resize-y"
+                              />
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  disabled={isSavingCommentEdit || !editingCommentText.trim()}
+                                  onClick={() => handleSaveEditComment(c.id)}
+                                  className="px-3 py-1 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold text-xs disabled:opacity-50"
+                                >
+                                  {isSavingCommentEdit ? "Saving..." : "Save"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCommentId(null);
+                                    setEditingCommentText("");
+                                  }}
+                                  className="px-3 py-1 rounded-lg bg-[#252525] text-[#888898] text-xs font-semibold hover:text-white"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-200 whitespace-pre-wrap pl-8">
+                              {c.content}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-xs text-slate-200 whitespace-pre-wrap pl-8">
-                          {c.content}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Comment Input */}
@@ -553,6 +719,101 @@ export function BugDetailModal({
                       </button>
                     </div>
                   </form>
+                </div>
+              )}
+
+              {/* Tab: Attachments (Multi-file Support) */}
+              {activeTab === "ATTACHMENTS" && (
+                <div className="pt-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#888898] uppercase tracking-wider">
+                      Bug Proofs &amp; Attachments ({bug?.attachments?.length || 0})
+                    </span>
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        multiple
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingFiles}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FF6200] hover:bg-[#E55800] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploadingFiles ? "Uploading Files..." : "Upload Multiple Files"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Multi-file Drag & Drop Dropzone */}
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        handleFileUpload(Array.from(e.dataTransfer.files));
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-6 border-2 border-dashed border-[#2E2E2E] hover:border-[#FF6200] bg-[#141414]/60 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#FF6200]/10 text-[#FF6200] mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div className="text-xs font-bold text-white">
+                      Drag &amp; Drop multiple screenshots or logs here, or <span className="text-[#FF6200] underline">browse</span>
+                    </div>
+                    <p className="text-[11px] text-[#888898]">
+                      Supports batch upload of PNG, JPG, MP4, PDF, HAR logs, and JSON artifacts
+                    </p>
+                  </div>
+
+                  {uploadError && (
+                    <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-500 text-xs">
+                      {uploadError}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(!bug?.attachments || bug.attachments.length === 0) ? (
+                      <div className="text-center py-8 text-[#666] text-xs italic">
+                        No attachments uploaded for this defect yet.
+                      </div>
+                    ) : (
+                      bug.attachments.map((att: any) => (
+                        <div
+                          key={att.id}
+                          className="flex items-center justify-between p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] shadow-sm text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <File className="w-5 h-5 text-[#FF6200]" />
+                            <div>
+                              <div className="font-bold text-white">{att.fileName}</div>
+                              <div className="text-[10px] text-[#888898]">
+                                {(att.fileSize / 1024).toFixed(1)} KB &bull; Uploaded on {formatDateTime(att.createdAt)}
+                              </div>
+                            </div>
+                          </div>
+                          <a
+                            href={att.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2 rounded-xl border border-[#2E2E2E] hover:bg-[#252525] text-[#ACACB8] hover:text-white"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </div>

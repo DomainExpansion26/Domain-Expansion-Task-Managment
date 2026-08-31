@@ -7,30 +7,15 @@ import { Building2, User, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, Inf
 
 export default function HRMSSuperAdminCreateAccountPage() {
   const router = useRouter();
-  const [name, setName] = useState("HR Administrator");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Requirement #4: Read pre-filled HRMS Super Admin email from secure configuration/database settings
-  useEffect(() => {
-    fetch("/api/auth/config")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.data.hrmsSuperAdminEmail) {
-          setEmail(json.data.hrmsSuperAdminEmail);
-        } else {
-          setEmail("hrms.admin@domainexpansion.in");
-        }
-      })
-      .catch(() => setEmail("hrms.admin@domainexpansion.in"))
-      .finally(() => setInitialLoading(false));
-  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

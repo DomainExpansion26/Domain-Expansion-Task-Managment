@@ -106,8 +106,8 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
           email: newEmail.trim(),
           password: newPassword,
           role: newRole,
-          jobTitle: newJobTitle.trim() || "Software Engineer",
-          department: newDepartment.trim() || "Engineering",
+          jobTitle: newJobTitle.trim() || undefined,
+          department: newDepartment.trim() || undefined,
           managerId: newManagerId || null,
           teamLeadId: newTeamLeadId || null,
         }),
@@ -390,8 +390,8 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <div className="text-white font-medium">{m.jobTitle}</div>
-                          <div className="text-[11px] text-[#888898]">{m.department}</div>
+                          <div className="text-white font-medium">{m.jobTitle || "—"}</div>
+                          <div className="text-[11px] text-[#888898]">{m.department || "—"}</div>
                         </td>
 
                         <td className="py-3.5 px-4">
@@ -475,7 +475,7 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                       {teamLeadsUnder.length > 0 ? (
                         teamLeadsUnder.map((tl) => (
                           <div key={tl.id} className="pl-3 border-l-2 border-blue-500/50 py-1 text-slate-200">
-                            ⚡ {tl.name} <span className="text-[#888898]">({tl.jobTitle})</span>
+                            ⚡ {tl.name} {tl.jobTitle && <span className="text-[#888898]">({tl.jobTitle})</span>}
                           </div>
                         ))
                       ) : (

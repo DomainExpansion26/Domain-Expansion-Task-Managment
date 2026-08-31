@@ -73,7 +73,7 @@ export function NotificationCenter({
   const handleNotificationClick = (item: any) => {
     if (!item.isRead) onMarkRead(item.id);
 
-    // Check for bug link or bugKey in title/link
+    // 1. Check for bug link or bugKey
     if (item.bugId && onSelectBug) {
       onSelectBug(item.bugId);
       onClose();
@@ -98,9 +98,19 @@ export function NotificationCenter({
       }
     }
 
+    // 2. Direct Task ID or Task Key
     if (item.taskId) {
       onSelectTask(item.taskId);
       onClose();
+      return;
+    }
+
+    // 3. Fallback: Parse task key from title or message (e.g. #PROJ-124 or PROJ-124)
+    const keyMatch = (item.title + " " + item.message).match(/#?([A-Za-z0-9]+-[0-9]+)/);
+    if (keyMatch && keyMatch[1]) {
+      onSelectTask(keyMatch[1]);
+      onClose();
+      return;
     }
   };
 

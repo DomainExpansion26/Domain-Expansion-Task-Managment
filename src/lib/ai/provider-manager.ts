@@ -120,25 +120,16 @@ export async function handleAIChat({
   ) {
     toolsCalled.push("propose_create_task");
 
-    let assigneeName = "Rahul";
-    let assignee = await prisma.user.findFirst({
-      where: {
-        OR: [{ name: { contains: "Rahul" } }, { email: { contains: "rahul" } }],
-      },
-    });
+    const allUsers = await prisma.user.findMany({ where: { isActive: true } });
+    let assignee = allUsers.length > 0 ? allUsers[0] : null;
+    let assigneeName = assignee?.name || "Unassigned";
 
-    if (lower.includes("priya")) {
-      assigneeName = "Priya";
-      assignee = await prisma.user.findFirst({ where: { name: { contains: "Priya" } } });
-    } else if (lower.includes("amit")) {
-      assigneeName = "Amit";
-      assignee = await prisma.user.findFirst({ where: { name: { contains: "Amit" } } });
-    } else if (lower.includes("sneha")) {
-      assigneeName = "Sneha";
-      assignee = await prisma.user.findFirst({ where: { name: { contains: "Sneha" } } });
-    } else if (lower.includes("vikram")) {
-      assigneeName = "Vikram";
-      assignee = await prisma.user.findFirst({ where: { name: { contains: "Vikram" } } });
+    for (const u of allUsers) {
+      if (lower.includes(u.name.toLowerCase()) || (u.email && lower.includes(u.email.toLowerCase().split("@")[0]))) {
+        assignee = u;
+        assigneeName = u.name;
+        break;
+      }
     }
 
     let priority = "MEDIUM";

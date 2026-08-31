@@ -129,6 +129,12 @@ function HRMSSuperAdminLoginForm() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-[#ACACB8] font-semibold">Password</label>
+            <Link
+              href="/forgot-password?portal=HRMSSUPERADMIN"
+              className="text-[11px] text-pink-400 hover:underline font-semibold"
+            >
+              Forgot Password?
+            </Link>
           </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />

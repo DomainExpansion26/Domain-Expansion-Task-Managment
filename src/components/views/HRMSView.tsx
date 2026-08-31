@@ -676,9 +676,13 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-[#888898] mt-0.5">
-              {profileData?.jobTitle || profileData?.hrProfile?.designation || "Employee"} &bull;{" "}
-              {profileData?.department || profileData?.hrProfile?.department || "General"} &bull;{" "}
-              {currentUser?.email}
+              {(profileData?.jobTitle || profileData?.hrProfile?.designation) && (
+                <span>{profileData?.jobTitle || profileData?.hrProfile?.designation} &bull; </span>
+              )}
+              {(profileData?.department || profileData?.hrProfile?.department) && (
+                <span>{profileData?.department || profileData?.hrProfile?.department} &bull; </span>
+              )}
+              <span>{currentUser?.email}</span>
             </p>
           </div>
         </div>

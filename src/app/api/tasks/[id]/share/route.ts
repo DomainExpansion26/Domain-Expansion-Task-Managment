@@ -77,6 +77,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       : body.userId
       ? [body.userId]
       : [];
+    const purpose = (body.purpose || "GENERAL").toUpperCase(); // TESTING, REVIEW, MARKETING, COLLABORATION, GENERAL
+    const note = body.note ? String(body.note).trim() : "";
 
     if (targetUserIds.length === 0) {
       return NextResponse.json(
@@ -84,6 +86,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         { status: 400 }
       );
     }
+
+    const purposeLabels: Record<string, { label: string; type: string }> = {
+      TESTING: { label: "Testing / QA", type: "BUG_READY_FOR_TESTING" },
+      REVIEW: { label: "Story Review", type: "TASK_ASSIGNED" },
+      MARKETING: { label: "Digital Marketing", type: "TASK_ASSIGNED" },
+      COLLABORATION: { label: "Collaboration", type: "TASK_ASSIGNED" },
+      GENERAL: { label: "User Story", type: "TASK_ASSIGNED" },
+    };
+    const currentPurpose = purposeLabels[purpose] || purposeLabels.GENERAL;
 
     const createdShares = [];
     for (const userId of targetUserIds) {
@@ -111,13 +122,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           data: {
             userId,
             senderUserId: currentUser.id,
-            title: `Task Shared: ${task.taskKey}`,
-            message: `${currentUser.name} shared task "${task.title}" with you`,
-            type: "TASK_ASSIGNED",
-            taskId: task.id,
+            title: `Tagged for ${currentPurpose.label} on #${task.taskKey}`,
+            message: `${currentUser.name} tagged you on story "${task.title}"${note ? `: "${note}"` : ""}`,
+            type: currentPurpose.type,
+            taskId: task.taskKey,
             link: `/tasks/${task.taskKey}`,
           },
         });
+
+        // Emit real-time notification
+        const { eventHub } = await import("@/lib/events");
+        eventHub.emit("notification", { userId });
       }
     }
 
@@ -128,14 +143,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         projectId: task.projectId,
         userId: currentUser.id,
         action: "UPDATED",
-        description: `${currentUser.name} shared ${task.taskKey} with ${createdShares.map((s) => s.user?.name).join(", ")}`,
+        description: `${currentUser.name} tagged for ${currentPurpose.label}: ${createdShares.map((s) => s.user?.name).join(", ")}${note ? ` (Note: ${note})` : ""}`,
       },
     });
 
     return NextResponse.json({
       success: true,
       data: createdShares,
-      message: `Task shared successfully`,
+      message: `Tagged ${createdShares.length} members successfully`,
     });
   } catch (error: any) {
     console.error("Task share error:", error);

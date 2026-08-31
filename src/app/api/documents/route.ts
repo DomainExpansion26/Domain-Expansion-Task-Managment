@@ -139,7 +139,6 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
     const title = formData.get("title") as string | null;
     const description = formData.get("description") as string | null;
     const department = formData.get("department") as string | null;
@@ -152,81 +151,98 @@ export async function POST(request: NextRequest) {
     const sortOrder = parseInt(formData.get("sortOrder") as string) || 0;
     const visibility = (formData.get("visibility") as string) || "DEPARTMENT";
 
-    if (!file || !title || !department) {
+    const rawFiles: (File | null)[] = [
+      ...formData.getAll("files"),
+      ...formData.getAll("file"),
+    ] as (File | null)[];
+
+    const files = rawFiles.filter((f): f is File => f !== null && typeof f === "object" && typeof f.name === "string" && f.size > 0);
+
+    if (files.length === 0 || !title || !department) {
       return NextResponse.json(
-        { success: false, error: { code: "INVALID_INPUT", message: "File, Title, and Department are required." } },
+        { success: false, error: { code: "INVALID_INPUT", message: "At least one File, Title, and Department are required." } },
         { status: 400 }
       );
     }
 
-    // Upload to Supabase Storage (with fallback to local storage)
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const createdDocs = await Promise.all(
+      files.map(async (file, idx) => {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-    const uploaded = await uploadFileToStorage(
-      buffer,
-      file.name,
-      file.type || "application/octet-stream",
-      `documents/${department.toLowerCase()}/${category.toLowerCase()}`
+        const uploaded = await uploadFileToStorage(
+          buffer,
+          file.name,
+          file.type || "application/octet-stream",
+          `documents/${department.toLowerCase()}/${category.toLowerCase()}`
+        );
+
+        const docTitle = files.length > 1 && title
+          ? `${title.trim()} (${file.name.replace(/\.[^/.]+$/, "")})`
+          : title.trim();
+
+        const doc = await prisma.organizationDocument.create({
+          data: {
+            title: docTitle,
+            description: description?.trim() || null,
+            department: department.trim().toUpperCase(),
+            category: category.trim(),
+            team: team.trim(),
+            phaseNumber,
+            phaseName: phaseName?.trim() || `Phase ${phaseNumber}`,
+            fileName: file.name,
+            fileUrl: uploaded.fileUrl,
+            storagePath: uploaded.storagePath,
+            fileSize: uploaded.fileSize || file.size,
+            fileType: file.type || "application/octet-stream",
+            version: version.trim(),
+            status: status.trim().toUpperCase(),
+            sortOrder: sortOrder + idx,
+            visibility: visibility.trim().toUpperCase(),
+            uploadedById: currentUser.id,
+          },
+          include: {
+            uploadedBy: {
+              select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+            },
+          },
+        });
+
+        // Record audit log
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId: currentUser.id,
+              action: "DOCUMENT_UPLOADED",
+              entityType: "ORGANIZATION_DOCUMENT",
+              entityId: doc.id,
+              detailsJson: JSON.stringify({
+                title: doc.title,
+                department: doc.department,
+                category: doc.category,
+                phaseNumber: doc.phaseNumber,
+                version: doc.version,
+                fileName: doc.fileName,
+              }),
+            },
+          });
+        } catch (auditErr) {
+          console.warn("Audit log notice:", auditErr);
+        }
+
+        return doc;
+      })
     );
-
-    const doc = await prisma.organizationDocument.create({
-      data: {
-        title: title.trim(),
-        description: description?.trim() || null,
-        department: department.trim().toUpperCase(),
-        category: category.trim(),
-        team: team.trim(),
-        phaseNumber,
-        phaseName: phaseName?.trim() || `Phase ${phaseNumber}`,
-        fileName: file.name,
-        fileUrl: uploaded.fileUrl,
-        storagePath: uploaded.storagePath,
-        fileSize: uploaded.fileSize || file.size,
-        fileType: file.type || "application/octet-stream",
-        version: version.trim(),
-        status: status.trim().toUpperCase(),
-        sortOrder,
-        visibility: visibility.trim().toUpperCase(),
-        uploadedById: currentUser.id,
-      },
-      include: {
-        uploadedBy: {
-          select: { id: true, name: true, email: true, role: true, avatarUrl: true },
-        },
-      },
-    });
-
-    // Record audit log
-    try {
-      await prisma.auditLog.create({
-        data: {
-          userId: currentUser.id,
-          action: "DOCUMENT_UPLOADED",
-          entityType: "ORGANIZATION_DOCUMENT",
-          entityId: doc.id,
-          detailsJson: JSON.stringify({
-            title: doc.title,
-            department: doc.department,
-            category: doc.category,
-            phaseNumber: doc.phaseNumber,
-            version: doc.version,
-            fileName: doc.fileName,
-          }),
-        },
-      });
-    } catch (auditErr) {
-      console.warn("Audit log notice:", auditErr);
-    }
 
     return NextResponse.json({
       success: true,
-      data: doc,
-      message: `Document "${doc.title}" published successfully to ${doc.department} / ${doc.category}.`,
+      data: createdDocs.length === 1 ? createdDocs[0] : createdDocs,
+      count: createdDocs.length,
+      message: `${createdDocs.length} document(s) published successfully to ${department.toUpperCase()} / ${category}.`,
     });
   } catch (error: any) {
     console.error("POST /api/documents error:", error);
-    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to upload document" } }, { status: 500 });
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: error.message || "Failed to upload document(s)" } }, { status: 500 });
   }
 }
 

@@ -75,8 +75,8 @@ export default function CreateAccountPage() {
           email: email.trim(),
           password,
           confirmPassword,
-          jobTitle: jobTitle.trim() || "Software Engineer",
-          department: department.trim() || "Engineering",
+          jobTitle: jobTitle.trim() || undefined,
+          department: department.trim() || undefined,
           portal: "MAIN",
         }),
       });

@@ -203,7 +203,13 @@ export function ProfileSettingsView({ currentUser, onUserUpdated }: ProfileSetti
               <div className="text-base font-bold text-white">{name || currentUser?.name}</div>
               <div className="text-xs text-[#888898] font-mono">{currentUser?.email}</div>
               <div className="text-xs text-[#ACACB8]">
-                {jobTitle || currentUser?.jobTitle || "Team Member"} &bull; {department || currentUser?.department || "General"}
+                {(jobTitle || currentUser?.jobTitle) && (
+                  <span>{jobTitle || currentUser?.jobTitle} &bull; </span>
+                )}
+                {(department || currentUser?.department) && (
+                  <span>{department || currentUser?.department} &bull; </span>
+                )}
+                <span className="font-mono text-[#FF8C42]">{currentUser?.role?.replace("_", " ")}</span>
               </div>
             </div>
           </div>

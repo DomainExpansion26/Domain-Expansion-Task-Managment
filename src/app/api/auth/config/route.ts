@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const defaultHrmsEmail =
       existingHrAdmin?.email ||
       process.env.HRMS_SUPERADMIN_EMAIL ||
-      "hrms.admin@domainexpansion.in";
+      "";
 
     const existingSuperAdmin = await prisma.user.findFirst({
       where: { role: "SUPER_ADMIN" },
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         appName: "Domain Expansion",
-        hrmsSuperAdminEmail: "hrms.admin@domainexpansion.in",
+        hrmsSuperAdminEmail: "",
         hasSuperAdmin: false,
       },
     });

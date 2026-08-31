@@ -45,8 +45,8 @@ export default function SuperAdminCreateAccountPage() {
           email: email.trim(),
           password,
           confirmPassword,
-          jobTitle: "Super Administrator",
-          department: "Executive Management",
+          jobTitle: undefined,
+          department: undefined,
           portal: "SUPER_ADMIN",
         }),
       });

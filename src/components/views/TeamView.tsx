@@ -134,7 +134,7 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
                     <h3 className="text-sm font-bold text-white group-hover:text-[#FF8C42] transition-colors">
                       {user.name}
                     </h3>
-                    <div className="text-xs text-[#888898]">{user.jobTitle}</div>
+                    {user.jobTitle && <div className="text-xs text-[#888898]">{user.jobTitle}</div>}
                     <div className="text-[11px] font-mono text-[#666]">{user.email}</div>
                   </div>
                 </div>
@@ -188,7 +188,10 @@ export function TeamView({ users, currentUser, onSelectTask, onRefreshData }: Te
                 )}
                 <div>
                   <h2 className="text-sm font-bold text-white">{selectedUser.name}</h2>
-                  <p className="text-xs text-[#888898]">{selectedUser.jobTitle} &bull; {selectedUser.email}</p>
+                  <p className="text-xs text-[#888898]">
+                    {selectedUser.jobTitle ? `${selectedUser.jobTitle} • ` : ""}
+                    {selectedUser.email}
+                  </p>
                 </div>
               </div>
               <button
