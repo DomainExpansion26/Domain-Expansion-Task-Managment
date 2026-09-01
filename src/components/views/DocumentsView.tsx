@@ -36,11 +36,17 @@ import {
   BookOpen,
   ArrowLeft,
   X,
+  Palette,
+  Code2,
+  CheckSquare,
+  Megaphone,
+  Users,
+  Briefcase,
 } from "lucide-react";
 import { DocumentUploadModal } from "@/components/modals/DocumentUploadModal";
 import { DocumentViewerModal } from "@/components/modals/DocumentViewerModal";
 import { formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
-import { isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 
 interface DocumentsViewProps {
   currentUser: any;
@@ -49,35 +55,83 @@ interface DocumentsViewProps {
 
 const DEPARTMENTS = [
   { id: "ALL_DEPTS", label: "All Departments" },
-  { id: "ALL", label: "Company-Wide (General)" },
-  { id: "DEVELOPMENT", label: "Development & Engineering" },
   { id: "UI_UX", label: "UI / UX Design" },
+  { id: "DEVELOPMENT", label: "Development & Engineering" },
   { id: "QA", label: "QA & Testing" },
   { id: "MARKETING", label: "Marketing & Growth" },
+  { id: "ALL", label: "Company-Wide (General)" },
   { id: "HR", label: "Human Resources" },
   { id: "FINANCE", label: "Finance & Legal" },
   { id: "OPERATIONS", label: "Business Operations" },
 ];
 
+const DEPARTMENT_SECTIONS = [
+  {
+    id: "UI_UX",
+    label: "UI / UX Design",
+    badge: "Figma & Design Systems",
+    icon: Palette,
+    accentBorder: "border-pink-500/30 hover:border-pink-500/60",
+    badgeColor: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+    iconBg: "bg-pink-500/10 text-pink-400 group-hover:bg-pink-500 group-hover:text-white",
+    defaultCategories: ["Figma", "Design System", "User Research", "Project Designs", "Components", "Wireframes"],
+  },
+  {
+    id: "DEVELOPMENT",
+    label: "Development & Engineering",
+    badge: "Architecture & Code",
+    icon: Code2,
+    accentBorder: "border-[#FF6200]/30 hover:border-[#FF6200]/60",
+    badgeColor: "bg-[#FF6200]/15 text-[#FF8C42] border-[#FF6200]/30",
+    iconBg: "bg-[#FF6200]/10 text-[#FF8C42] group-hover:bg-[#FF6200] group-hover:text-white",
+    defaultCategories: ["Backend", "Frontend", "Mobile", "DevOps", "Database", "Architecture", "API"],
+  },
+  {
+    id: "QA",
+    label: "QA & Testing",
+    badge: "Automation & Quality",
+    icon: CheckSquare,
+    accentBorder: "border-emerald-500/30 hover:border-emerald-500/60",
+    badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+    iconBg: "bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white",
+    defaultCategories: ["Testing Guidelines", "Automation", "Release Checklist", "Test Cases"],
+  },
+  {
+    id: "MARKETING",
+    label: "Marketing & Growth",
+    badge: "Brand & Content",
+    icon: Megaphone,
+    accentBorder: "border-purple-500/30 hover:border-purple-500/60",
+    badgeColor: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+    iconBg: "bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white",
+    defaultCategories: ["Brand Guidelines", "SEO & Content", "Social Media", "Campaigns"],
+  },
+  {
+    id: "ALL",
+    label: "Company-Wide & Standards",
+    badge: "Policies & Standards",
+    icon: Building,
+    accentBorder: "border-blue-500/30 hover:border-blue-500/60",
+    badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    iconBg: "bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white",
+    defaultCategories: ["Company Policies", "Engineering Standards", "General Guidelines"],
+  },
+];
+
 export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps) {
   const superAdmin = isSuperAdmin(currentUser);
+  const canManageDocs = superAdmin || isManager(currentUser) || isTeamLead(currentUser?.role);
 
-  // Determine user's native department
+  // Default to all departments so all published documentation is immediately visible
   const getUserDefaultDept = () => {
-    if (superAdmin) return "ALL_DEPTS";
-    const dept = (currentUser?.department || currentUser?.jobTitle || "").toUpperCase();
-    if (dept.includes("FRONTEND") || dept.includes("BACKEND") || dept.includes("DEV") || dept.includes("ENGINEER")) return "DEVELOPMENT";
-    if (dept.includes("UI") || dept.includes("UX") || dept.includes("DESIGN")) return "UI_UX";
-    if (dept.includes("QA") || dept.includes("TEST")) return "QA";
-    if (dept.includes("MARKET")) return "MARKETING";
-    return "DEVELOPMENT";
+    return "ALL_DEPTS";
   };
 
   // State
   const [documents, setDocuments] = useState<any[]>([]);
   const [phases, setPhases] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedDept, setSelectedDept] = useState<string>(getUserDefaultDept());
+  const [selectedDept, setSelectedDept] = useState<string>("ALL_DEPTS");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL_CATEGORIES");
   const [selectedPhase, setSelectedPhase] = useState<string>("ALL_PHASES");
   const [searchQuery, setSearchQuery] = useState("");
@@ -221,14 +275,17 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
     return <FileText className="w-5 h-5 text-[#FF6200]" />;
   };
 
-  // Unique categories in the current view
-  const visibleCategories = Array.from(
-    new Set(
-      categories
-        .filter((c) => selectedDept === "ALL_DEPTS" || c.department === selectedDept || c.department === "ALL")
-        .map((c) => c.name)
-    )
-  );
+  // Unique categories in the current view (from DocCategory definitions + uploaded documents)
+  const categoryNamesFromDb = categories
+    .filter((c) => selectedDept === "ALL_DEPTS" || c.department === selectedDept || c.department === "ALL")
+    .map((c) => c.name);
+
+  const categoryNamesFromDocs = documents
+    .filter((d) => selectedDept === "ALL_DEPTS" || d.department === selectedDept || d.department === "ALL")
+    .map((d) => d.category)
+    .filter(Boolean);
+
+  const visibleCategories = Array.from(new Set([...categoryNamesFromDb, ...categoryNamesFromDocs]));
 
   // Group documents by phase if inside a specific category
   const phasesInCurrentCategory = Array.from(
@@ -251,7 +308,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">Company Documentation Portal</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 font-mono text-[10px] font-bold uppercase">
-                {superAdmin ? "Super Admin Control" : `${currentUser?.department || "Team"} Access`}
+                {superAdmin ? "Super Admin Control" : canManageDocs ? `${currentUser?.role?.replace("_", " ") || "Lead"} Access` : `${currentUser?.department || "Team"} Access`}
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
@@ -260,8 +317,8 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
           </div>
         </div>
 
-        {/* Super Admin Actions */}
-        {superAdmin && (
+        {/* Manager, Team Lead & Super Admin Actions */}
+        {canManageDocs && (
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
@@ -350,7 +407,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
       {/* Department Tabs (for Super Admin or multi-dept access) */}
       <div className="flex items-center gap-2 p-2 rounded-2xl bg-[#141418] border border-[#2A2A32] overflow-x-auto no-scrollbar">
-        {DEPARTMENTS.filter((d) => superAdmin || d.id === "ALL" || d.id === getUserDefaultDept()).map((dept) => (
+        {DEPARTMENTS.map((dept) => (
           <button
             key={dept.id}
             type="button"
@@ -431,44 +488,110 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
         </div>
       </div>
 
-      {/* Category Summary Cards (when at root of department) */}
+      {/* Category Summary Cards grouped by Department */}
       {selectedCategory === "ALL_CATEGORIES" && (
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <Folder className="w-4 h-4 text-[#FF6200]" />
-            <span>Teams & Categories ({visibleCategories.length})</span>
-          </h3>
+        <div className="space-y-6">
+          {DEPARTMENT_SECTIONS.filter(
+            (dept) => selectedDept === "ALL_DEPTS" || dept.id === selectedDept
+          ).map((dept) => {
+            const deptCategoriesFromDb = categories
+              .filter((c) => c.department === dept.id)
+              .map((c) => c.name);
+            const deptCategoriesFromDocs = documents
+              .filter((d) => d.department === dept.id)
+              .map((d) => d.category)
+              .filter(Boolean);
+            const deptCategories = Array.from(
+              new Set([...deptCategoriesFromDb, ...deptCategoriesFromDocs, ...dept.defaultCategories])
+            );
+            const deptTotalDocs = documents.filter((d) => d.department === dept.id).length;
+            const DeptIcon = dept.icon;
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {visibleCategories.map((cat) => {
-              const catDocs = documents.filter((d) => d.category === cat);
-              return (
-                <div
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className="p-4 rounded-2xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-xl bg-[#FF6200]/10 text-[#FF8C42] border border-[#FF6200]/20 group-hover:bg-[#FF6200] group-hover:text-white transition-colors">
-                      <Folder className="w-4 h-4" />
+            return (
+              <div key={dept.id} className="space-y-3 p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] shadow-lg">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#22222A]">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`p-2 rounded-xl border ${dept.badgeColor}`}>
+                      <DeptIcon className="w-4 h-4" />
                     </div>
-                    <span className="text-[10px] font-mono text-slate-300">
-                      {catDocs.length} Docs
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white tracking-tight">
+                          {dept.label}
+                        </h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${dept.badgeColor}`}>
+                          {dept.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#888898]">
+                        Browse official specifications, assets, and design guidelines for {dept.label}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-bold text-white text-xs sm:text-sm group-hover:text-[#FF8C42] transition-colors">
-                      {cat}
-                    </h4>
-                    <p className="text-[10px] text-[#888898] line-clamp-1 mt-0.5">
-                      Explore {cat} specifications
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-300 font-semibold px-2.5 py-1 rounded-xl bg-[#1E1E24] border border-[#333]">
+                      {deptTotalDocs} Document{deptTotalDocs === 1 ? "" : "s"}
+                    </span>
+                    {selectedDept === "ALL_DEPTS" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDept(dept.id);
+                          setSelectedCategory("ALL_CATEGORIES");
+                          setSelectedPhase("ALL_PHASES");
+                        }}
+                        className="px-3 py-1 rounded-xl bg-[#1E1E24] hover:bg-[#282830] text-[11px] font-semibold text-[#FF8C42] border border-[#333] transition-colors cursor-pointer"
+                      >
+                        View Section &rarr;
+                      </button>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-1">
+                  {deptCategories.map((cat) => {
+                    const catDocs = documents.filter(
+                      (d) => (d.department === dept.id || dept.id === "ALL") && d.category === cat
+                    );
+                    return (
+                      <div
+                        key={cat}
+                        onClick={() => {
+                          setSelectedDept(dept.id);
+                          setSelectedCategory(cat);
+                          setSelectedPhase("ALL_PHASES");
+                        }}
+                        className={`p-4 rounded-2xl bg-[#1A1A20] border border-[#2E2E38] ${dept.accentBorder} transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md hover:translate-y-[-2px]`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className={`p-2 rounded-xl border border-transparent transition-colors ${dept.iconBg}`}>
+                            <Folder className="w-4 h-4" />
+                          </div>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                            catDocs.length > 0
+                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                              : "bg-[#22222A] text-slate-400"
+                          }`}>
+                            {catDocs.length} Docs
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-white text-xs sm:text-sm group-hover:text-[#FF8C42] transition-colors">
+                            {cat}
+                          </h4>
+                          <p className="text-[10px] text-[#888898] line-clamp-1 mt-0.5">
+                            {dept.id === "UI_UX" && cat === "Figma" ? "Figma libraries, assets & screens" : `Explore ${cat} specifications`}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -533,104 +656,110 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
         </div>
       )}
 
-      {/* Documents Grid */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#FF6200]" />
-            <span>Documents Vault ({documents.length})</span>
-          </h3>
-          <span className="text-[10px] text-slate-300 font-mono">
-            {superAdmin ? "Super Admin Full Access" : "Read-Only Protected"}
-          </span>
-        </div>
-
-        {errorMsg && (
-          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{errorMsg}</span>
+      {/* Documents Grid - Only shown when inside a specific category or when searching */}
+      {(selectedCategory !== "ALL_CATEGORIES" || searchQuery.trim() !== "") && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#FF6200]" />
+              <span>
+                {selectedCategory !== "ALL_CATEGORIES"
+                  ? `${selectedCategory} Documents (${documents.length})`
+                  : `Search Results (${documents.length})`}
+              </span>
+            </h3>
+            <span className="text-[10px] text-slate-300 font-mono">
+              {superAdmin ? "Super Admin Full Access" : canManageDocs ? "Management Access" : "Read-Only Protected"}
+            </span>
           </div>
-        )}
 
-        {loading ? (
-          <div className="p-12 text-center text-xs text-slate-300">Loading company documents...</div>
-        ) : documents.length === 0 ? (
-          <div className="p-12 rounded-3xl bg-[#141418] border border-[#2A2A32] text-center space-y-3">
-            <FileText className="w-10 h-10 text-[#666] mx-auto" />
-            <div className="font-bold text-white text-sm">No documentation available</div>
-            <p className="text-xs text-[#888898] max-w-sm mx-auto">
-              There are currently no documents matching your selected filters or search query.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => setViewingDoc(doc)}
-                className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="p-3 rounded-2xl bg-[#1E1E24] border border-[#333] flex-shrink-0">
-                      {getFileIcon(doc.fileName)}
+          {errorMsg && (
+            <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="p-12 text-center text-xs text-slate-300">Loading documents...</div>
+          ) : documents.length === 0 ? (
+            <div className="p-12 rounded-3xl bg-[#141418] border border-[#2A2A32] text-center space-y-3">
+              <FileText className="w-10 h-10 text-[#666] mx-auto" />
+              <div className="font-bold text-white text-sm">No documentation available</div>
+              <p className="text-xs text-[#888898] max-w-sm mx-auto">
+                There are currently no documents uploaded in this category.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  onClick={() => setViewingDoc(doc)}
+                  className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="p-3 rounded-2xl bg-[#1E1E24] border border-[#333] flex-shrink-0">
+                        {getFileIcon(doc.fileName)}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                        <span className="px-2 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 text-[10px] font-mono font-bold">
+                          v{doc.version || "1.0"}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                          Phase {doc.phaseNumber}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                      <span className="px-2 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 text-[10px] font-mono font-bold">
-                        v{doc.version || "1.0"}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                        Phase {doc.phaseNumber}
-                      </span>
+
+                    <div>
+                      <h4 className="font-bold text-white text-sm group-hover:text-[#FF8C42] transition-colors line-clamp-2">
+                        {doc.title}
+                      </h4>
+                      {doc.description && (
+                        <p className="text-xs text-slate-300 line-clamp-2 mt-1">{doc.description}</p>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-bold text-white text-sm group-hover:text-[#FF8C42] transition-colors line-clamp-2">
-                      {doc.title}
-                    </h4>
-                    {doc.description && (
-                      <p className="text-xs text-slate-300 line-clamp-2 mt-1">{doc.description}</p>
-                    )}
-                  </div>
-                </div>
+                  <div className="space-y-3 pt-3 border-t border-[#2A2A32] text-[11px]">
+                    <div className="flex items-center justify-between text-slate-300">
+                      <span className="font-medium text-white">{doc.category || "General"}</span>
+                      <span className="font-mono">{(doc.fileSize / 1024).toFixed(1)} KB</span>
+                    </div>
 
-                <div className="space-y-3 pt-3 border-t border-[#2A2A32] text-[11px]">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span className="font-medium text-white">{doc.category || "General"}</span>
-                    <span className="font-mono">{(doc.fileSize / 1024).toFixed(1)} KB</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setViewingDoc(doc);
-                      }}
-                      className="flex items-center gap-1 text-xs text-[#FF8C42] font-semibold hover:underline"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Read Document</span>
-                    </button>
-
-                    {superAdmin && (
+                    <div className="flex items-center justify-between pt-1">
                       <button
                         type="button"
-                        onClick={(e) => handleDelete(doc.id, doc.title, e)}
-                        className="p-1.5 rounded-lg text-[#666] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                        title="Delete Document"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewingDoc(doc);
+                        }}
+                        className="flex items-center gap-1 text-xs text-[#FF8C42] font-semibold hover:underline"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Read Document</span>
                       </button>
-                    )}
+
+                      {canManageDocs && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleDelete(doc.id, doc.title, e)}
+                          className="p-1.5 rounded-lg text-[#666] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Upload Document Modal */}
       {isUploadOpen && (
@@ -638,7 +767,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
           isOpen={isUploadOpen}
           onClose={() => setIsUploadOpen(false)}
           onUploaded={fetchDocuments}
-          initialDepartment={selectedDept === "ALL_DEPTS" ? "DEVELOPMENT" : selectedDept}
+          initialDepartment={selectedDept === "ALL_DEPTS" ? (currentUser?.department?.toUpperCase()?.includes("UI") ? "UI_UX" : "DEVELOPMENT") : selectedDept}
           initialCategory={selectedCategory === "ALL_CATEGORIES" ? "General" : selectedCategory}
           initialPhase={selectedPhase === "ALL_PHASES" ? 1 : parseInt(selectedPhase) || 1}
         />

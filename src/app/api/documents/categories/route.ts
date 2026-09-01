@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const currentUser = await getCurrentUserFromRequest(request);
-    if (!currentUser || !isSuperAdmin(currentUser)) {
-      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Super Admin permission required" } }, { status: 403 });
+    const canManage = isSuperAdmin(currentUser) || isManager(currentUser) || isTeamLead(currentUser?.role);
+    if (!currentUser || !canManage) {
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Manager, Team Lead, or Admin permission required" } }, { status: 403 });
     }
 
     const { name, department, description, sortOrder = 0 } = await request.json();

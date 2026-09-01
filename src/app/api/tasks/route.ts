@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 import { processAutomations } from "@/lib/automations";
 import { eventHub } from "@/lib/events";
 
@@ -361,6 +361,7 @@ export async function POST(request: NextRequest) {
         dueDate: dueDate ? new Date(dueDate) : (endDate ? new Date(endDate) : null),
         estimatedHours: Number(estimatedHours) || 0,
         position: taskCount,
+        accountableId: accountableId || null,
         assignees: {
           create: uniqueAssigneeIds.map((userId: string) => ({ userId })),
         },
@@ -401,6 +402,24 @@ export async function POST(request: NextRequest) {
       });
     } catch (e) {
       console.warn("Activity record warning:", e);
+    }
+
+    // Trigger notification for accountable reviewer
+    if (accountableId && accountableId !== currentUser.id) {
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: accountableId,
+            type: "TASK_ASSIGNED",
+            title: `Review Assigned: #${task.taskKey}`,
+            message: `${currentUser.name} assigned you as Accountable for review on ${task.taskKey}: "${task.title}"`,
+            taskId: task.taskKey,
+            isRead: false,
+          },
+        });
+      } catch (e) {
+        console.warn("Accountable notification warning:", e);
+      }
     }
 
     // Trigger automations for assigned users safely

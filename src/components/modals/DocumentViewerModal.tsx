@@ -23,7 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatDate, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
-import { isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 
 interface DocumentViewerModalProps {
   isOpen: boolean;
@@ -46,6 +46,7 @@ export function DocumentViewerModal({
   const [contentError, setContentError] = useState<string | null>(null);
 
   const superAdmin = isSuperAdmin(currentUser?.role || currentUser);
+  const canManage = superAdmin || isManager(currentUser?.role || currentUser) || isTeamLead(currentUser?.role || currentUser);
 
   const fileExt = document?.fileName?.split(".").pop()?.toLowerCase() || "";
   const isImage = ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"].includes(fileExt);
@@ -237,15 +238,15 @@ export function DocumentViewerModal({
               </span>
             )}
 
-            {/* Super Admin Download Option */}
-            {superAdmin && (
+            {/* Management & Admin Download Option */}
+            {canManage && (
               <a
                 href={document.fileUrl}
                 download={document.fileName}
                 target="_blank"
                 rel="noreferrer"
                 className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#252528] hover:bg-[#333] text-xs font-bold text-white flex items-center gap-1.5 transition-colors"
-                title="Super Admin Download"
+                title="Download Document"
               >
                 <Download className="w-3.5 h-3.5 text-[#FF6200]" />
                 <span className="hidden sm:inline">Download</span>

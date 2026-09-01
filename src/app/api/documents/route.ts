@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 import { uploadFileToStorage } from "@/lib/storage";
 
 // Department normalizer helper
@@ -36,26 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Build department access filter
     let departmentFilter: any = undefined;
-
-    if (superAdmin) {
-      if (deptParam && deptParam !== "ALL_DEPTS") {
-        departmentFilter = deptParam.toUpperCase();
-      }
-    } else {
-      // Normal member is restricted to their department and "ALL"
-      const allowed = ["ALL", "GENERAL", "COMPANY", userDept];
-      if (deptParam && deptParam !== "ALL_DEPTS") {
-        const target = deptParam.toUpperCase();
-        if (!allowed.includes(target)) {
-          return NextResponse.json({
-            success: false,
-            error: { code: "FORBIDDEN", message: "You do not have permission to view documents from other departments." },
-          }, { status: 403 });
-        }
-        departmentFilter = target;
-      } else {
-        departmentFilter = { in: allowed };
-      }
+    if (deptParam && deptParam !== "ALL_DEPTS") {
+      departmentFilter = deptParam.toUpperCase();
     }
 
     const whereClause: any = {};
@@ -130,10 +112,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    // Strictly check Super Admin permission
-    if (!isSuperAdmin(currentUser)) {
+    // Allow Super Admins, Managers, and Team Leads to upload and publish documentation
+    const canUpload = isSuperAdmin(currentUser) || isManager(currentUser) || isTeamLead(currentUser?.role);
+    if (!canUpload) {
       return NextResponse.json(
-        { success: false, error: { code: "FORBIDDEN", message: "Only Super Administrators can upload and manage organization documents." } },
+        { success: false, error: { code: "FORBIDDEN", message: "Only Managers, Team Leads, and Administrators can upload organization documents." } },
         { status: 403 }
       );
     }

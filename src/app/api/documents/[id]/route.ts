@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 
 function normalizeDepartment(dept?: string | null): string {
   if (!dept) return "GENERAL";
@@ -49,14 +49,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const superAdmin = isSuperAdmin(currentUser);
-    const userDept = normalizeDepartment(currentUser.department || currentUser.jobTitle);
+    const canManageDocs = superAdmin || isManager(currentUser) || isTeamLead(currentUser?.role);
 
-    // Verify department access
+    // Verify document access
     if (!superAdmin) {
-      const allowed = ["ALL", "GENERAL", userDept];
-      if (!allowed.includes(doc.department)) {
+      if (doc.status !== "PUBLISHED" && !canManageDocs && doc.uploadedById !== currentUser.id) {
         return NextResponse.json(
           { success: false, error: { code: "FORBIDDEN", message: "You do not have permission to view this document." } },
+          { status: 403 }
+        );
+      }
+      if (doc.visibility === "ADMIN_ONLY" && !superAdmin) {
+        return NextResponse.json(
+          { success: false, error: { code: "FORBIDDEN", message: "This document is restricted to administrators." } },
           { status: 403 }
         );
       }
@@ -78,9 +83,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    if (!isSuperAdmin(currentUser)) {
-      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Only Super Admin can delete documents" } }, { status: 403 });
-    }
+    const superAdmin = isSuperAdmin(currentUser);
+    const canManageDocs = superAdmin || isManager(currentUser) || isTeamLead(currentUser?.role);
 
     const { id } = await params;
     let existing: any = null;
@@ -94,6 +98,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     if (!existing) {
       return NextResponse.json({ success: false, error: { code: "NOT_FOUND", message: "Document not found" } }, { status: 404 });
+    }
+
+    const canDelete = canManageDocs || existing.uploadedById === currentUser.id;
+    if (!canDelete) {
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "You do not have permission to delete this document" } }, { status: 403 });
     }
 
     if ((prisma as any).organizationDocument?.delete) {

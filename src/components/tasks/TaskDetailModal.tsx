@@ -46,11 +46,14 @@ import {
   Strikethrough,
   Code,
   Link,
-  List,
   Quote,
   RotateCcw,
+  Lock,
+  Unlock,
+  ShieldAlert,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
+import { isSuperAdmin } from "@/lib/permissions";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 import { RaiseBugModal } from "@/components/modals/RaiseBugModal";
 import { BugDetailModal } from "@/components/qa/BugDetailModal";
@@ -145,6 +148,13 @@ export function TaskDetailModal({
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSavingField, setIsSavingField] = useState(false);
+
+  // Reopen Request State (Closed task lock protection)
+  const isUserSuperAdmin = isSuperAdmin(currentUser);
+  const [isReopenModalOpen, setIsReopenModalOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState("");
+  const [isSubmittingReopen, setIsSubmittingReopen] = useState(false);
+  const [reopenSuccessMsg, setReopenSuccessMsg] = useState<string | null>(null);
 
   const fetchTaskDetails = async (showModalLoader = false) => {
     if (!taskKey) return;
@@ -279,6 +289,37 @@ export function TaskDetailModal({
       console.error("Failed to share/tag task:", err);
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  // Submit Reopen Request to Super Admins
+  const handleSendReopenRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reopenReason.trim()) return;
+    setIsSubmittingReopen(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskKey}/reopen-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reopenReason.trim() }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setReopenSuccessMsg("Reopen request sent to Super Admins successfully!");
+        setTimeout(() => {
+          setIsReopenModalOpen(false);
+          setReopenSuccessMsg(null);
+          setReopenReason("");
+        }, 1500);
+        fetchTaskDetails();
+        if (onTaskUpdated) onTaskUpdated();
+      } else {
+        alert(json.error?.message || "Failed to submit reopen request");
+      }
+    } catch (err: any) {
+      alert(err.message || "Network error occurred");
+    } finally {
+      setIsSubmittingReopen(false);
     }
   };
 
@@ -624,22 +665,67 @@ export function TaskDetailModal({
         {/* STATUS & META BAR: Reference to OpenProject Screenshot #1 */}
         <div className="px-6 py-2.5 border-b border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#141414] flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-3">
-            {/* Status Dropdown */}
-            <select
-              value={task.status}
-              onChange={(e) => handleUpdateField({ status: e.target.value })}
-              className={`px-3 py-1 rounded-lg font-bold text-xs border cursor-pointer focus:outline-none ${getStatusColor(
-                task.status
-              )}`}
-            >
-              <option value="TODO">To Do</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="IN_REVIEW">In Review</option>
-              <option value="READY_FOR_TESTING">Ready for Testing</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CLOSED">Closed</option>
-              <option value="BLOCKED">Blocked</option>
-            </select>
+            {/* Status Selector / Closed Task Lock */}
+            {task.status === "CLOSED" && !isUserSuperAdmin ? (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-sm">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Closed & Locked</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsReopenModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                  title="Request Super Admin to reopen this closed task"
+                >
+                  <Unlock className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Request Reopen</span>
+                </button>
+              </div>
+            ) : task.status === "CLOSED" && isUserSuperAdmin ? (
+              <div className="flex items-center gap-2">
+                <select
+                  value={task.status}
+                  onChange={(e) => handleUpdateField({ status: e.target.value })}
+                  className={`px-3 py-1 rounded-lg font-bold text-xs border cursor-pointer focus:outline-none ${getStatusColor(
+                    task.status
+                  )}`}
+                >
+                  <option value="CLOSED">Closed (Locked)</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="TODO">To Do</option>
+                  <option value="IN_REVIEW">In Review</option>
+                  <option value="READY_FOR_TESTING">Ready for Testing</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="BLOCKED">Blocked</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateField({ status: "IN_PROGRESS" })}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white transition-all cursor-pointer shadow-sm"
+                  title="Super Admin 1-Click Reopen"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reopen Task</span>
+                </button>
+              </div>
+            ) : (
+              <select
+                value={task.status}
+                onChange={(e) => handleUpdateField({ status: e.target.value })}
+                className={`px-3 py-1 rounded-lg font-bold text-xs border cursor-pointer focus:outline-none ${getStatusColor(
+                  task.status
+                )}`}
+              >
+                <option value="TODO">To Do</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="IN_REVIEW">In Review</option>
+                <option value="READY_FOR_TESTING">Ready for Testing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CLOSED">Closed</option>
+                <option value="BLOCKED">Blocked</option>
+              </select>
+            )}
 
             {/* ID & Real Created by & Last Updated */}
             <span className="text-gray-500 dark:text-[#888898] text-[11px]">
@@ -668,6 +754,26 @@ export function TaskDetailModal({
             </button>
           </div>
         </div>
+
+        {/* Super Admin Reopen Banner for Closed Tasks */}
+        {isUserSuperAdmin && task.status === "CLOSED" && (
+          <div className="mx-6 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs animate-fade-in shadow-sm">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+              <ShieldAlert className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <span>
+                <strong>Closed Ticket Protection:</strong> This ticket is locked from team members. Click to reopen and move it back to In Progress.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleUpdateField({ status: "IN_PROGRESS" })}
+              className="px-3.5 py-1.5 rounded-xl bg-[#FF6200] hover:bg-[#E55800] text-white font-bold text-xs flex items-center gap-1.5 shadow-md flex-shrink-0 cursor-pointer transition-all active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Approve & Reopen Task</span>
+            </button>
+          </div>
+        )}
 
         {/* 2-COLUMN MAIN CONTENT (Exact OpenProject Layout) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -1820,20 +1926,88 @@ export function TaskDetailModal({
           }}
         />
 
-        {/* Bug Detail Modal */}
-        {selectedBugKey && (
-          <BugDetailModal
-            bugKey={selectedBugKey}
-            isOpen={Boolean(selectedBugKey)}
-            onClose={() => setSelectedBugKey(null)}
-            onSelectTask={() => {}}
-            onBugUpdated={() => {
-              fetchTaskDetails();
-              if (onTaskUpdated) onTaskUpdated();
-            }}
-            users={users}
-            currentUser={currentUser}
-          />
+        {/* Request Reopen Modal (Closed Task Lock) */}
+        {isReopenModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in text-gray-900 dark:text-[#F3F4F6]">
+            <form
+              onSubmit={handleSendReopenRequest}
+              className="relative w-full max-w-md bg-white dark:bg-[#18181C] border border-gray-200 dark:border-[#2E2E36] rounded-3xl shadow-2xl p-6 space-y-4 overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-[#26262E] pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                    <Unlock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                      Request Task Reopen
+                    </h3>
+                    <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                      Super Admin authorization required
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsReopenModalOpen(false)}
+                  className="p-1 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {reopenSuccessMsg ? (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{reopenSuccessMsg}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#121214] border border-gray-100 dark:border-[#26262E] text-xs text-gray-600 dark:text-[#999] space-y-1">
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      Task #{task.taskKey} is currently closed.
+                    </p>
+                    <p>
+                      Please provide a clear reason why this task needs to be reopened. All Super Admins will be notified immediately to review and approve.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-[#ACACB8] mb-1.5">
+                      Reason for Reopening <span className="text-[#FF6200]">*</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={reopenReason}
+                      onChange={(e) => setReopenReason(e.target.value)}
+                      placeholder="e.g., Regression bug found in QA testing; additional scope required..."
+                      className="w-full bg-gray-50 dark:bg-[#121214] border border-gray-200 dark:border-[#333] rounded-2xl p-3 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF6200]"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-[#26262E]">
+                    <button
+                      type="button"
+                      onClick={() => setIsReopenModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReopen || !reopenReason.trim()}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{isSubmittingReopen ? "Submitting..." : "Send Request to Super Admin"}</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </div>
         )}
       </div>
     </div>

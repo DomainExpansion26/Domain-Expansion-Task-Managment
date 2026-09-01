@@ -29,6 +29,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, getTypeIcon, formatDate, getInitials, getAvatarGradient } from "@/lib/utils";
+import { isSuperAdmin } from "@/lib/permissions";
 import { TaskRelationsModal } from "@/components/modals/TaskRelationsModal";
 import { ProjectMembersModal } from "@/components/modals/ProjectMembersModal";
 
@@ -159,6 +160,14 @@ export function KanbanView({
     e.preventDefault();
     const taskKey = e.dataTransfer.getData("text/plain") || draggedTaskKey;
     if (taskKey) {
+      const task = tasks.find((t) => t.taskKey === taskKey);
+      if (task && (task.status === "CLOSED" || task.status === "DONE") && columnStatus !== "CLOSED" && columnStatus !== "DONE") {
+        if (!isSuperAdmin(currentUser)) {
+          alert("This task is closed and locked. Only Super Admins can reopen closed tasks. Please open the task and click 'Request Reopen'.");
+          setDraggedTaskKey(null);
+          return;
+        }
+      }
       onStatusChange(taskKey, columnStatus);
     }
     setDraggedTaskKey(null);
