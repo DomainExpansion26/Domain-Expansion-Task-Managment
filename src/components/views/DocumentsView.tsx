@@ -654,112 +654,124 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             )}
           </div>
         </div>
-      )}
-
-      {/* Documents Grid - Only shown when inside a specific category or when searching */}
-      {(selectedCategory !== "ALL_CATEGORIES" || searchQuery.trim() !== "") && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+      )}      {/* Documents Grid - Always shown so all team members can see all published documents */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-extrabold text-white tracking-tight flex items-center gap-2">
               <FileText className="w-4 h-4 text-[#FF6200]" />
               <span>
                 {selectedCategory !== "ALL_CATEGORIES"
                   ? `${selectedCategory} Documents (${documents.length})`
-                  : `Search Results (${documents.length})`}
+                  : searchQuery.trim() !== ""
+                  ? `Search Results for "${searchQuery}" (${documents.length})`
+                  : `All Organization Documents (${documents.length})`}
               </span>
             </h3>
-            <span className="text-[10px] text-slate-300 font-mono">
-              {superAdmin ? "Super Admin Full Access" : canManageDocs ? "Management Access" : "Read-Only Protected"}
-            </span>
+            {selectedCategory !== "ALL_CATEGORIES" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory("ALL_CATEGORIES");
+                  setSelectedPhase("ALL_PHASES");
+                }}
+                className="text-[11px] text-[#FF8C42] hover:underline px-2 py-0.5 rounded-lg bg-[#FF6200]/10 border border-[#FF6200]/20 font-semibold"
+              >
+                Clear Category Filter &times;
+              </button>
+            )}
           </div>
+          <span className="text-[10px] text-slate-300 font-mono">
+            {superAdmin ? "Super Admin Full Access" : canManageDocs ? "Management Access" : "Read-Only Protected"}
+          </span>
+        </div>
 
-          {errorMsg && (
-            <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+        {errorMsg && (
+          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
-          {loading ? (
-            <div className="p-12 text-center text-xs text-slate-300">Loading documents...</div>
-          ) : documents.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-[#141418] border border-[#2A2A32] text-center space-y-3">
-              <FileText className="w-10 h-10 text-[#666] mx-auto" />
-              <div className="font-bold text-white text-sm">No documentation available</div>
-              <p className="text-xs text-[#888898] max-w-sm mx-auto">
-                There are currently no documents uploaded in this category.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  onClick={() => setViewingDoc(doc)}
-                  className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="p-3 rounded-2xl bg-[#1E1E24] border border-[#333] flex-shrink-0">
-                        {getFileIcon(doc.fileName)}
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                        <span className="px-2 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 text-[10px] font-mono font-bold">
-                          v{doc.version || "1.0"}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                          Phase {doc.phaseNumber}
-                        </span>
-                      </div>
+        {loading ? (
+          <div className="p-12 text-center text-xs text-slate-300">Loading documents...</div>
+        ) : documents.length === 0 ? (
+          <div className="p-12 rounded-3xl bg-[#141418] border border-[#2A2A32] text-center space-y-3">
+            <FileText className="w-10 h-10 text-[#666] mx-auto" />
+            <div className="font-bold text-white text-sm">No documentation available in this view</div>
+            <p className="text-xs text-[#888898] max-w-sm mx-auto">
+              There are currently no documents matching your selected department or category filters.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {documents.map((doc) => (
+              <div
+                key={doc.id}
+                onClick={() => setViewingDoc(doc)}
+                className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md hover:translate-y-[-2px]"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="p-3 rounded-2xl bg-[#1E1E24] border border-[#333] flex-shrink-0">
+                      {getFileIcon(doc.fileName)}
                     </div>
-
-                    <div>
-                      <h4 className="font-bold text-white text-sm group-hover:text-[#FF8C42] transition-colors line-clamp-2">
-                        {doc.title}
-                      </h4>
-                      {doc.description && (
-                        <p className="text-xs text-slate-300 line-clamp-2 mt-1">{doc.description}</p>
-                      )}
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      <span className="px-2 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 text-[10px] font-mono font-bold">
+                        v{doc.version || "1.0"}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                        Phase {doc.phaseNumber}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-[#2A2A32] text-[11px]">
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="font-medium text-white">{doc.category || "General"}</span>
-                      <span className="font-mono">{(doc.fileSize / 1024).toFixed(1)} KB</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setViewingDoc(doc);
-                        }}
-                        className="flex items-center gap-1 text-xs text-[#FF8C42] font-semibold hover:underline"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Read Document</span>
-                      </button>
-
-                      {canManageDocs && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleDelete(doc.id, doc.title, e)}
-                          className="p-1.5 rounded-lg text-[#666] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          title="Delete Document"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
+                  <div>
+                    <h4 className="font-bold text-white text-sm group-hover:text-[#FF8C42] transition-colors line-clamp-2">
+                      {doc.title}
+                    </h4>
+                    {doc.description && (
+                      <p className="text-xs text-slate-300 line-clamp-2 mt-1">{doc.description}</p>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+
+                <div className="space-y-3 pt-3 border-t border-[#2A2A32] text-[11px]">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span className="font-medium text-white">{doc.category || "General"}</span>
+                    <span className="font-mono">{(doc.fileSize / 1024).toFixed(1)} KB</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingDoc(doc);
+                      }}
+                      className="flex items-center gap-1 text-xs text-[#FF8C42] font-semibold hover:underline"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Read Document</span>
+                    </button>
+
+                    {canManageDocs && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDelete(doc.id, doc.title, e)}
+                        className="p-1.5 rounded-lg text-[#666] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        title="Delete Document"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Upload Document Modal */}
       {isUploadOpen && (

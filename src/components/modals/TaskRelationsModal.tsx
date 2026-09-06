@@ -11,6 +11,10 @@ import {
   Bug,
   ListTodo,
   ExternalLink,
+  Trash2,
+  Copy,
+  Unlink,
+  Loader2,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor } from "@/lib/utils";
 
@@ -19,6 +23,7 @@ interface TaskRelationsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectTask?: (key: string) => void;
+  onTaskDeleted?: () => void;
 }
 
 export function TaskRelationsModal({
@@ -26,26 +31,84 @@ export function TaskRelationsModal({
   isOpen,
   onClose,
   onSelectTask,
+  onTaskDeleted,
 }: TaskRelationsModalProps) {
   const [relationsData, setRelationsData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [unlinkingId, setUnlinkingId] = useState<string | null>(null);
+
+  const fetchRelations = () => {
+    if (!taskKey) return;
+    setLoading(true);
+    fetch(`/api/tasks/${taskKey}/relations`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success) {
+          setRelationsData(json.data);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (isOpen && taskKey) {
-      setLoading(true);
-      fetch(`/api/tasks/${taskKey}/relations`)
-        .then((res) => res.json())
-        .then((json) => {
-          if (json.success) {
-            setRelationsData(json.data);
-          }
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      fetchRelations();
     }
   }, [isOpen, taskKey]);
 
+  const handleDeleteDuplicateTask = async (targetTaskKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to permanently delete duplicate task ${targetTaskKey}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(targetTaskKey);
+    try {
+      const res = await fetch(`/api/tasks/${targetTaskKey}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        fetchRelations();
+        if (onTaskDeleted) onTaskDeleted();
+      } else {
+        alert(json.error?.message || "Failed to delete task");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting task");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleUnlinkRelation = async (relationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Remove relation link between these tasks?")) return;
+
+    setUnlinkingId(relationId);
+    try {
+      const res = await fetch(`/api/tasks/${taskKey}/relations?relationId=${relationId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        fetchRelations();
+      } else {
+        alert(json.error?.message || "Failed to unlink relation");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error unlinking relation");
+    } finally {
+      setUnlinkingId(null);
+    }
+  };
+
   if (!isOpen) return null;
+
+  const duplicates = relationsData?.relatedTasks?.filter((r: any) => r.type === "DUPLICATES" || r.type === "DUPLICATE") || [];
+  const otherRelations = relationsData?.relatedTasks?.filter((r: any) => r.type !== "DUPLICATES" && r.type !== "DUPLICATE") || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -58,10 +121,10 @@ export function TaskRelationsModal({
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Task Relations & Lineage</h2>
-              <p className="text-[11px] text-[#888898]">Parent, child, related user stories, and QA bugs for {taskKey}</p>
+              <p className="text-[11px] text-[#888898]">Parent, children, duplicates, and QA bugs for {taskKey}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -69,10 +132,73 @@ export function TaskRelationsModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
           {loading ? (
-            <div className="py-12 text-center text-[#888898]">Loading relations for {taskKey}...</div>
+            <div className="py-12 flex flex-col items-center justify-center gap-2 text-[#888898]">
+              <Loader2 className="w-5 h-5 animate-spin text-[#FF6200]" />
+              <span>Loading relations for {taskKey}...</span>
+            </div>
           ) : (
             <>
-              {/* 1. Parent Task */}
+              {/* 1. Duplicate Tasks Section */}
+              {duplicates.length > 0 && (
+                <div className="space-y-2 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Copy className="w-3.5 h-3.5" /> Duplicate Tasks ({duplicates.length})
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {duplicates.map((rel: any) => (
+                      <div
+                        key={rel.relationId}
+                        onClick={() => {
+                          if (onSelectTask && rel.task?.taskKey) {
+                            onSelectTask(rel.task.taskKey);
+                            onClose();
+                          }
+                        }}
+                        className="p-3 rounded-lg bg-[#141414] border border-amber-500/20 hover:border-amber-500/60 transition-colors flex items-center justify-between cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          <span className="font-mono font-bold text-amber-400 shrink-0">{rel.task?.taskKey}</span>
+                          <span className="text-white truncate group-hover:text-amber-300 transition-colors font-medium">
+                            {rel.task?.title}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-slate-300 font-mono">
+                            {rel.task?.status}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleUnlinkRelation(rel.relationId, e)}
+                            disabled={unlinkingId === rel.relationId}
+                            title="Unlink duplicate relation"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                          >
+                            <Unlink className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteDuplicateTask(rel.task?.taskKey, e)}
+                            disabled={deletingId === rel.task?.taskKey}
+                            title="Delete this duplicate task"
+                            className="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-[11px] font-semibold flex items-center gap-1.5 transition-colors"
+                          >
+                            {deletingId === rel.task?.taskKey ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                            Delete Duplicate
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Parent Task */}
               <div className="space-y-2">
                 <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">Parent Task</h3>
                 {relationsData?.parent ? (
@@ -100,7 +226,7 @@ export function TaskRelationsModal({
                 )}
               </div>
 
-              {/* 2. Child Tasks */}
+              {/* 3. Child Tasks */}
               <div className="space-y-2">
                 <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">
                   Child Tasks ({relationsData?.children?.length || 0})
@@ -122,9 +248,20 @@ export function TaskRelationsModal({
                           <span className="font-mono font-bold text-[#FF8C42]">{child.taskKey}</span>
                           <span className="text-white group-hover:text-[#FF8C42] transition-colors">{child.title}</span>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-slate-300 font-mono">
-                          {child.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-[#252525] text-slate-300 font-mono">
+                            {child.status}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteDuplicateTask(child.taskKey, e)}
+                            disabled={deletingId === child.taskKey}
+                            title="Delete this child task"
+                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -135,7 +272,49 @@ export function TaskRelationsModal({
                 )}
               </div>
 
-              {/* 3. Related QA Tickets */}
+              {/* 4. Other Relations */}
+              {otherRelations.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">
+                    Linked Related Tasks ({otherRelations.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {otherRelations.map((rel: any) => (
+                      <div
+                        key={rel.relationId}
+                        onClick={() => {
+                          if (onSelectTask && rel.task?.taskKey) {
+                            onSelectTask(rel.task.taskKey);
+                            onClose();
+                          }
+                        }}
+                        className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/50 transition-colors flex items-center justify-between cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 font-semibold uppercase">
+                            {rel.type}
+                          </span>
+                          <span className="font-mono font-bold text-white group-hover:text-[#FF8C42]">{rel.task?.taskKey}</span>
+                          <span className="text-[#888898]">{rel.task?.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => handleUnlinkRelation(rel.relationId, e)}
+                            disabled={unlinkingId === rel.relationId}
+                            title="Unlink relation"
+                            className="p-1 rounded bg-[#252525] hover:bg-[#303030] text-slate-400 hover:text-white transition-colors"
+                          >
+                            <Unlink className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. Related QA Tickets */}
               <div className="space-y-2">
                 <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">
                   Linked QA Tickets ({relationsData?.qaTickets?.length || 0})
@@ -164,10 +343,10 @@ export function TaskRelationsModal({
                 )}
               </div>
 
-              {/* 4. Related QA Bugs */}
+              {/* 6. Related QA Bugs */}
               <div className="space-y-2">
                 <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">
-                  Linked QA Bugs ({relationsData?.qaBugs?.length || 0})
+                  Linked QA Bugs / Defects ({relationsData?.qaBugs?.length || 0})
                 </h3>
                 {relationsData?.qaBugs?.length > 0 ? (
                   <div className="space-y-2">
@@ -214,3 +393,4 @@ export function TaskRelationsModal({
     </div>
   );
 }
+

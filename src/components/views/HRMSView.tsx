@@ -1486,11 +1486,13 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                           <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-bold">
                             {tl.leaveType}
                           </span>
-                          <span className="font-mono font-bold text-gray-500">{tl.daysCount} Day(s)</span>
+                          <span className="font-mono font-bold text-gray-500">
+                            {tl.daysCount === 0.5 ? "0.5 Day (Half Day)" : `${tl.daysCount} Day(s)`}
+                          </span>
                           <span className="text-[10px] text-gray-400">({tl.user?.role})</span>
                         </div>
                         <div className="text-gray-500 font-mono text-[11px]">
-                          Period: {formatDate(tl.startDate)} - {formatDate(tl.endDate)}
+                          Period: {formatDate(tl.startDate)}{tl.daysCount > 0.5 ? ` - ${formatDate(tl.endDate)}` : ""}
                         </div>
                         <div className="text-gray-700 dark:text-[#D1D5DB] italic">"{tl.reason}"</div>
                       </div>
@@ -1557,7 +1559,15 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                         <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{l.leaveType}</td>
                         <td className="py-3 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">{formatDate(l.startDate)}</td>
                         <td className="py-3 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">{formatDate(l.endDate)}</td>
-                        <td className="py-3 px-3 font-mono font-bold">{l.daysCount}</td>
+                        <td className="py-3 px-3 font-mono font-bold">
+                          {l.daysCount === 0.5 ? (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-mono text-[10px]">
+                              0.5 (Half)
+                            </span>
+                          ) : (
+                            l.daysCount
+                          )}
+                        </td>
                         <td className="py-3 px-3 text-gray-700 dark:text-[#D1D5DB]">{l.reason}</td>
                         <td className="py-3 px-3">
                           <span

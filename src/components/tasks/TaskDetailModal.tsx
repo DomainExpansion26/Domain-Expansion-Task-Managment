@@ -79,7 +79,7 @@ export function TaskDetailModal({
 }: TaskDetailModalProps) {
   const [task, setTask] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"ACTIVITY" | "FILES" | "RELATIONS" | "WATCHERS">("ACTIVITY");
+  const [activeTab, setActiveTab] = useState<"ACTIVITY" | "FILES" | "RELATIONS" | "WATCHERS" | "BUGS">("ACTIVITY");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Editable Fields State
@@ -323,46 +323,6 @@ export function TaskDetailModal({
     }
   };
 
-  // Multiple Files Upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement> | File[]) => {
-    let filesToUpload: File[] = [];
-    if (Array.isArray(e)) {
-      filesToUpload = e;
-    } else if (e.target.files) {
-      filesToUpload = Array.from(e.target.files);
-    }
-
-    if (filesToUpload.length === 0 || !task) return;
-
-    setIsUploadingFile(true);
-    setUploadError(null);
-    try {
-      const formData = new FormData();
-      filesToUpload.forEach((file) => {
-        formData.append("files", file);
-      });
-      formData.append("taskId", task.id);
-      formData.append("projectId", task.projectId);
-
-      const res = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const json = await res.json();
-      if (json.success) {
-        fetchTaskDetails();
-        if (onTaskUpdated) onTaskUpdated();
-      } else {
-        setUploadError(json.error?.message || "Failed to upload file(s)");
-      }
-    } catch (err: any) {
-      setUploadError(err.message || "File upload failed");
-    } finally {
-      setIsUploadingFile(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
   // Add Comment with @Mention parsing
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -478,6 +438,96 @@ export function TaskDetailModal({
     }
   };
 
+  // Handle File Upload (multi-file and drag & drop)
+  const handleFileUpload = async (filesOrEvent: React.ChangeEvent<HTMLInputElement> | File[]) => {
+    let files: File[] = [];
+    if (Array.isArray(filesOrEvent)) {
+      files = filesOrEvent;
+    } else if (filesOrEvent?.target?.files) {
+      files = Array.from(filesOrEvent.target.files);
+    }
+
+    if (files.length === 0) return;
+
+    setIsUploadingFile(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("taskId", task?.id || taskKey);
+      if (task?.projectId) formData.append("projectId", task.projectId);
+      formData.append("folder", "tasks");
+
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        fetchTaskDetails();
+        if (onTaskUpdated) onTaskUpdated();
+      } else {
+        setUploadError(json.error?.message || "Failed to upload files");
+      }
+    } catch (err: any) {
+      console.error("File upload error:", err);
+      setUploadError(err.message || "Failed to upload file(s)");
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
+  // Handle Delete Attachment
+  const handleDeleteAttachment = async (attachmentId: string, fileName: string) => {
+    if (!confirm(`Are you sure you want to delete attachment "${fileName}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/storage/attachments/${attachmentId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchTaskDetails();
+        if (onTaskUpdated) onTaskUpdated();
+      } else {
+        alert(json.error?.message || "Failed to delete attachment");
+      }
+    } catch (err) {
+      console.error("Delete attachment error:", err);
+    }
+  };
+
+  // Handle Delete Task (Super Admin, Manager, Project Lead, or Task Creator)
+  const [isDeletingTask, setIsDeletingTask] = useState(false);
+  const handleDeleteTask = async () => {
+    if (!confirm(`Are you sure you want to permanently delete task ${taskKey}: "${task?.title}"? This cannot be undone.`)) return;
+
+    setIsDeletingTask(true);
+    try {
+      const res = await fetch(`/api/tasks/${taskKey}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        onClose();
+        if (onTaskUpdated) onTaskUpdated();
+      } else {
+        alert(json.error?.message || "Failed to delete task");
+      }
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+      alert("Failed to delete task due to network error.");
+    } finally {
+      setIsDeletingTask(false);
+    }
+  };
+
   // All workspace users (no project restrictions for tagging, assigning, or mentioning)
   const allAvailableUsers = React.useMemo(() => {
     const map = new Map<string, any>();
@@ -550,8 +600,17 @@ export function TaskDetailModal({
   const isWatching = Boolean(task.isWatching);
   const watchersCount = Array.isArray(task.watchers) ? task.watchers.length : 0;
   const filesCount = Array.isArray(task.attachments) ? task.attachments.length : 0;
+  const bugsCount = Array.isArray(task.qaBugs) ? task.qaBugs.length : 0;
   const relationsCount = (task.relationsAsSource?.length || 0) + (task.relationsAsTarget?.length || 0) + (task.subtasks?.length || 0);
   const activitiesCount = (task.activities?.length || 0) + (task.comments?.length || 0);
+
+  const canDeleteTask =
+    isUserSuperAdmin ||
+    currentUser?.role === "MANAGER" ||
+    currentUser?.role === "PROJECT_MANAGER" ||
+    task.reporterId === currentUser?.id ||
+    task.project?.leadId === currentUser?.id ||
+    task.project?.teamLeadId === currentUser?.id;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
@@ -616,6 +675,16 @@ export function TaskDetailModal({
 
           {/* Action Toolbar on Top Right */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Raise Bug / Defect Button */}
+            <button
+              onClick={() => setIsRaiseBugOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-600 dark:text-red-400 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              title="Log defect or QA bug against this task"
+            >
+              <Bug className="w-3.5 h-3.5 text-red-500" />
+              <span>+ Raise Bug</span>
+            </button>
+
             {/* Tag for Testing / Share Button */}
             <button
               onClick={() => {
@@ -643,6 +712,20 @@ export function TaskDetailModal({
               <Eye className="w-3.5 h-3.5" />
               <span>{isWatching ? `Watching (${watchersCount})` : `Watch (${watchersCount})`}</span>
             </button>
+
+            {/* Delete Task Button */}
+            {canDeleteTask && (
+              <button
+                type="button"
+                disabled={isDeletingTask}
+                onClick={handleDeleteTask}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 transition-all cursor-pointer disabled:opacity-50"
+                title="Permanently delete this task"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeletingTask ? "Deleting..." : "Delete"}</span>
+              </button>
+            )}
 
             {/* Fullscreen Toggle */}
             <button
@@ -1168,6 +1251,23 @@ export function TaskDetailModal({
               >
                 WATCHERS ({watchersCount})
               </button>
+
+              <button
+                onClick={() => setActiveTab("BUGS")}
+                className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === "BUGS"
+                    ? "border-red-500 text-red-500"
+                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                <Bug className="w-3.5 h-3.5" />
+                <span>BUGS &amp; DEFECTS ({bugsCount})</span>
+                {bugsCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-red-500/20 text-red-400 font-mono font-bold">
+                    {bugsCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* TAB CONTENT AREA */}
@@ -1536,23 +1636,36 @@ export function TaskDetailModal({
                           key={att.id}
                           className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] shadow-sm text-xs"
                         >
-                          <div className="flex items-center gap-3">
-                            <File className="w-5 h-5 text-[#FF6200]" />
-                            <div>
-                              <div className="font-bold text-gray-900 dark:text-white">{att.fileName}</div>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <File className="w-5 h-5 text-[#FF6200] flex-shrink-0" />
+                            <div className="min-w-0">
+                              <div className="font-bold text-gray-900 dark:text-white truncate">{att.fileName}</div>
                               <div className="text-[10px] text-gray-400 dark:text-[#888898]">
                                 {(att.fileSize / 1024).toFixed(1)} KB &bull; Uploaded by {att.uploadedBy?.name || "Member"} on {formatDate(att.createdAt)}
                               </div>
                             </div>
                           </div>
-                          <a
-                            href={att.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8]"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <a
+                              href={att.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8]"
+                              title="Download attachment"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                            {(isUserSuperAdmin || att.uploadedById === currentUser?.id) && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAttachment(att.id, att.fileName)}
+                                className="p-2 rounded-xl border border-red-500/30 hover:bg-red-500/15 text-red-500 transition-colors"
+                                title="Delete attachment"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}
@@ -1570,7 +1683,7 @@ export function TaskDetailModal({
                     <button
                       type="button"
                       onClick={() => setIsRelationsOpen(true)}
-                      className="px-3 py-1.5 rounded-xl bg-[#0066CC] text-white text-xs font-bold shadow-sm"
+                      className="px-3 py-1.5 rounded-xl bg-[#0066CC] text-white text-xs font-bold shadow-sm cursor-pointer"
                     >
                       + Manage Relations
                     </button>
@@ -1634,6 +1747,100 @@ export function TaskDetailModal({
                           <div>
                             <div className="font-bold text-gray-900 dark:text-white">{w.name}</div>
                             <div className="text-[10px] text-gray-400 font-mono">{w.email}</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: BUGS & DEFECTS */}
+              {activeTab === "BUGS" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                        Linked QA Defects &amp; Bugs ({bugsCount})
+                      </span>
+                      <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                        Log unlimited bugs against this task for testing and resolution.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsRaiseBugOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-red-600/20 cursor-pointer"
+                    >
+                      <Bug className="w-3.5 h-3.5" />
+                      <span>+ Raise Defect</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {bugsCount === 0 ? (
+                      <div className="text-center py-12 border border-dashed border-gray-300 dark:border-[#2E2E2E] rounded-2xl space-y-3 p-6">
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 mx-auto flex items-center justify-center">
+                          <Bug className="w-5 h-5" />
+                        </div>
+                        <div className="text-xs font-bold text-gray-900 dark:text-white">
+                          No defects reported on this task yet
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                          If issues are found during development or QA verification, log them here.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setIsRaiseBugOpen(true)}
+                          className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-md inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Raise First Bug</span>
+                        </button>
+                      </div>
+                    ) : (
+                      task.qaBugs.map((bug: any) => (
+                        <div
+                          key={bug.id}
+                          onClick={() => setSelectedBugKey(bug.bugKey)}
+                          className="p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] hover:border-red-500/40 transition-all cursor-pointer space-y-2 group shadow-sm"
+                        >
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-red-500">{bug.bugKey}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase tracking-wider ${getStatusColor(bug.status)}`}>
+                                {bug.status?.replace(/_/g, " ")}
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${getPriorityColor(bug.priority)}`}>
+                                {bug.priority}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {formatDateTime(bug.updatedAt || bug.createdAt)}
+                            </span>
+                          </div>
+
+                          <div className="font-bold text-gray-900 dark:text-white group-hover:text-red-400 transition-colors text-xs">
+                            {bug.title}
+                          </div>
+
+                          {bug.failureReason && (
+                            <div className="text-[10px] text-red-500 font-semibold">
+                              QA Fail Note: {bug.failureReason}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-[#262626] text-[10px] text-gray-500 dark:text-[#888898]">
+                            <div className="flex items-center gap-1.5">
+                              <span>Assigned to:</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">
+                                {bug.assignedTo?.name || "Unassigned"}
+                              </span>
+                            </div>
+                            <div>
+                              <span>Severity: </span>
+                              <span className="font-mono font-bold text-gray-700 dark:text-gray-300">{bug.severity || "MEDIUM"}</span>
+                            </div>
                           </div>
                         </div>
                       ))
@@ -1925,6 +2132,25 @@ export function TaskDetailModal({
             if (onTaskUpdated) onTaskUpdated();
           }}
         />
+
+        {/* Bug Detail Modal */}
+        {selectedBugKey && (
+          <BugDetailModal
+            bugKey={selectedBugKey}
+            isOpen={Boolean(selectedBugKey)}
+            onClose={() => setSelectedBugKey(null)}
+            onSelectTask={(key) => {
+              setSelectedBugKey(null);
+              if (onSelectTask) onSelectTask(key);
+            }}
+            onBugUpdated={() => {
+              fetchTaskDetails();
+              if (onTaskUpdated) onTaskUpdated();
+            }}
+            users={users}
+            currentUser={currentUser}
+          />
+        )}
 
         {/* Request Reopen Modal (Closed Task Lock) */}
         {isReopenModalOpen && (

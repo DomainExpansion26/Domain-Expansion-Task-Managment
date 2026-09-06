@@ -28,6 +28,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "NO_FILE", message: "No files provided for upload" } }, { status: 400 });
     }
 
+    let resolvedTaskId: string | null = null;
+    let resolvedProjectId: string | null = projectId || null;
+    let resolvedBugId: string | null = null;
+
+    if (taskId) {
+      const task = await prisma.task.findFirst({
+        where: { OR: [{ id: taskId }, { taskKey: taskId }, { taskKey: taskId.toUpperCase() }] },
+        select: { id: true, projectId: true },
+      });
+      if (task) {
+        resolvedTaskId = task.id;
+        if (!resolvedProjectId) resolvedProjectId = task.projectId;
+      }
+    }
+
+    if (bugId) {
+      const bug = await prisma.qABug.findFirst({
+        where: { OR: [{ id: bugId }, { bugKey: bugId }, { bugKey: bugId.toUpperCase() }] },
+        select: { id: true, projectId: true },
+      });
+      if (bug) {
+        resolvedBugId = bug.id;
+        if (!resolvedProjectId) resolvedProjectId = bug.projectId;
+      }
+    }
+
     // Upload all files in parallel
     const uploadPromises = files.map(async (file) => {
       const uploaded = await uploadFileToStorage(file, file.name, file.type || "application/octet-stream", folder);
@@ -38,10 +64,13 @@ export async function POST(request: NextRequest) {
           fileUrl: uploaded.fileUrl,
           fileSize: uploaded.fileSize,
           fileType: uploaded.fileType,
-          projectId: projectId || null,
-          taskId: taskId || null,
-          bugId: bugId || null,
+          projectId: resolvedProjectId,
+          taskId: resolvedTaskId,
+          bugId: resolvedBugId,
           uploadedById: currentUser.id,
+        },
+        include: {
+          uploadedBy: { select: { id: true, name: true, email: true, avatarUrl: true } },
         },
       });
 
@@ -55,9 +84,9 @@ export async function POST(request: NextRequest) {
             fileName: uploaded.fileName,
             fileSize: uploaded.fileSize,
             storagePath: uploaded.storagePath,
-            projectId,
-            taskId,
-            bugId,
+            projectId: resolvedProjectId,
+            taskId: resolvedTaskId,
+            bugId: resolvedBugId,
           }),
         },
       }).catch(() => {});

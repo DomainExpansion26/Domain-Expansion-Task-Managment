@@ -63,19 +63,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    const { leaveType, startDate, endDate, reason } = await request.json();
+    const { leaveType, startDate, endDate, reason, isHalfDay, halfDaySession, daysCount: requestedDays } = await request.json();
 
-    if (!leaveType || !startDate || !endDate || !reason?.trim()) {
+    if (!leaveType || !startDate || !reason?.trim()) {
       return NextResponse.json(
-        { success: false, error: { code: "INVALID_INPUT", message: "Leave type, start date, end date, and reason are required" } },
+        { success: false, error: { code: "INVALID_INPUT", message: "Leave type, date, and reason are required" } },
         { status: 400 }
       );
     }
 
     const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const daysCount = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+    const end = isHalfDay ? new Date(startDate) : new Date(endDate || startDate);
+    
+    let daysCount = 1;
+    if (isHalfDay || requestedDays === 0.5) {
+      daysCount = 0.5;
+    } else {
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      daysCount = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+    }
+
+    const sessionLabel = isHalfDay
+      ? halfDaySession === "SECOND_HALF"
+        ? " (Half Day - 2nd Half)"
+        : " (Half Day - 1st Half)"
+      : "";
 
     const leave = await prisma.leave.create({
       data: {
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
         startDate: start,
         endDate: end,
         daysCount,
-        reason: reason.trim(),
+        reason: `${reason.trim()}${sessionLabel}`,
         status: "PENDING",
       },
       include: { user: true },
@@ -98,6 +110,8 @@ export async function POST(request: NextRequest) {
       applicantRole === "PROJECT_MANAGER" ||
       applicantRole === "HR_ADMIN";
 
+    const durationText = daysCount === 0.5 ? `0.5 day${sessionLabel}` : `${daysCount} day(s)`;
+
     if (isHigherTier) {
       // Notify Super Admins
       const superAdmins = await prisma.user.findMany({ where: { role: "SUPER_ADMIN" }, select: { id: true } });
@@ -106,7 +120,7 @@ export async function POST(request: NextRequest) {
           data: {
             userId: sa.id,
             title: `Executive Leave Request: ${currentUser.name} (${applicantRole})`,
-            message: `${currentUser.name} (${applicantRole}) applied for ${daysCount} day(s) ${leaveType} leave. Requires Super Admin approval.`,
+            message: `${currentUser.name} (${applicantRole}) applied for ${durationText} ${leaveType} leave. Requires Super Admin approval.`,
             type: "LEAVE_UPDATE",
             link: "/hrms/leave",
           },
@@ -133,7 +147,7 @@ export async function POST(request: NextRequest) {
           data: {
             userId: approverId,
             title: "New Team Member Leave Application",
-            message: `${currentUser.name} applied for ${daysCount} day(s) ${leaveType} leave (${start.toLocaleDateString()} - ${end.toLocaleDateString()}).`,
+            message: `${currentUser.name} applied for ${durationText} ${leaveType} leave (${start.toLocaleDateString()}${daysCount > 1 ? ` - ${end.toLocaleDateString()}` : ""}).`,
             type: "LEAVE_UPDATE",
             link: "/hrms/dashboard?tab=leaves",
           },
@@ -249,6 +263,10 @@ export async function PATCH(request: NextRequest) {
       const endMs = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
       const ONE_DAY = 24 * 60 * 60 * 1000;
 
+      const isHalfDayLeave = leave.daysCount <= 0.5;
+      const attendanceStatus = isHalfDayLeave ? "HALF_DAY" : "LEAVE";
+      const notePrefix = isHalfDayLeave ? "Half-Day Leave" : `${leave.leaveType} Leave`;
+
       for (let t = startMs; t <= endMs; t += ONE_DAY) {
         const dateUtc = new Date(t);
         await prisma.attendance.upsert({
@@ -261,12 +279,12 @@ export async function PATCH(request: NextRequest) {
           create: {
             userId: leave.userId,
             date: dateUtc,
-            status: "LEAVE",
-            notes: `${leave.leaveType} Leave (Approved by ${currentUser.name})`,
+            status: attendanceStatus,
+            notes: `${notePrefix} (Approved by ${currentUser.name})`,
           },
           update: {
-            status: "LEAVE",
-            notes: `${leave.leaveType} Leave (Approved by ${currentUser.name})`,
+            status: attendanceStatus,
+            notes: `${notePrefix} (Approved by ${currentUser.name})`,
           },
         });
       }

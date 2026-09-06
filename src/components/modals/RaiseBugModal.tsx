@@ -28,6 +28,13 @@ interface RaiseBugModalProps {
     projectName?: string;
     assignees?: any[];
   } | null;
+  parentTicket?: {
+    id: string;
+    ticketKey: string;
+    title: string;
+    projectId: string;
+    projectName?: string;
+  } | null;
   projects?: any[];
   users: any[];
   currentUser: any;
@@ -38,6 +45,7 @@ export function RaiseBugModal({
   isOpen,
   onClose,
   parentTask,
+  parentTicket,
   projects = [],
   users = [],
   currentUser,
@@ -58,7 +66,7 @@ export function RaiseBugModal({
   const [aiEnhancing, setAiEnhancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize or reset form when modal opens or parentTask changes
+  // Initialize or reset form when modal opens or parentTask/parentTicket changes
   useEffect(() => {
     if (isOpen) {
       setError(null);
@@ -68,17 +76,21 @@ export function RaiseBugModal({
         const primaryAssignee = parentTask.assignees?.[0];
         const devId = primaryAssignee?.id || primaryAssignee?.userId || primaryAssignee?.user?.id || "";
         setAssignedToId(devId);
+      } else if (parentTicket) {
+        setSelectedProjectId(parentTicket.projectId);
+        setAssignedToId("");
       } else if (projects.length > 0) {
         setSelectedProjectId(projects[0].id);
         setAssignedToId("");
       }
     }
-  }, [isOpen, parentTask, projects]);
+  }, [isOpen, parentTask, parentTicket, projects]);
 
   if (!isOpen) return null;
 
   const currentProjectName =
     parentTask?.projectName ||
+    parentTicket?.projectName ||
     projects.find((p) => p.id === selectedProjectId)?.name ||
     "Selected Project";
 
@@ -103,7 +115,7 @@ export function RaiseBugModal({
       });
       const json = await res.json();
       if (json.success && json.data?.enhancedText) {
-        if (!description) setDescription(`Defect observed on ${parentTask?.taskKey || "system"}: ${title}`);
+        if (!description) setDescription(`Defect observed on ${parentTask?.taskKey || parentTicket?.ticketKey || "system"}: ${title}`);
         if (!stepsToReproduce) {
           setStepsToReproduce(
             `1. Navigate to target module\n2. Trigger action with test payload\n3. Observe system response`
@@ -123,7 +135,7 @@ export function RaiseBugModal({
       setError("Bug title is required.");
       return;
     }
-    if (!selectedProjectId && !parentTask?.projectId) {
+    if (!selectedProjectId && !parentTask?.projectId && !parentTicket?.projectId) {
       setError("Project association is required.");
       return;
     }
@@ -135,21 +147,21 @@ export function RaiseBugModal({
       let endpoint = "/api/qa/bugs";
       const payload: any = {
         title: title.trim(),
-        description: description.trim() || `QA defect reported against ${parentTask?.taskKey || "task"}: ${title.trim()}`,
+        description: description.trim() || `QA defect reported against ${parentTask?.taskKey || parentTicket?.ticketKey || "task"}: ${title.trim()}`,
         priority,
         severity,
         environment,
         stepsToReproduce: stepsToReproduce.trim() || undefined,
         expectedResult: expectedResult.trim() || undefined,
         actualResult: actualResult.trim() || undefined,
-        projectId: parentTask?.projectId || selectedProjectId,
+        projectId: parentTask?.projectId || parentTicket?.projectId || selectedProjectId,
         assignedToId: assignedToId || undefined,
       };
 
       if (parentTask?.id) {
         endpoint = `/api/tasks/${parentTask.taskKey || parentTask.id}/bugs`;
-      } else {
-        payload.relatedTaskId = undefined;
+      } else if (parentTicket?.id) {
+        payload.ticketId = parentTicket.id;
       }
 
       const res = await fetch(endpoint, {
@@ -177,6 +189,7 @@ export function RaiseBugModal({
       setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">

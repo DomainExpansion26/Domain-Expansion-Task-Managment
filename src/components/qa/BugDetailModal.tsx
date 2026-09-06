@@ -211,6 +211,51 @@ export function BugDetailModal({
     }
   };
 
+  // Handle Delete Attachment
+  const handleDeleteAttachment = async (attachmentId: string, fileName: string) => {
+    if (!confirm(`Are you sure you want to delete attachment "${fileName}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/storage/attachments/${attachmentId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchBugDetails();
+        if (onBugUpdated) onBugUpdated();
+      } else {
+        alert(json.error?.message || "Failed to delete attachment");
+      }
+    } catch (err) {
+      console.error("Delete attachment error:", err);
+    }
+  };
+
+  // Handle Delete Bug
+  const [isDeletingBug, setIsDeletingBug] = useState(false);
+  const handleDeleteBug = async () => {
+    if (!confirm(`Are you sure you want to permanently delete defect ${bugKey}: "${bug?.title}"? This cannot be undone.`)) return;
+
+    setIsDeletingBug(true);
+    try {
+      const res = await fetch(`/api/qa/bugs/${bugKey}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        onClose();
+        if (onBugUpdated) onBugUpdated();
+      } else {
+        alert(json.error?.message || "Failed to delete defect");
+      }
+    } catch (err) {
+      console.error("Failed to delete defect:", err);
+      alert("Failed to delete defect due to network error.");
+    } finally {
+      setIsDeletingBug(false);
+    }
+  };
+
   const handleFailConfirm = async (data: { failureReason: string; actualResult?: string; failureComment?: string }) => {
     await handleUpdateBug({
       status: "FAILED",
@@ -318,15 +363,30 @@ export function BugDetailModal({
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={copyBugKey}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#222] hover:bg-[#2A2A2A] text-[#ACACB8] hover:text-white text-xs font-semibold transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#222] hover:bg-[#2A2A2A] text-[#ACACB8] hover:text-white text-xs font-semibold transition-colors cursor-pointer"
               title="Copy Bug Link"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? "Copied" : "Share"}</span>
             </button>
+
+            {/* Delete Defect Button */}
+            {(currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "MANAGER" || currentUser?.role === "QA" || bug?.createdById === currentUser?.id) && (
+              <button
+                type="button"
+                disabled={isDeletingBug}
+                onClick={handleDeleteBug}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 transition-all cursor-pointer disabled:opacity-50"
+                title="Permanently delete this defect"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeletingBug ? "Deleting..." : "Delete"}</span>
+              </button>
+            )}
+
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
+              className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -802,14 +862,27 @@ export function BugDetailModal({
                               </div>
                             </div>
                           </div>
-                          <a
-                            href={att.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-2 rounded-xl border border-[#2E2E2E] hover:bg-[#252525] text-[#ACACB8] hover:text-white"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <a
+                              href={att.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-2 rounded-xl border border-[#2E2E2E] hover:bg-[#252525] text-[#ACACB8] hover:text-white transition-colors"
+                              title="Download attachment"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                            {(currentUser?.role === "SUPER_ADMIN" || att.uploadedById === currentUser?.id) && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAttachment(att.id, att.fileName)}
+                                className="p-2 rounded-xl border border-red-500/30 hover:bg-red-500/15 text-red-500 transition-colors"
+                                title="Delete attachment"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}

@@ -4,6 +4,8 @@ import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
 import { uploadFileToStorage } from "@/lib/storage";
 
+export const dynamic = "force-dynamic";
+
 // Department normalizer helper
 function normalizeDepartment(dept?: string | null): string {
   if (!dept) return "GENERAL";
@@ -42,7 +44,12 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = {};
     if (departmentFilter) {
-      whereClause.department = departmentFilter;
+      whereClause.OR = [
+        { department: departmentFilter },
+        { department: "ALL" },
+        { department: "GENERAL" },
+        { visibility: "COMPANY_WIDE" },
+      ];
     }
     if (categoryParam && categoryParam !== "ALL_CATEGORIES") {
       whereClause.category = { equals: categoryParam, mode: "insensitive" };
@@ -54,9 +61,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Role-based visibility scoping
+    // Role-based visibility scoping: Show all non-archived documents to all users
     if (!superAdmin) {
-      whereClause.status = "PUBLISHED";
+      whereClause.status = { not: "ARCHIVED" };
+      whereClause.visibility = { not: "ADMIN_ONLY" };
     } else if (statusParam && statusParam !== "ALL_STATUSES") {
       whereClause.status = statusParam;
     }

@@ -21,9 +21,9 @@ import {
   RotateCcw,
   User,
   SlidersHorizontal,
-  Flame,
   FileText,
   Table,
+  Trash2,
 } from "lucide-react";
 import { getPriorityColor, getStatusColor, formatDateTime, getInitials, getAvatarGradient } from "@/lib/utils";
 import { RaiseBugModal } from "@/components/modals/RaiseBugModal";
@@ -108,8 +108,36 @@ export function QAView({
   // Modals
   const [isRaiseBugOpen, setIsRaiseBugOpen] = useState(false);
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [selectedTicketForBug, setSelectedTicketForBug] = useState<any | null>(null);
   const [selectedBugKey, setSelectedBugKey] = useState<string | null>(null);
   const [draggedBugKey, setDraggedBugKey] = useState<string | null>(null);
+  const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null);
+
+  const isSuperAdmin = currentUser?.systemRole === "SUPER_ADMIN" || currentUser?.role === "SUPER_ADMIN";
+  const isManagerOrAdmin = isSuperAdmin || currentUser?.role === "MANAGER" || currentUser?.role === "HR_ADMIN";
+
+  const handleDeleteTicket = async (ticket: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to permanently delete QA Ticket ${ticket.ticketKey}?`)) {
+      return;
+    }
+
+    setDeletingTicketId(ticket.id);
+    try {
+      const res = await fetch(`/api/qa/tickets/${ticket.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        fetchQAData();
+      } else {
+        alert(json.error?.message || "Failed to delete ticket");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting ticket");
+    } finally {
+      setDeletingTicketId(null);
+    }
+  };
 
   const fetchQAData = useCallback(async () => {
     try {
@@ -706,27 +734,77 @@ export function QAView({
       {viewMode === "tickets" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tickets.map((t) => (
-              <div
-                key={t.id}
-                className="p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/40 transition-all space-y-3"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono font-bold text-blue-400">{t.ticketKey}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase ${getBugStatusBadge(t.status)}`}>
-                    {t.status}
-                  </span>
+            {tickets.map((t) => {
+              const canDelete = isSuperAdmin || isManagerOrAdmin || t.createdById === currentUser?.id;
+              return (
+                <div
+                  key={t.id}
+                  className="p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/40 transition-all space-y-3.5 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-blue-400">{t.ticketKey}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase ${getBugStatusBadge(t.status)}`}>
+                          {t.status}
+                        </span>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteTicket(t, e)}
+                            disabled={deletingTicketId === t.id}
+                            title="Delete QA Ticket"
+                            className="p-1 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-white">{t.title}</h3>
+                      <p className="text-xs text-[#888898] mt-1 line-clamp-2">{t.description}</p>
+                    </div>
+
+                    {t.bugs && t.bugs.length > 0 && (
+                      <div className="pt-2 border-t border-[#2E2E2E]/60 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Logged Defects ({t.bugs.length})
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {t.bugs.map((bug: any) => (
+                            <button
+                              key={bug.id}
+                              type="button"
+                              onClick={() => setSelectedBugKey(bug.bugKey)}
+                              className="px-2 py-0.5 rounded bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-[10px] font-mono font-bold transition-colors"
+                            >
+                              {bug.bugKey}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-[11px] text-[#888898]">
+                    <span>Assigned: <strong className="text-slate-200">{t.assignedTo?.name || "Unassigned"}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTicketForBug(t);
+                        setIsRaiseBugOpen(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-[#FF6200]/15 hover:bg-[#FF6200]/25 text-[#FF8C42] border border-[#FF6200]/30 text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Log Bug
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">{t.title}</h3>
-                  <p className="text-xs text-[#888898] mt-1 line-clamp-2">{t.description}</p>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-[#2E2E2E] text-[10px] text-[#888898]">
-                  <span>Assigned: {t.assignedTo?.name || "Unassigned"}</span>
-                  <span>Bugs logged: {t.bugs?.length || 0}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -734,7 +812,11 @@ export function QAView({
       {/* Modals */}
       <RaiseBugModal
         isOpen={isRaiseBugOpen}
-        onClose={() => setIsRaiseBugOpen(false)}
+        onClose={() => {
+          setIsRaiseBugOpen(false);
+          setSelectedTicketForBug(null);
+        }}
+        parentTicket={selectedTicketForBug}
         projects={projects}
         users={users}
         currentUser={currentUser}

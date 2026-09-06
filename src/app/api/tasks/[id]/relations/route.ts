@@ -110,3 +110,33 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to create relation" } }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const currentUser = await getCurrentUserFromRequest(request);
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const relationId = searchParams.get("relationId");
+
+    if (!relationId) {
+      return NextResponse.json({ success: false, error: { code: "INVALID_INPUT", message: "relationId is required" } }, { status: 400 });
+    }
+
+    await prisma.taskRelation.delete({
+      where: { id: relationId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Task relation deleted successfully",
+    });
+  } catch (error: any) {
+    console.error("Delete task relation error:", error);
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to delete relation" } }, { status: 500 });
+  }
+}
+

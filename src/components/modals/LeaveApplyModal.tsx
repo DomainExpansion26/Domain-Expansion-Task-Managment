@@ -15,6 +15,7 @@ export function LeaveApplyModal({
   onLeaveApplied,
 }: LeaveApplyModalProps) {
   const [leaveType, setLeaveType] = useState("CL");
+  const [durationType, setDurationType] = useState<"FULL_DAY" | "FIRST_HALF" | "SECOND_HALF">("FULL_DAY");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
@@ -23,15 +24,33 @@ export function LeaveApplyModal({
 
   if (!isOpen) return null;
 
+  const isHalfDay = durationType !== "FULL_DAY";
+
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (isHalfDay || !endDate) {
+      setEndDate(val);
+    }
+  };
+
+  const handleDurationChange = (type: "FULL_DAY" | "FIRST_HALF" | "SECOND_HALF") => {
+    setDurationType(type);
+    if (type !== "FULL_DAY" && startDate) {
+      setEndDate(startDate);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!leaveType || !startDate || !endDate || !reason.trim()) {
+    if (!leaveType || !startDate || (!isHalfDay && !endDate) || !reason.trim()) {
       setError("Please fill in all leave details and a valid reason.");
       return;
     }
 
     setLoading(true);
     setError(null);
+
+    const finalEndDate = isHalfDay ? startDate : endDate;
 
     try {
       const res = await fetch("/api/hrms/leave", {
@@ -40,7 +59,10 @@ export function LeaveApplyModal({
         body: JSON.stringify({
           leaveType,
           startDate,
-          endDate,
+          endDate: finalEndDate,
+          isHalfDay,
+          halfDaySession: isHalfDay ? durationType : undefined,
+          daysCount: isHalfDay ? 0.5 : undefined,
           reason: reason.trim(),
         }),
       });
@@ -52,6 +74,7 @@ export function LeaveApplyModal({
         setReason("");
         setStartDate("");
         setEndDate("");
+        setDurationType("FULL_DAY");
       } else {
         setError(json.error?.message || "Failed to submit leave request");
       }
@@ -193,28 +216,72 @@ export function LeaveApplyModal({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Leave Duration Selector: Full Day vs Half Day */}
+          <div>
+            <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1.5">Leave Duration *</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDurationChange("FULL_DAY")}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  durationType === "FULL_DAY"
+                    ? "bg-cyan-600 text-white border-cyan-600 shadow-sm"
+                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-cyan-500/50"
+                }`}
+              >
+                Full Day (1.0)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDurationChange("FIRST_HALF")}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  durationType === "FIRST_HALF"
+                    ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-amber-500/50"
+                }`}
+              >
+                Half Day - 1st Half (0.5)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDurationChange("SECOND_HALF")}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  durationType === "SECOND_HALF"
+                    ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-amber-500/50"
+                }`}
+              >
+                Half Day - 2nd Half (0.5)
+              </button>
+            </div>
+          </div>
+
+          <div className={`grid ${isHalfDay ? "grid-cols-1" : "grid-cols-2"} gap-3`}>
             <div>
-              <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">Start Date *</label>
+              <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">
+                {isHalfDay ? "Leave Date *" : "Start Date *"}
+              </label>
               <input
                 type="date"
                 required
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => handleStartDateChange(e.target.value)}
                 className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
 
-            <div>
-              <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">End Date *</label>
-              <input
-                type="date"
-                required
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
-              />
-            </div>
+            {!isHalfDay && (
+              <div>
+                <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">End Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+            )}
           </div>
 
           <div>
