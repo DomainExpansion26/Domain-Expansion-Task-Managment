@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
 import { EmployeeDetailModal } from "@/components/modals/EmployeeDetailModal";
+import { isHRAdmin, isSuperAdmin } from "@/lib/permissions";
 import { getInitials, getAvatarGradient, formatDate, formatDateTime } from "@/lib/utils";
 
 interface HRAdminViewProps {
@@ -59,6 +60,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
   const [actionLoading, setActionLoading] = useState(false);
   const [approverComment, setApproverComment] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState<any | null>(null);
 
   // Add Employee Modal State
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
@@ -271,6 +273,22 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
     }
     return true;
   });
+
+  const isAuthorized = isHRAdmin(currentUser?.role) || isSuperAdmin(currentUser?.role);
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[450px] text-center p-8 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl space-y-4">
+        <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+          <ShieldAlert className="w-10 h-10" />
+        </div>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">HR Admin & Super Admin Access Required</h2>
+        <p className="text-xs text-gray-500 dark:text-[#888898] max-w-md">
+          You do not have administrative privileges to access the HR Management Portal. Only HR Admins and Super Admins can manage workforce records and approve leaves.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 text-gray-900 dark:text-[#F3F4F6]">
@@ -546,13 +564,20 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                     <th className="py-3 px-3">BREAK</th>
                     <th className="py-3 px-3">TOTAL HOURS</th>
                     <th className="py-3 px-3">STATUS</th>
+                    <th className="py-3 px-4 text-right">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
                   {attendanceRecords.map((rec) => (
-                    <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                    <tr
+                      key={rec.id}
+                      onClick={() => setSelectedAttendanceRecord(rec)}
+                      className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer group"
+                    >
                       <td className="py-3 px-4">
-                        <div className="font-bold text-gray-900 dark:text-white">{rec.user?.name || "Employee"}</div>
+                        <div className="font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
+                          {rec.user?.name || "Employee"}
+                        </div>
                         <div className="text-[10px] text-gray-400 font-mono">
                           {rec.user?.hrProfile?.employeeId || rec.user?.email}
                         </div>
@@ -582,6 +607,18 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                         >
                           {rec.status}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAttendanceRecord(rec);
+                          }}
+                          className="px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#252525] hover:bg-cyan-600 hover:text-white text-gray-700 dark:text-[#ACACB8] font-bold text-[11px] transition-colors cursor-pointer"
+                        >
+                          View / Correct
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -671,30 +708,22 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {["TEAM_LEAD", "MANAGER", "PROJECT_MANAGER", "HR_ADMIN"].includes(l.user?.role) && currentUser.role !== "SUPER_ADMIN" ? (
-                        <span className="text-[11px] text-amber-500 italic">
-                          Awaiting Super Admin Decision
-                        </span>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            disabled={actionLoading}
-                            onClick={() => handleLeaveDecision(l.id, "APPROVED")}
-                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            disabled={actionLoading}
-                            onClick={() => handleLeaveDecision(l.id, "REJECTED")}
-                            className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => handleLeaveDecision(l.id, "APPROVED")}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => handleLeaveDecision(l.id, "REJECTED")}
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1108,6 +1137,21 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           userId={selectedEmployeeId}
           onEmployeeUpdated={fetchHRData}
           currentUser={currentUser}
+        />
+      )}
+
+      {/* Attendance Detail & Correction Modal */}
+      {selectedAttendanceRecord && (
+        <AttendanceDetailModal
+          isOpen={Boolean(selectedAttendanceRecord)}
+          onClose={() => setSelectedAttendanceRecord(null)}
+          record={selectedAttendanceRecord}
+          dateStr={attendanceDate}
+          isHRAdmin={true}
+          onRecordUpdated={() => {
+            fetchHRData();
+            setSelectedAttendanceRecord(null);
+          }}
         />
       )}
     </div>

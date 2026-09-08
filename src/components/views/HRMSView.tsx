@@ -123,6 +123,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [punchLoading, setPunchLoading] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [selectedAttendanceRecord, setSelectedAttendanceRecord] = useState<any | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<any | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -172,7 +173,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
 
   const isLead = isTeamLead(currentUser?.role) || isManager(currentUser?.role);
   const isHR = isHRAdmin(currentUser?.role) || isSuperAdmin(currentUser?.role);
-  const canReviewLeaves = isLead || isHR;
+  const canReviewLeaves = isHR;
 
   // 1. Fetch Dashboard & Punch Status
   const fetchDashboard = async () => {
@@ -235,8 +236,9 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
   // 4. Fetch Leaves & Balances
   const fetchLeaves = async () => {
     try {
+      const leaveUrl = isHR ? "/api/hrms/leave?viewAll=true" : "/api/hrms/leave";
       const [leaveRes, balRes] = await Promise.all([
-        fetch("/api/hrms/leave"),
+        fetch(leaveUrl),
         fetch("/api/hrms/leave/types"),
       ]);
       const [leaveJson, balJson] = await Promise.all([leaveRes.json(), balRes.json()]);
@@ -1325,11 +1327,16 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                     <th className="py-3 px-3">WORKING HOURS</th>
                     <th className="py-3 px-3">STATUS</th>
                     <th className="py-3 px-4">NOTES</th>
+                    <th className="py-3 px-4 text-right">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
                   {attendanceRecords.map((rec) => (
-                    <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                    <tr
+                      key={rec.id}
+                      onClick={() => setSelectedAttendanceRecord(rec)}
+                      className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A] cursor-pointer transition-colors"
+                    >
                       <td className="py-3 px-4 font-mono font-semibold text-gray-900 dark:text-white">
                         {formatDate(rec.date)}
                       </td>
@@ -1357,6 +1364,18 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-500 text-[11px] italic">{rec.notes || "-"}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAttendanceRecord(rec);
+                          }}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer"
+                        >
+                          {isHR ? "View / Correct" : "Details"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -2205,6 +2224,26 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
           fetchLeaves();
         }}
       />
+
+      {/* Attendance Detail & HR Correction Modal */}
+      {selectedAttendanceRecord && (
+        <AttendanceDetailModal
+          isOpen={Boolean(selectedAttendanceRecord)}
+          onClose={() => setSelectedAttendanceRecord(null)}
+          record={selectedAttendanceRecord}
+          dateStr={
+            selectedAttendanceRecord.date
+              ? new Date(selectedAttendanceRecord.date).toISOString().split("T")[0]
+              : new Date().toISOString().split("T")[0]
+          }
+          isHRAdmin={isHR}
+          onRecordUpdated={() => {
+            fetchAttendance();
+            fetchDashboard();
+            setSelectedAttendanceRecord(null);
+          }}
+        />
+      )}
     </div>
   );
 }

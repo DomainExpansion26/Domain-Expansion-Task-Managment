@@ -22,9 +22,12 @@ export async function GET(request: NextRequest) {
     const isHR = isHRAdmin(currentUser.role);
     const isLead = isTeamLead(currentUser.role) || isManager(currentUser.role);
 
-    if (viewAll && (isSuper || isHR)) {
-      // Super Admin & HR Admin can view all leaves
-    } else if (isLead || viewAll) {
+    if (isSuper || isHR || viewAll) {
+      // Super Admin & HR Admin can view all company leaves
+      if (searchParams.get("userId")) {
+        where.userId = searchParams.get("userId");
+      }
+    } else if (isLead) {
       // Team Leads & Managers: view own leaves + team members' leaves
       const conditions: any[] = [{ userId: currentUser.id }];
       conditions.push({ user: { teamLeadId: currentUser.id } });
@@ -199,49 +202,17 @@ export async function PATCH(request: NextRequest) {
     const isSelfCancel = status === "CANCELLED" && leave.userId === currentUser.id;
 
     if (!isSelfCancel) {
-      const applicantRole = leave.user.role;
-      const isHigherTierApplicant =
-        applicantRole === "TEAM_LEAD" ||
-        applicantRole === "MANAGER" ||
-        applicantRole === "PROJECT_MANAGER" ||
-        applicantRole === "HR_ADMIN";
-
-      if (isSuperAdmin(currentUser.role)) {
-        // Super Admin can approve ANY leave
-      } else if (isHigherTierApplicant) {
-        // Team Lead / Manager / HR Admin leaves REQUIRE Super Admin!
+      if (!isHRAdmin(currentUser.role)) {
         return NextResponse.json(
           {
             success: false,
             error: {
-              code: "SUPER_ADMIN_REQUIRED",
-              message: `Leave applications for ${applicantRole} (${leave.user.name}) can only be approved by the Super Admin.`,
+              code: "FORBIDDEN",
+              message: "Only HR Admin and Super Admin are authorized to approve or reject leave requests.",
             },
           },
           { status: 403 }
         );
-      } else {
-        // Regular members: Team Lead, Manager, or HR Admin can approve
-        const isAuthorized =
-          isHRAdmin(currentUser.role) ||
-          isTeamLead(currentUser.role) ||
-          isManager(currentUser.role) ||
-          leave.user.teamLeadId === currentUser.id ||
-          leave.user.managerId === currentUser.id ||
-          (Boolean(currentUser.department) && currentUser.department === leave.user.department);
-
-        if (!isAuthorized) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: {
-                code: "FORBIDDEN",
-                message: "You lack authority to approve/reject this leave request.",
-              },
-            },
-            { status: 403 }
-          );
-        }
       }
     }
 

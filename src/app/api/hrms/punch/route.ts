@@ -45,19 +45,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    if (currentUser.role === "SUPER_ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "SUPER_ADMIN_EXEMPT",
-            message: "Super Administrators oversee system administration and do not record daily employee punch logs.",
-          },
-        },
-        { status: 400 }
-      );
-    }
-
     const { action, notes } = await request.json(); // action: "PUNCH_IN" | "PUNCH_OUT"
 
     const today = new Date();

@@ -87,20 +87,13 @@ export async function GET(request: NextRequest) {
         })
       ),
 
-      // 5. Team Pending Leaves (if lead/manager/hr)
-      isLeadOrManager || isHR
-        ? withDbRetry(() =>
-            prisma.leave.findMany({
+      // 5. Team Pending Leaves (Only for HR Admin & Super Admin)
+      isHR
+        ? withDbRetry(() => {
+            return prisma.leave.findMany({
               where: {
                 status: "PENDING",
                 userId: { not: currentUser.id },
-                ...(isHR
-                  ? {}
-                  : {
-                      user: {
-                        managerId: currentUser.id,
-                      },
-                    }),
               },
               include: {
                 user: {
@@ -113,13 +106,14 @@ export async function GET(request: NextRequest) {
                     department: true,
                     avatarUrl: true,
                     managerId: true,
+                    teamLeadId: true,
                   },
                 },
               },
               orderBy: { createdAt: "desc" },
-              take: 25,
-            })
-          )
+              take: 50,
+            });
+          })
         : Promise.resolve([]),
 
       // 6. Leave Type Configurations (used to calculate leave balances)
