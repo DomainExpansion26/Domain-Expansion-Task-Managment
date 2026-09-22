@@ -336,10 +336,11 @@ export function MemberManageModal({
                 onDeleteMember(member.id, member.name);
                 onClose();
               }}
-              className="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1"
+              className="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
+              title="Only Super Admin has access to remove members from the portal"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Deactivate Member</span>
+              <span>Remove Member from Portal</span>
             </button>
           ) : (
             <div />

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isHRAdmin, isSuperAdmin, isTeamLead, isManager } from "@/lib/permissions";
+import { calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +26,26 @@ export async function GET(request: NextRequest) {
 
     const isLeadOrManager = isTeamLead(currentUser.role) || isManager(currentUser.role);
     const isHR = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
+
+    // Fetch projects led by current user to allow Team Leads to see project members' leaves
+    const ledProjects = await withDbRetry(() =>
+      prisma.project.findMany({
+        where: {
+          OR: [
+            { leadId: currentUser.id },
+            { teamLeadId: currentUser.id },
+            { managerId: currentUser.id },
+            { members: { some: { userId: currentUser.id, role: "LEAD" } } },
+          ],
+        },
+        select: {
+          members: { select: { userId: true } },
+        },
+      })
+    );
+    const projectMemberUserIds = Array.from(
+      new Set(ledProjects.flatMap((p) => p.members.map((m) => m.userId)))
+    );
 
     // Run all HRMS queries concurrently in a single database connection session
     const [
@@ -54,15 +75,24 @@ export async function GET(request: NextRequest) {
         })
       ),
 
-      // 2. Today's Punch
-      withDbRetry(() =>
-        prisma.attendance.findFirst({
+      // 2. Today's Punch (check active open session or today's record)
+      withDbRetry(async () => {
+        const active = await prisma.attendance.findFirst({
+          where: {
+            userId: currentUser.id,
+            punchIn: { not: null },
+            punchOut: null,
+          },
+          orderBy: { date: "desc" },
+        });
+        if (active) return active;
+        return prisma.attendance.findFirst({
           where: {
             userId: currentUser.id,
             date: todayUtcMidnight,
           },
-        })
-      ),
+        });
+      }),
 
       // 3. Monthly Attendance
       withDbRetry(() =>
@@ -87,34 +117,74 @@ export async function GET(request: NextRequest) {
         })
       ),
 
-      // 5. Team Pending Leaves (Only for HR Admin & Super Admin)
-      isHR
-        ? withDbRetry(() => {
-            return prisma.leave.findMany({
-              where: {
-                status: "PENDING",
-                userId: { not: currentUser.id },
-              },
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    jobTitle: true,
-                    department: true,
-                    avatarUrl: true,
-                    managerId: true,
-                    teamLeadId: true,
-                  },
+      // 5. Team Pending Leaves (For HR Admin, Super Admin, Team Leads, Managers & Project Leads)
+      withDbRetry(() => {
+        if (isHR) {
+          return prisma.leave.findMany({
+            where: {
+              status: "PENDING",
+              userId: { not: currentUser.id },
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  jobTitle: true,
+                  department: true,
+                  avatarUrl: true,
+                  managerId: true,
+                  teamLeadId: true,
                 },
               },
-              orderBy: { createdAt: "desc" },
-              take: 50,
-            });
-          })
-        : Promise.resolve([]),
+            },
+            orderBy: { createdAt: "desc" },
+            take: 50,
+          });
+        }
+
+        if (isLeadOrManager || projectMemberUserIds.length > 0) {
+          const conditions: any[] = [
+            { user: { teamLeadId: currentUser.id } },
+            { user: { managerId: currentUser.id } },
+          ];
+          if (currentUser.department) {
+            conditions.push({ user: { department: currentUser.department } });
+          }
+          if (projectMemberUserIds.length > 0) {
+            conditions.push({ userId: { in: projectMemberUserIds } });
+          }
+
+          return prisma.leave.findMany({
+            where: {
+              status: "PENDING",
+              userId: { not: currentUser.id },
+              OR: conditions,
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  jobTitle: true,
+                  department: true,
+                  avatarUrl: true,
+                  managerId: true,
+                  teamLeadId: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 50,
+          });
+        }
+
+        return Promise.resolve([]);
+      }),
 
       // 6. Leave Type Configurations (used to calculate leave balances)
       withDbRetry(() =>
@@ -407,18 +477,40 @@ export async function GET(request: NextRequest) {
       leaveDays: totalLeave,
     };
 
+    let todayPunchData: any = todayAttendance;
+    if (todayAttendance?.punchIn && !todayAttendance?.punchOut) {
+      let sessions: PunchSession[] = [];
+      if (todayAttendance.notes) {
+        try {
+          const parsed = JSON.parse(todayAttendance.notes);
+          if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+        } catch (e) {}
+      }
+      if (sessions.length === 0) {
+        sessions.push({ punchIn: new Date(todayAttendance.punchIn).toISOString(), punchOut: null });
+      }
+      const calc = calculateMultiSessionHours(sessions, todayAttendance.punchIn, null, todayAttendance.breakDurationMinutes ?? 60);
+      todayPunchData = {
+        ...todayAttendance,
+        totalWorkingHours: calc.totalWorkingHours,
+        status: calc.status,
+        sessions,
+      };
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         profile: userWithProfile,
         dashboard: {
-          todayPunch: todayAttendance || {
+          todayPunch: todayPunchData || {
             date: todayUtcMidnight,
             punchIn: null,
             punchOut: null,
-            breakDurationMinutes: 0,
+            breakDurationMinutes: 60,
             totalWorkingHours: 0,
             status: "NOT_RECORDED",
+            sessions: [],
           },
           upcomingBirthdays,
           todayBirthdays,
@@ -429,7 +521,7 @@ export async function GET(request: NextRequest) {
           leaveBalances,
           monthlyStats,
         },
-        punch: todayAttendance,
+        punch: todayPunchData,
         attendance: {
           attendances: monthlyAttendances,
           stats: monthlyStats,

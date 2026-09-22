@@ -420,16 +420,29 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
                         </td>
 
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => {
-                              setSelectedMember(m);
-                              setIsManageModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/70 hover:bg-[#FF6200]/10 hover:text-white transition-all text-[11px] font-bold text-[#ACACB8] shadow-sm cursor-pointer"
-                          >
-                            <Shield className="w-3.5 h-3.5 text-[#FF6200]" />
-                            <span>Set Role & Hierarchy</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedMember(m);
+                                setIsManageModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/70 hover:bg-[#FF6200]/10 hover:text-white transition-all text-[11px] font-bold text-[#ACACB8] shadow-sm cursor-pointer"
+                            >
+                              <Shield className="w-3.5 h-3.5 text-[#FF6200]" />
+                              <span>Set Role & Hierarchy</span>
+                            </button>
+
+                            {m.id !== currentUser.id && (
+                              <button
+                                onClick={() => setDeleteConfirm({ id: m.id, name: m.name })}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-400 hover:text-red-300 text-[11px] font-bold transition-all cursor-pointer shadow-sm"
+                                title="Remove member from portal (Super Admin Only)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -677,13 +690,13 @@ export function SuperAdminView({ currentUser }: SuperAdminViewProps) {
         </div>
       )}
 
-      {/* Confirmation Modal for Deactivation */}
+      {/* Confirmation Modal for Removal from Portal */}
       {deleteConfirm && (
         <ConfirmActionModal
           isOpen={Boolean(deleteConfirm)}
-          title="Deactivate Member Account"
-          message={`Are you sure you want to deactivate ${deleteConfirm.name}? They will lose access to login immediately.`}
-          confirmLabel="Deactivate"
+          title="Remove Member from Portal"
+          message={`Are you sure you want to remove ${deleteConfirm.name} from the portal? Only Super Admin has access to perform this action. The member will lose access to login immediately.`}
+          confirmLabel="Remove Member"
           onConfirm={handleDeleteMember}
           onClose={() => setDeleteConfirm(null)}
           loading={actionLoading}

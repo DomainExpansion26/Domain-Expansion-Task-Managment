@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isHRAdmin, isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
+import { calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,9 +26,16 @@ export async function GET(request: NextRequest) {
       allProfiles,
       myHRProfile,
     ] = await Promise.all([
-      prisma.attendance.findUnique({
-        where: { userId_date: { userId: currentUser.id, date: today } },
-      }),
+      (async () => {
+        const openPunch = await prisma.attendance.findFirst({
+          where: { userId: currentUser.id, punchIn: { not: null }, punchOut: null },
+          orderBy: { date: "desc" },
+        });
+        if (openPunch) return openPunch;
+        return prisma.attendance.findUnique({
+          where: { userId_date: { userId: currentUser.id, date: today } },
+        });
+      })(),
       prisma.leave.findMany({
         where: { userId: currentUser.id },
         orderBy: { createdAt: "desc" },
@@ -216,12 +224,32 @@ export async function GET(request: NextRequest) {
       .filter((l) => l.status === "PENDING")
       .reduce((sum, l) => sum + (l.daysCount || 1), 0);
 
+    let liveTodayPunch: any = myTodayPunch;
+    if (myTodayPunch?.punchIn && !myTodayPunch?.punchOut) {
+      let sessions: PunchSession[] = [];
+      if (myTodayPunch.notes) {
+        try {
+          const parsed = JSON.parse(myTodayPunch.notes);
+          if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+        } catch (e) {}
+      }
+      if (sessions.length === 0) {
+        sessions.push({ punchIn: new Date(myTodayPunch.punchIn).toISOString(), punchOut: null });
+      }
+      const calc = calculateMultiSessionHours(sessions, myTodayPunch.punchIn, null, myTodayPunch.breakDurationMinutes ?? 60);
+      liveTodayPunch = {
+        ...myTodayPunch,
+        totalWorkingHours: calc.totalWorkingHours,
+        status: calc.status,
+      };
+    }
+
     const employeeDashboard = {
-      todayPunch: myTodayPunch || {
+      todayPunch: liveTodayPunch || {
         date: today,
         punchIn: null,
         punchOut: null,
-        breakDurationMinutes: 0,
+        breakDurationMinutes: 60,
         totalWorkingHours: 0,
         status: "NOT_RECORDED",
       },

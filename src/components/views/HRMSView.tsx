@@ -171,9 +171,91 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const isLead = isTeamLead(currentUser?.role) || isManager(currentUser?.role);
+  const isLead =
+    isTeamLead(currentUser?.role) ||
+    isManager(currentUser?.role) ||
+    (Boolean(currentUser?.role) && ["TEAM_LEAD", "MANAGER", "PROJECT_MANAGER"].includes(currentUser.role));
   const isHR = isHRAdmin(currentUser?.role) || isSuperAdmin(currentUser?.role);
-  const canReviewLeaves = isHR;
+  const canReviewLeaves = isHR || isLead || (teamPendingLeaves && teamPendingLeaves.length > 0);
+
+  // Compute live punch / work time stats
+  const getLivePunchStats = () => {
+    if (!punchData?.punchIn) {
+      return {
+        isActive: false,
+        displayHours: 0,
+        formattedHours: "0.0h",
+        progressPct: 0,
+      };
+    }
+
+    const isActive = Boolean(punchData.punchIn && !punchData.punchOut);
+
+    if (!isActive) {
+      const hours = punchData.totalWorkingHours || 0;
+      return {
+        isActive: false,
+        displayHours: hours,
+        formattedHours: `${hours}h`,
+        progressPct: Math.min(100, Math.round((hours / 8.0) * 100)),
+      };
+    }
+
+    // Active session: compute live elapsed working time
+    let sessions: any[] = [];
+    if (Array.isArray(punchData.sessions) && punchData.sessions.length > 0) {
+      sessions = punchData.sessions;
+    } else if (punchData.notes) {
+      try {
+        const parsed = JSON.parse(punchData.notes);
+        if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+      } catch (e) {}
+    }
+
+    let totalActiveMs = 0;
+    const nowMs = currentTime ? currentTime.getTime() : Date.now();
+
+    if (sessions.length > 0) {
+      for (const s of sessions) {
+        if (s.punchIn) {
+          const inMs = new Date(s.punchIn).getTime();
+          if (s.punchOut) {
+            const outMs = new Date(s.punchOut).getTime();
+            totalActiveMs += Math.max(0, outMs - inMs);
+          } else {
+            totalActiveMs += Math.max(0, nowMs - inMs);
+          }
+        }
+      }
+    } else {
+      const inMs = new Date(punchData.punchIn).getTime();
+      totalActiveMs = Math.max(0, nowMs - inMs);
+    }
+
+    // In a 9-hour shift: standard 1-hour break window applies beyond 8 hours
+    const elapsedHours = totalActiveMs / (1000 * 60 * 60);
+    let breakMs = 0;
+    if (elapsedHours >= 9.0) {
+      breakMs = 60 * 60 * 1000;
+    } else if (elapsedHours > 8.0) {
+      breakMs = Math.min(60 * 60 * 1000, totalActiveMs - 8 * 60 * 60 * 1000);
+    }
+
+    const netMs = Math.max(0, totalActiveMs - breakMs);
+    const totalMinutes = Math.floor(netMs / (60 * 1000));
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const decimalHours = Math.round((netMs / (1000 * 60 * 60)) * 100) / 100;
+
+    return {
+      isActive: true,
+      displayHours: decimalHours,
+      formattedHours: `${hours}h ${mins}m`,
+      progressPct: Math.min(100, Math.round((decimalHours / 8.0) * 100)),
+    };
+  };
+
+  const livePunchStats = getLivePunchStats();
 
   // 1. Fetch Dashboard & Punch Status
   const fetchDashboard = async () => {
@@ -785,9 +867,14 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
-                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">Logged Hours</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase flex items-center justify-between">
+                    <span>Logged Hours</span>
+                    {livePunchStats.isActive && (
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" title="Actively tracking" />
+                    )}
+                  </div>
                   <div className="text-sm font-bold font-mono text-cyan-600 dark:text-cyan-400 mt-1">
-                    {punchData?.totalWorkingHours ? `${punchData.totalWorkingHours}h` : "0.0h"}{" "}
+                    {livePunchStats.formattedHours}{" "}
                     <span className="text-[10px] font-normal text-gray-500 dark:text-gray-400">/ 8.0h</span>
                   </div>
                 </div>
@@ -819,11 +906,11 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                 </div>
 
                 <div className="text-[11px] text-gray-500 dark:text-[#888898]">
-                  {punchData?.status === "FULL_DAY" ? (
+                  {punchData?.status === "FULL_DAY" || livePunchStats.displayHours >= 8.0 ? (
                     <span className="text-emerald-500 font-bold">✓ Full Day Target Met (8+ hours)</span>
-                  ) : punchData?.totalWorkingHours ? (
+                  ) : livePunchStats.displayHours > 0 ? (
                     <span>
-                      Progress: <b>{punchData.totalWorkingHours}h</b> / 8.0h ({Math.min(100, Math.round(((punchData.totalWorkingHours || 0) / 8) * 100))}%)
+                      Progress: <b>{livePunchStats.displayHours}h</b> / 8.0h ({livePunchStats.progressPct}%)
                     </span>
                   ) : (
                     <span>9-hour shift with 1-hour break window</span>

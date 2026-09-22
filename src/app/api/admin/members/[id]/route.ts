@@ -166,7 +166,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 }
 
-// Deactivate or Delete Member
+// Remove or Deactivate Member from Portal (Super Admin Only)
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const currentUser = await requireSuperAdmin(request);
@@ -174,7 +174,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     if (currentUser.id === id) {
       return NextResponse.json(
-        { success: false, error: { code: "CANNOT_DELETE_SELF", message: "You cannot delete your own Super Admin account" } },
+        { success: false, error: { code: "CANNOT_DELETE_SELF", message: "You cannot remove your own Super Admin account from the portal" } },
         { status: 400 }
       );
     }
@@ -184,38 +184,61 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ success: false, error: { code: "NOT_FOUND", message: "User not found" } }, { status: 404 });
     }
 
-    // Soft delete: set isActive = false
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get("permanent") === "true";
+
+    if (permanent) {
+      // Remove member from portal permanently
+      await prisma.user.delete({
+        where: { id },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          userId: currentUser.id,
+          action: "MEMBER_PERMANENTLY_DELETED",
+          entityType: "USER",
+          entityId: id,
+          detailsJson: JSON.stringify({ deletedUser: user.name, email: user.email }),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Member ${user.name} has been permanently removed from the portal.`,
+      });
+    }
+
+    // Standard portal removal: set isActive = false and HR Profile = TERMINATED
     await prisma.user.update({
       where: { id },
       data: { isActive: false },
     });
 
-    if (user) {
-      await prisma.hRProfile.updateMany({
-        where: { userId: id },
-        data: { status: "TERMINATED" },
-      });
-    }
+    await prisma.hRProfile.updateMany({
+      where: { userId: id },
+      data: { status: "TERMINATED" },
+    });
 
     // Record audit log
     await prisma.auditLog.create({
       data: {
         userId: currentUser.id,
-        action: "MEMBER_DEACTIVATED",
+        action: "MEMBER_REMOVED_FROM_PORTAL",
         entityType: "USER",
         entityId: id,
-        detailsJson: JSON.stringify({ deactivatedUser: user.name, email: user.email }),
+        detailsJson: JSON.stringify({ removedUser: user.name, email: user.email }),
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Member ${user.name} has been deactivated`,
+      message: `Member ${user.name} has been successfully removed from the portal.`,
     });
   } catch (error: any) {
-    if (error.message === "FORBIDDEN") {
-      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Super Admin privileges required" } }, { status: 403 });
+    if (error.message === "FORBIDDEN" || error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ success: false, error: { code: "FORBIDDEN", message: "Only Super Admin has access to remove members from the portal" } }, { status: 403 });
     }
-    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to deactivate member" } }, { status: 500 });
+    return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to remove member from portal" } }, { status: 500 });
   }
 }

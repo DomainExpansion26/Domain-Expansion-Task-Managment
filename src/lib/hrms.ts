@@ -41,12 +41,17 @@ export function calculateWorkingHours(
   const elapsedMs = Math.max(0, outTime - inTime);
   const elapsedHours = elapsedMs / (1000 * 60 * 60);
 
-  // Apply standard 1-hour (60 mins) break for shifts of 5+ hours, or when shift reaches 9 hours
-  let breakMs = (breakDurationMinutes ?? 60) * 60 * 1000;
-  if (elapsedHours < 5.0 && breakDurationMinutes === 60) {
-    breakMs = 0; // Short initial punches do not prematurely deduct 1 hour
+  // In a standard 9-hour shift (8 hours work + 1 hour break):
+  // - For <= 8 hours: no automatic break deduction is penalized unless user specified explicit break
+  // - Between 8 and 9 hours: time beyond 8 hours is treated as break window
+  // - For >= 9 hours: standard 1-hour break is applied
+  let breakMs = 0;
+  if (breakDurationMinutes > 0 && breakDurationMinutes !== 60) {
+    breakMs = breakDurationMinutes * 60 * 1000;
   } else if (elapsedHours >= 9.0) {
-    breakMs = Math.max(breakMs, 60 * 60 * 1000);
+    breakMs = 60 * 60 * 1000;
+  } else if (elapsedHours > 8.0) {
+    breakMs = Math.min(60 * 60 * 1000, elapsedMs - (8 * 60 * 60 * 1000));
   }
 
   const netWorkingMs = Math.max(0, elapsedMs - breakMs);
@@ -54,7 +59,9 @@ export function calculateWorkingHours(
 
   let status: "FULL_DAY" | "HALF_DAY" | "PRESENT" | "NOT_RECORDED" = "PRESENT";
   if (punchOut) {
-    status = totalWorkingHours >= 8.0 ? "FULL_DAY" : "HALF_DAY";
+    status = totalWorkingHours >= 8.0 ? "FULL_DAY" : totalWorkingHours > 0 ? "HALF_DAY" : "NOT_RECORDED";
+  } else if (totalWorkingHours >= 8.0) {
+    status = "FULL_DAY";
   }
 
   return {
@@ -176,8 +183,14 @@ export function calculateMonthlyStats(attendances: any[], leaves: any[] = []) {
   let absentDays = 0;
   let totalWorkingHours = 0;
 
+  const attendanceDates = new Set<string>();
+
   for (const record of attendances) {
     totalWorkingHours += record.totalWorkingHours || 0;
+    if (record.date) {
+      const d = new Date(record.date);
+      attendanceDates.add(`${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`);
+    }
     if (record.status === "FULL_DAY" || record.status === "PRESENT") {
       presentDays++;
     } else if (record.status === "HALF_DAY") {
@@ -189,10 +202,21 @@ export function calculateMonthlyStats(attendances: any[], leaves: any[] = []) {
     }
   }
 
-  // Approved leaves count
+  // Add approved leaves only if not already counted via an attendance record
   for (const leave of leaves) {
     if (leave.status === "APPROVED") {
-      leaveDays += leave.daysCount || 1;
+      const s = new Date(leave.startDate);
+      const e = new Date(leave.endDate);
+      const startMs = Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate());
+      const endMs = Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate());
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+      for (let t = startMs; t <= endMs; t += ONE_DAY) {
+        const d = new Date(t);
+        const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+        if (!attendanceDates.has(key)) {
+          leaveDays += leave.daysCount <= 0.5 ? 0.5 : 1;
+        }
+      }
     }
   }
 

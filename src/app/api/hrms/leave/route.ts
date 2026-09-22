@@ -22,18 +22,41 @@ export async function GET(request: NextRequest) {
     const isHR = isHRAdmin(currentUser.role);
     const isLead = isTeamLead(currentUser.role) || isManager(currentUser.role);
 
-    if (isSuper || isHR || viewAll) {
+    // Fetch project member IDs for projects led by current user
+    const ledProjects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { leadId: currentUser.id },
+          { teamLeadId: currentUser.id },
+          { managerId: currentUser.id },
+          { members: { some: { userId: currentUser.id, role: "LEAD" } } },
+        ],
+      },
+      select: {
+        members: { select: { userId: true } },
+      },
+    });
+    const projectMemberUserIds = Array.from(
+      new Set(ledProjects.flatMap((p) => p.members.map((m) => m.userId)))
+    );
+
+    const isEffectiveLead = isLead || projectMemberUserIds.length > 0;
+
+    if (isSuper || isHR || (viewAll && !isEffectiveLead)) {
       // Super Admin & HR Admin can view all company leaves
       if (searchParams.get("userId")) {
         where.userId = searchParams.get("userId");
       }
-    } else if (isLead) {
-      // Team Leads & Managers: view own leaves + team members' leaves
+    } else if (isEffectiveLead) {
+      // Team Leads, Managers, & Project Leads: view own leaves + team members' & project members' leaves
       const conditions: any[] = [{ userId: currentUser.id }];
       conditions.push({ user: { teamLeadId: currentUser.id } });
       conditions.push({ user: { managerId: currentUser.id } });
       if (currentUser.department) {
         conditions.push({ user: { department: currentUser.department } });
+      }
+      if (projectMemberUserIds.length > 0) {
+        conditions.push({ userId: { in: projectMemberUserIds } });
       }
       where.OR = conditions;
     } else {
@@ -130,14 +153,15 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      // Notify Team Lead & Manager
+      // Notify Team Lead, Manager, Project Leads, and HR Admins
       const userWithLeads = await prisma.user.findUnique({
         where: { id: currentUser.id },
         select: { managerId: true, teamLeadId: true, department: true },
       });
 
-      const approverIds = [userWithLeads?.managerId, userWithLeads?.teamLeadId].filter(Boolean) as string[];
-      if (approverIds.length === 0 && userWithLeads?.department) {
+      const approverIds: string[] = [userWithLeads?.managerId, userWithLeads?.teamLeadId].filter(Boolean) as string[];
+
+      if (userWithLeads?.department) {
         const deptLeads = await prisma.user.findMany({
           where: { department: userWithLeads.department, role: { in: ["TEAM_LEAD", "MANAGER", "PROJECT_MANAGER"] } },
           select: { id: true },
@@ -145,7 +169,29 @@ export async function POST(request: NextRequest) {
         approverIds.push(...deptLeads.map((l) => l.id));
       }
 
-      for (const approverId of approverIds) {
+      // Check projects where user is a member
+      const memberProjects = await prisma.projectMember.findMany({
+        where: { userId: currentUser.id },
+        include: {
+          project: { select: { leadId: true, teamLeadId: true, managerId: true } },
+        },
+      });
+      for (const mp of memberProjects) {
+        if (mp.project.leadId) approverIds.push(mp.project.leadId);
+        if (mp.project.teamLeadId) approverIds.push(mp.project.teamLeadId);
+        if (mp.project.managerId) approverIds.push(mp.project.managerId);
+      }
+
+      // Also notify HR Admins
+      const hrAdmins = await prisma.user.findMany({
+        where: { role: { in: ["HR_ADMIN", "SUPER_ADMIN"] } },
+        select: { id: true },
+      });
+      approverIds.push(...hrAdmins.map((h) => h.id));
+
+      const uniqueApproverIds = Array.from(new Set(approverIds)).filter((id) => id !== currentUser.id);
+
+      for (const approverId of uniqueApproverIds) {
         await prisma.notification.create({
           data: {
             userId: approverId,
@@ -168,7 +214,7 @@ export async function POST(request: NextRequest) {
       data: leave,
       message: isHigherTier
         ? "Leave application submitted. Executive leave requires Super Admin approval."
-        : "Leave application submitted. Sent to your Team Lead for review.",
+        : "Leave application submitted. Sent to your Team Lead & HR for review.",
     });
   } catch (error: any) {
     console.error("Apply leave error:", error);
@@ -202,13 +248,56 @@ export async function PATCH(request: NextRequest) {
     const isSelfCancel = status === "CANCELLED" && leave.userId === currentUser.id;
 
     if (!isSelfCancel) {
-      if (!isHRAdmin(currentUser.role)) {
+      if (leave.userId === currentUser.id && !isSuperAdmin(currentUser.role)) {
         return NextResponse.json(
           {
             success: false,
             error: {
               code: "FORBIDDEN",
-              message: "Only HR Admin and Super Admin are authorized to approve or reject leave requests.",
+              message: "You cannot approve or reject your own leave application.",
+            },
+          },
+          { status: 403 }
+        );
+      }
+
+      const isSuper = isSuperAdmin(currentUser.role);
+      const isHR = isHRAdmin(currentUser.role);
+      const isLead = isTeamLead(currentUser.role) || isManager(currentUser.role);
+
+      // Check if current user leads any project that the applicant belongs to
+      let isProjectLeadForApplicant = false;
+      if (!isSuper && !isHR) {
+        const projectMatch = await prisma.project.findFirst({
+          where: {
+            OR: [
+              { leadId: currentUser.id },
+              { teamLeadId: currentUser.id },
+              { managerId: currentUser.id },
+              { members: { some: { userId: currentUser.id, role: "LEAD" } } },
+            ],
+            members: {
+              some: { userId: leave.userId },
+            },
+          },
+        });
+        isProjectLeadForApplicant = !!projectMatch;
+      }
+
+      const isDirectReport =
+        leave.user.teamLeadId === currentUser.id ||
+        leave.user.managerId === currentUser.id ||
+        (Boolean(currentUser.department) && leave.user.department === currentUser.department);
+
+      const canApprove = isSuper || isHR || isLead || isProjectLeadForApplicant || isDirectReport;
+
+      if (!canApprove) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "FORBIDDEN",
+              message: "Only HR Admin, Super Admin, or the Team Lead / Project Lead of this member are authorized to approve or reject leave requests.",
             },
           },
           { status: 403 }
