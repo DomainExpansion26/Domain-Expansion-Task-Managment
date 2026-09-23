@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { DevMailboxModal } from "@/components/layout/DevMailboxModal";
-import { DXAIAssistant } from "@/components/ai/DXAIAssistant";
 import { TaskCreateModal } from "@/components/tasks/TaskCreateModal";
 import { TaskDetailModal } from "@/components/tasks/TaskDetailModal";
 import { BugDetailModal } from "@/components/qa/BugDetailModal";
@@ -93,7 +92,6 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isDevMailboxOpen, setIsDevMailboxOpen] = useState(false);
-  const [isAIOpen, setIsAIOpen] = useState(false);
 
   // 1. Fetch Workspace Data (Consolidated Bootstrap for 5x Performance)
   const fetchAppData = useCallback(async () => {
@@ -245,9 +243,7 @@ export default function Home() {
     <AppShell
       currentTab={currentTab}
       onSelectTab={(tab) => {
-        if (tab === "ai") {
-          setIsAIOpen(true);
-        } else if (tab === "superadmin" || tab === "admin") {
+        if (tab === "superadmin" || tab === "admin") {
           if (isSuperAdmin(currentUser?.role)) {
             setCurrentTab(tab);
           } else {
@@ -279,7 +275,6 @@ export default function Home() {
       onOpenSearch={() => setIsSearchOpen(true)}
       onOpenNotifications={() => setIsNotificationsOpen(true)}
       onOpenDevMailbox={() => setIsDevMailboxOpen(true)}
-      onToggleAI={() => setIsAIOpen(!isAIOpen)}
       onLogout={handleLogout}
     >
       {/* Dynamic Views */}
@@ -291,7 +286,6 @@ export default function Home() {
           onSelectTask={(key) => setSelectedTaskKey(key)}
           onSelectProject={(id) => setCurrentTab("kanban")}
           onOpenCreateTask={() => setIsCreateTaskOpen(true)}
-          onToggleAI={() => setIsAIOpen(true)}
         />
       )}
 
@@ -320,7 +314,6 @@ export default function Home() {
           onSelectBug={(key) => setSelectedBugKey(key)}
           onStatusChange={handleStatusChange}
           onOpenCreateTask={() => setIsCreateTaskOpen(true)}
-          onToggleAI={() => setIsAIOpen(true)}
         />
       )}
 
@@ -491,16 +484,6 @@ export default function Home() {
       <DevMailboxModal
         isOpen={isDevMailboxOpen}
         onClose={() => setIsDevMailboxOpen(false)}
-      />
-
-      <DXAIAssistant
-        isOpen={isAIOpen}
-        onClose={() => setIsAIOpen(false)}
-        currentUser={currentUser}
-        onTaskCreated={(taskKey) => {
-          fetchAppData();
-          setSelectedTaskKey(taskKey);
-        }}
       />
 
       <TaskCreateModal

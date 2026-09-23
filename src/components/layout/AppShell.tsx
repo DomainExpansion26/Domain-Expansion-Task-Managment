@@ -10,7 +10,6 @@ import {
   Layers,
   Users,
   Bell,
-  Sparkles,
   Settings,
   Mail,
   Plus,
@@ -44,7 +43,7 @@ interface AppShellProps {
   onOpenSearch: () => void;
   onOpenNotifications: () => void;
   onOpenDevMailbox: () => void;
-  onToggleAI: () => void;
+  onToggleAI?: () => void;
   onLogout: () => void;
   children: React.ReactNode;
 }
@@ -118,7 +117,6 @@ export function AppShell({
     { id: "documents", label: "Documents & Vault", icon: FileText },
     { id: "team", label: "Team Directory", icon: Users },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadCount },
-    { id: "ai", label: "DX AI Copilot", icon: Sparkles, highlight: true },
     { id: "hradmin", label: "HR Admin", icon: Building2, hrOnly: true },
     { id: "superadmin", label: "Super Admin", icon: Shield, superAdminOnly: true },
     { id: "admin", label: "Settings", icon: Settings, superAdminOnly: true },
@@ -203,15 +201,13 @@ export function AppShell({
                   isActive
                     ? "bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 shadow-[0_0_15px_rgba(255,98,0,0.1)] font-bold"
                     : "text-[#ACACB8] hover:text-white hover:bg-[#1A1A1A]"
-                } ${item.highlight ? "text-[#C084FC] hover:text-[#D8B4FE]" : ""}`}
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon
                     className={`w-4 h-4 ${
                       isActive
                         ? "text-[#FF6200]"
-                        : item.highlight
-                        ? "text-[#A855F7]"
                         : "text-[#888898]"
                     }`}
                   />
@@ -405,14 +401,6 @@ export function AppShell({
               )}
             </button>
 
-            {/* DX AI Assistant Trigger Button */}
-            <button
-              onClick={onToggleAI}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 text-xs font-semibold shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-              <span className="hidden sm:inline">Ask DX AI</span>
-            </button>
 
             {/* Notification Bell */}
             <button

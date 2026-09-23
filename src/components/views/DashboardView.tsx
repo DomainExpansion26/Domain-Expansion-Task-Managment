@@ -10,7 +10,6 @@ import {
   Users,
   TrendingUp,
   ArrowUpRight,
-  Sparkles,
 } from "lucide-react";
 import {
   BarChart,
@@ -32,7 +31,7 @@ interface DashboardViewProps {
   onSelectTask: (key: string) => void;
   onSelectProject: (id: string) => void;
   onOpenCreateTask: () => void;
-  onToggleAI: () => void;
+  onToggleAI?: () => void;
 }
 
 export function DashboardView({
@@ -98,18 +97,11 @@ export function DashboardView({
               Think <span className="text-gradient-orange">Outside The Box</span>
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 dark:text-[#ACACB8] mt-1 max-w-xl">
-              Enterprise Jira-style workflow engine, sprint tracking, real-time collaboration, and DX AI assistant.
+              Enterprise Jira-style workflow engine, sprint tracking, and real-time collaboration.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={onToggleAI}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 hover:bg-purple-500/30 text-xs font-bold transition-all shadow-[0_0_15px_rgba(168,85,247,0.2)]"
-            >
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span>Ask DX AI Assistant</span>
-            </button>
             <button
               onClick={onOpenCreateTask}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)]"

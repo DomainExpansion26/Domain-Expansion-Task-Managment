@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronRight,
   ArrowRight,
-  Sparkles,
   Bug,
   AtSign,
   Eye,
@@ -28,7 +27,7 @@ interface MyWorkViewProps {
   onSelectBug?: (bugKey: string) => void;
   onStatusChange: (taskKey: string, newStatus: string) => void;
   onOpenCreateTask: () => void;
-  onToggleAI: () => void;
+  onToggleAI?: () => void;
 }
 
 export function MyWorkView({
@@ -134,13 +133,6 @@ export function MyWorkView({
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={onToggleAI}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-300 hover:bg-purple-500/25 text-xs font-semibold"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Work Summary</span>
-          </button>
           <button
             onClick={onOpenCreateTask}
             className="px-3.5 py-1.5 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-colors"
