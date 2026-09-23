@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
-import { calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
+import { autoCloseDanglingSessions, calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,27 +13,18 @@ export async function GET(request: NextRequest) {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    // First check if there is an active/open punch session (even if started on previous calendar day)
-    let attendance = await prisma.attendance.findFirst({
-      where: {
-        userId: currentUser.id,
-        punchIn: { not: null },
-        punchOut: null,
-      },
-      orderBy: { date: "desc" },
-    });
+    // Auto-close any dangling sessions from previous calendar days so they don't leak into today
+    await autoCloseDanglingSessions(prisma, currentUser.id, today);
 
-    // If no open session, fetch today's attendance record
-    if (!attendance) {
-      attendance = await prisma.attendance.findUnique({
-        where: {
-          userId_date: {
-            userId: currentUser.id,
-            date: today,
-          },
+    // Query strictly today's attendance record
+    const attendance = await prisma.attendance.findUnique({
+      where: {
+        userId_date: {
+          userId: currentUser.id,
+          date: today,
         },
-      });
-    }
+      },
+    });
 
     if (!attendance) {
       return NextResponse.json({
@@ -42,7 +33,7 @@ export async function GET(request: NextRequest) {
           date: today,
           punchIn: null,
           punchOut: null,
-          breakDurationMinutes: 60,
+          breakDurationMinutes: 0,
           totalWorkingHours: 0,
           status: "NOT_RECORDED",
           sessions: [],
@@ -68,7 +59,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // If user is currently active (clocked in), dynamically compute current live working hours
+    // If user is currently active (clocked in today), dynamically compute live working hours
     let currentWorkingHours = attendance.totalWorkingHours || 0;
     let currentStatus = attendance.status;
 
@@ -88,6 +79,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("Get punch status error:", error);
     return NextResponse.json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to get punch status" } }, { status: 500 });
   }
 }
@@ -106,16 +98,10 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
 
-    // Check for an active open session
-    const activeOpen = await prisma.attendance.findFirst({
-      where: {
-        userId: currentUser.id,
-        punchIn: { not: null },
-        punchOut: null,
-      },
-      orderBy: { date: "desc" },
-    });
+    // Auto-close any unclosed past days' sessions first so they never block today
+    await autoCloseDanglingSessions(prisma, currentUser.id, today);
 
+    // Fetch today's record strictly
     const existingToday = await prisma.attendance.findUnique({
       where: {
         userId_date: {
@@ -126,13 +112,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (action === "PUNCH_IN") {
-      if (activeOpen) {
+      // Check if user is already clocked in today
+      const isCurrentlyClockedIn = Boolean(existingToday?.punchIn && !existingToday?.punchOut);
+      if (isCurrentlyClockedIn) {
         return NextResponse.json(
           {
             success: false,
             error: {
               code: "ALREADY_PUNCHED_IN",
-              message: "You are currently clocked in. Please punch out before punching in again.",
+              message: "You are currently clocked in. Please punch out / take a break before punching in again.",
             },
           },
           { status: 400 }
@@ -184,32 +172,32 @@ export async function POST(request: NextRequest) {
           date: today,
           punchIn: now,
           punchOut: null,
-          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 60,
+          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 0,
           totalWorkingHours: calc.totalWorkingHours,
           status: "PRESENT",
           notes: notesPayload,
         },
         update: {
           punchIn: firstPunchIn,
-          punchOut: null,
+          punchOut: null, // Actively clocked in
           status: "PRESENT",
           totalWorkingHours: calc.totalWorkingHours,
-          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 60,
+          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 0,
           notes: notesPayload,
         },
       });
 
+      const sessionNum = sessions.length;
       return NextResponse.json({
         success: true,
         data: { ...attendance, sessions },
-        message: `Punched in successfully at ${now.toLocaleTimeString()} (Session #${sessions.length})`,
+        message: `Punched in successfully at ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} (Session #${sessionNum})`,
       });
     }
 
     if (action === "PUNCH_OUT") {
-      const targetRecord = activeOpen || existingToday;
-
-      if (!targetRecord || targetRecord.punchOut || !targetRecord.punchIn) {
+      // Must be clocked in today to punch out
+      if (!existingToday || !existingToday.punchIn || existingToday.punchOut) {
         return NextResponse.json(
           {
             success: false,
@@ -224,18 +212,18 @@ export async function POST(request: NextRequest) {
 
       // Parse sessions
       let sessions: PunchSession[] = [];
-      if (targetRecord.notes) {
+      if (existingToday.notes) {
         try {
-          const parsed = JSON.parse(targetRecord.notes);
+          const parsed = JSON.parse(existingToday.notes);
           if (Array.isArray(parsed.punches)) {
             sessions = parsed.punches;
           }
         } catch (e) {}
       }
 
-      if (sessions.length === 0 && targetRecord.punchIn) {
+      if (sessions.length === 0 && existingToday.punchIn) {
         sessions.push({
-          punchIn: new Date(targetRecord.punchIn).toISOString(),
+          punchIn: new Date(existingToday.punchIn).toISOString(),
           punchOut: null,
         });
       }
@@ -247,7 +235,7 @@ export async function POST(request: NextRequest) {
           sessions[i].punchOut = now.toISOString();
           const inMs = new Date(sessions[i].punchIn).getTime();
           const outMs = now.getTime();
-          sessions[i].durationMinutes = Math.round((outMs - inMs) / (60 * 1000));
+          sessions[i].durationMinutes = Math.max(0, Math.round((outMs - inMs) / (60 * 1000)));
           closed = true;
           break;
         }
@@ -255,13 +243,13 @@ export async function POST(request: NextRequest) {
 
       if (!closed) {
         sessions.push({
-          punchIn: (targetRecord.punchIn || now).toISOString(),
+          punchIn: (existingToday.punchIn || now).toISOString(),
           punchOut: now.toISOString(),
-          durationMinutes: Math.round((now.getTime() - new Date(targetRecord.punchIn || now).getTime()) / (60 * 1000)),
+          durationMinutes: Math.max(0, Math.round((now.getTime() - new Date(existingToday.punchIn || now).getTime()) / (60 * 1000))),
         });
       }
 
-      const firstPunchIn = targetRecord.punchIn || now;
+      const firstPunchIn = existingToday.punchIn || now;
       const calc = calculateMultiSessionHours(sessions, firstPunchIn, now, 60);
 
       const notesPayload = JSON.stringify({
@@ -271,10 +259,10 @@ export async function POST(request: NextRequest) {
       });
 
       const attendance = await prisma.attendance.update({
-        where: { id: targetRecord.id },
+        where: { id: existingToday.id },
         data: {
           punchOut: now,
-          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 60,
+          breakDurationMinutes: calc.breakDurationMinutes !== undefined ? calc.breakDurationMinutes : 0,
           totalWorkingHours: calc.totalWorkingHours,
           status: calc.status,
           notes: notesPayload,
@@ -284,7 +272,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: { ...attendance, sessions },
-        message: `Punched out at ${now.toLocaleTimeString()}. Logged: ${calc.totalWorkingHours}h (${calc.status === "FULL_DAY" ? "Full Day Complete: 8+ hrs" : "Half Day: <8 hrs"})`,
+        message: `Punched out at ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. Logged: ${calc.totalWorkingHours}h (${calc.status === "FULL_DAY" ? "Full Day Complete: 8+ hrs" : "Break / Half Day: <8 hrs"})`,
       });
     }
 

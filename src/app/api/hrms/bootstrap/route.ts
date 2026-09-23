@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, withDbRetry } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isHRAdmin, isSuperAdmin, isTeamLead, isManager } from "@/lib/permissions";
-import { calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
+import { autoCloseDanglingSessions, calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +47,9 @@ export async function GET(request: NextRequest) {
       new Set(ledProjects.flatMap((p) => p.members.map((m) => m.userId)))
     );
 
+    // Auto-close dangling sessions from past calendar days so they don't leak into today
+    await autoCloseDanglingSessions(prisma, currentUser.id, todayUtcMidnight);
+
     // Run all HRMS queries concurrently in a single database connection session
     const [
       userWithProfile,
@@ -75,24 +78,17 @@ export async function GET(request: NextRequest) {
         })
       ),
 
-      // 2. Today's Punch (check active open session or today's record)
-      withDbRetry(async () => {
-        const active = await prisma.attendance.findFirst({
+      // 2. Today's Punch (strictly today's record)
+      withDbRetry(() =>
+        prisma.attendance.findUnique({
           where: {
-            userId: currentUser.id,
-            punchIn: { not: null },
-            punchOut: null,
+            userId_date: {
+              userId: currentUser.id,
+              date: todayUtcMidnight,
+            },
           },
-          orderBy: { date: "desc" },
-        });
-        if (active) return active;
-        return prisma.attendance.findFirst({
-          where: {
-            userId: currentUser.id,
-            date: todayUtcMidnight,
-          },
-        });
-      }),
+        })
+      ),
 
       // 3. Monthly Attendance
       withDbRetry(() =>
@@ -478,23 +474,32 @@ export async function GET(request: NextRequest) {
     };
 
     let todayPunchData: any = todayAttendance;
+    let todaySessions: PunchSession[] = [];
+    if (todayAttendance?.notes) {
+      try {
+        const parsed = JSON.parse(todayAttendance.notes);
+        if (Array.isArray(parsed.punches)) todaySessions = parsed.punches;
+      } catch (e) {}
+    }
+    if (todaySessions.length === 0 && todayAttendance?.punchIn) {
+      todaySessions.push({
+        punchIn: new Date(todayAttendance.punchIn).toISOString(),
+        punchOut: todayAttendance.punchOut ? new Date(todayAttendance.punchOut).toISOString() : null,
+      });
+    }
+
     if (todayAttendance?.punchIn && !todayAttendance?.punchOut) {
-      let sessions: PunchSession[] = [];
-      if (todayAttendance.notes) {
-        try {
-          const parsed = JSON.parse(todayAttendance.notes);
-          if (Array.isArray(parsed.punches)) sessions = parsed.punches;
-        } catch (e) {}
-      }
-      if (sessions.length === 0) {
-        sessions.push({ punchIn: new Date(todayAttendance.punchIn).toISOString(), punchOut: null });
-      }
-      const calc = calculateMultiSessionHours(sessions, todayAttendance.punchIn, null, todayAttendance.breakDurationMinutes ?? 60);
+      const calc = calculateMultiSessionHours(todaySessions, todayAttendance.punchIn, null, todayAttendance.breakDurationMinutes ?? 60);
       todayPunchData = {
         ...todayAttendance,
         totalWorkingHours: calc.totalWorkingHours,
         status: calc.status,
-        sessions,
+        sessions: todaySessions,
+      };
+    } else if (todayAttendance) {
+      todayPunchData = {
+        ...todayAttendance,
+        sessions: todaySessions,
       };
     }
 

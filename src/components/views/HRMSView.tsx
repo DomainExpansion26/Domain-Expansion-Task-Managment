@@ -44,6 +44,8 @@ import {
   Sparkles,
   Heart,
   ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { AttendanceDetailModal } from "@/components/modals/AttendanceDetailModal";
 import { LeaveApplyModal } from "@/components/modals/LeaveApplyModal";
@@ -132,6 +134,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
   const [leaves, setLeaves] = useState<any[]>([]);
   const [teamPendingLeaves, setTeamPendingLeaves] = useState<any[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<any[]>([]);
+  const [showOtherLeaves, setShowOtherLeaves] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [actionLeaveLoading, setActionLeaveLoading] = useState(false);
 
@@ -232,20 +235,22 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
       totalActiveMs = Math.max(0, nowMs - inMs);
     }
 
-    // In a 9-hour shift: standard 1-hour break window applies beyond 8 hours
+    // In a 9-hour shift: standard 1-hour break window applies beyond 8 hours for continuous single session
     const elapsedHours = totalActiveMs / (1000 * 60 * 60);
     let breakMs = 0;
-    if (elapsedHours >= 9.0) {
-      breakMs = 60 * 60 * 1000;
-    } else if (elapsedHours > 8.0) {
-      breakMs = Math.min(60 * 60 * 1000, totalActiveMs - 8 * 60 * 60 * 1000);
+    if (sessions.length <= 1) {
+      if (elapsedHours >= 9.0) {
+        breakMs = 60 * 60 * 1000;
+      } else if (elapsedHours > 8.0) {
+        breakMs = Math.min(60 * 60 * 1000, totalActiveMs - 8 * 60 * 60 * 1000);
+      }
     }
 
     const netMs = Math.max(0, totalActiveMs - breakMs);
     const totalMinutes = Math.floor(netMs / (60 * 1000));
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
-    const decimalHours = Math.round((netMs / (1000 * 60 * 60)) * 100) / 100;
+    const decimalHours = Math.min(12.0, Math.round((netMs / (1000 * 60 * 60)) * 100) / 100);
 
     return {
       isActive: true,
@@ -642,7 +647,14 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
   const isMyBirthday = empDash?.isMyBirthday || false;
   const upcomingAnniversaries = empDash?.upcomingAnniversaries || [];
   const announcements = empDash?.announcements || [];
-  const upcomingHolidays = empDash?.upcomingHolidays || [];
+  const upcomingHolidays = (empDash?.upcomingHolidays || []).filter((h: any) => {
+    if (!h?.date) return false;
+    const hDate = new Date(h.date);
+    const now = new Date();
+    const hDateStr = typeof h.date === "string" ? h.date.split("T")[0] : hDate.toISOString().split("T")[0];
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    return hDateStr >= todayStr;
+  });
 
   const tabList = [
     { id: "dashboard", label: "📊 HR Overview & Celebrations" },
@@ -862,7 +874,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                 <div className="p-3.5 rounded-2xl bg-gray-50/90 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
                   <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">Break Time</div>
                   <div className="text-sm font-bold font-mono text-gray-900 dark:text-white mt-1">
-                    {punchData?.breakDurationMinutes ?? 60}m <span className="text-[10px] text-gray-500 dark:text-gray-400 font-normal">(1h allowed)</span>
+                    {punchData?.breakDurationMinutes ?? 0}m <span className="text-[10px] text-gray-500 dark:text-gray-400 font-normal">(1h allowed)</span>
                   </div>
                 </div>
 
@@ -890,7 +902,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                       onClick={() => handlePunchAction("PUNCH_IN")}
                       className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      <span>{punchData?.punchOut ? "➕ Punch In Again" : "▶ Punch In Now"}</span>
+                      <span>{punchData?.punchOut ? "➕ Punch In (Resume Work)" : "▶ Punch In Now"}</span>
                     </button>
                   ) : (
                     <button
@@ -899,7 +911,7 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                       onClick={() => handlePunchAction("PUNCH_OUT")}
                       className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      <span>⏹ Punch Out / Take Break</span>
+                      <span>⏹ Punch Out (Take Break / Finish)</span>
                     </button>
                   )}
                   {punchLoading && <span className="text-xs text-gray-400 animate-pulse">Updating...</span>}
@@ -976,27 +988,29 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
             </div>
           </div>
 
-          {/* Leave Balances Quick Cards (24-Day Annual Quota: 2 Leaves Monthly on 1st) */}
+          {/* Leave Balances Cards - Focused strictly on Monthly CL & PL */}
           <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] p-6 rounded-3xl shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                    My Leave Balances (24 Days / Year Quota)
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-cyan-500" />
+                    <span>My Leave Balances (CL & PL)</span>
                   </h2>
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                    2 Leaves Accrued Monthly on 1st
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                    +1 CL & +1 PL Credited Monthly
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-500 dark:text-[#888898] mt-0.5">
-                  1 Casual/Sick Leave (CL/SL) + 1 Privilege Leave (PL/EL) credited monthly on 1st &bull; Dec Year-End Carry Forward
+                  1 Casual Leave (CL) + 1 Privilege Leave (PL) credited on the 1st of every month. Unused leaves accumulate and roll over to next month!
                 </p>
               </div>
               <button
                 onClick={() => setIsLeaveModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm cursor-pointer transition-all self-start sm:self-auto"
+                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm cursor-pointer transition-all self-start sm:self-auto flex items-center gap-1.5"
               >
-                + Apply for Leave
+                <Plus className="w-3.5 h-3.5" />
+                <span>Apply for Leave</span>
               </button>
             </div>
 
@@ -1005,37 +1019,111 @@ export function HRMSView({ currentUser, currentTab = "overview", onSelectTab }: 
                 Leave balance not available.
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {leaveBalances.map((bal) => {
-                  const isMonthly = bal.code === "CL" || bal.code === "PL" || bal.code === "EL";
-                  return (
-                    <div
-                      key={bal.id}
-                      className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#282828] text-xs space-y-1.5"
+              <div className="space-y-4">
+                {/* Primary Focused Cards: Casual Leave (CL) and Privilege Leave (PL) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {leaveBalances
+                    .filter((bal) => bal.code === "CL" || bal.code === "PL" || bal.code === "EL" || bal.code === "SL")
+                    .map((bal) => {
+                      const isCL = bal.code === "CL" || bal.code === "SL";
+                      return (
+                        <div
+                          key={bal.id}
+                          className={`p-5 rounded-2xl border transition-all text-xs space-y-3 relative overflow-hidden ${
+                            isCL
+                              ? "bg-gradient-to-br from-cyan-50/70 via-white to-blue-50/40 dark:from-[#151D24] dark:via-[#161616] dark:to-[#181818] border-cyan-200 dark:border-cyan-900/40"
+                              : "bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 dark:from-[#13201B] dark:via-[#161616] dark:to-[#181818] border-emerald-200 dark:border-emerald-900/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full ${
+                                  isCL ? "bg-cyan-500" : "bg-emerald-500"
+                                }`}
+                              />
+                              <span className="font-bold text-sm text-gray-900 dark:text-white">
+                                {isCL ? "Casual / Sick Leave (CL)" : "Privilege / Earned Leave (PL)"}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                                isCL
+                                  ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30"
+                                  : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                              }`}
+                            >
+                              +1 Credited Monthly
+                            </span>
+                          </div>
+
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-black font-mono text-gray-900 dark:text-white">
+                              {bal.remainingDays}
+                            </span>
+                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                              Days Available
+                            </span>
+                            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono ml-auto">
+                              / {bal.accruedDays || bal.daysAllowed} accrued so far
+                            </span>
+                          </div>
+
+                          <div className="pt-2 border-t border-gray-100 dark:border-[#282828] flex items-center justify-between text-[11px] text-gray-500 dark:text-[#888898]">
+                            <div>
+                              <span>Used: <b>{bal.approvedDays}d</b></span>
+                              <span className="mx-1.5">&bull;</span>
+                              <span>Pending: <b>{bal.pendingDays}d</b></span>
+                            </div>
+                            <span className="font-mono text-[10px] text-gray-400">
+                              Quota: 12d/yr
+                            </span>
+                          </div>
+
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/20 px-2.5 py-1.5 rounded-xl border border-emerald-200/60 dark:border-emerald-900/30 flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                            <span>Unused balance rolls over to next month automatically (+1 added on 1st).</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Collapsible toggle for other statutory leaves (Maternity, Paternity, LOP) */}
+                {leaveBalances.some((bal) => !(bal.code === "CL" || bal.code === "PL" || bal.code === "EL" || bal.code === "SL")) && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowOtherLeaves(!showOtherLeaves)}
+                      className="text-[11px] text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 flex items-center gap-1 font-semibold cursor-pointer transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-gray-700 dark:text-gray-200 truncate">{bal.name}</div>
-                        {bal.carryForward && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-semibold" title="Carries forward to next calendar year">
-                            CF
-                          </span>
-                        )}
+                      {showOtherLeaves ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      <span>{showOtherLeaves ? "Hide other statutory leave types" : "View other statutory leave types (Maternity, Paternity, LOP)"}</span>
+                    </button>
+
+                    {showOtherLeaves && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-[#282828]">
+                        {leaveBalances
+                          .filter((bal) => !(bal.code === "CL" || bal.code === "PL" || bal.code === "EL" || bal.code === "SL"))
+                          .map((bal) => (
+                            <div
+                              key={bal.id}
+                              className="p-3.5 rounded-2xl bg-gray-50/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828] text-xs space-y-1"
+                            >
+                              <div className="font-bold text-gray-700 dark:text-gray-300 truncate">{bal.name}</div>
+                              <div className="text-xl font-bold font-mono text-gray-900 dark:text-white">
+                                {bal.remainingDays}{" "}
+                                <span className="text-[10px] font-normal text-gray-400">/ {bal.daysAllowed}</span>
+                              </div>
+                              <div className="text-[10px] text-gray-400">
+                                {bal.approvedDays} used &bull; Statutory Policy
+                              </div>
+                            </div>
+                          ))}
                       </div>
-                      <div className="text-2xl font-black text-gray-900 dark:text-white font-mono">
-                        {bal.remainingDays}{" "}
-                        <span className="text-xs font-normal text-gray-400">
-                          / {isMonthly ? `${bal.accruedDays || bal.daysAllowed} accrued` : bal.daysAllowed}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-gray-400 flex items-center justify-between">
-                        <span>{bal.approvedDays} used &bull; {bal.pendingDays} pending</span>
-                        <span className="font-mono text-[9px] text-cyan-600 dark:text-cyan-400 font-semibold">
-                          {isMonthly ? `${bal.daysAllowed}/yr` : "Statutory"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

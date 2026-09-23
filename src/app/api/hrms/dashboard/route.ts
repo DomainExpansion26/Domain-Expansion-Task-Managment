@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isHRAdmin, isSuperAdmin, isManager, isTeamLead } from "@/lib/permissions";
-import { calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
+import { autoCloseDanglingSessions, calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
     const isHRorSuper = isHRAdmin(currentUser.role) || isSuperAdmin(currentUser.role);
     const isLeadOrManager = isManager(currentUser.role) || isTeamLead(currentUser.role);
 
+    // Auto-close dangling past sessions first so they never leak into today
+    await autoCloseDanglingSessions(prisma, currentUser.id, today);
+
     // 1. Fetch real DB entities
     const [
       myTodayPunch,
@@ -26,16 +29,9 @@ export async function GET(request: NextRequest) {
       allProfiles,
       myHRProfile,
     ] = await Promise.all([
-      (async () => {
-        const openPunch = await prisma.attendance.findFirst({
-          where: { userId: currentUser.id, punchIn: { not: null }, punchOut: null },
-          orderBy: { date: "desc" },
-        });
-        if (openPunch) return openPunch;
-        return prisma.attendance.findUnique({
-          where: { userId_date: { userId: currentUser.id, date: today } },
-        });
-      })(),
+      prisma.attendance.findUnique({
+        where: { userId_date: { userId: currentUser.id, date: today } },
+      }),
       prisma.leave.findMany({
         where: { userId: currentUser.id },
         orderBy: { createdAt: "desc" },
@@ -225,22 +221,32 @@ export async function GET(request: NextRequest) {
       .reduce((sum, l) => sum + (l.daysCount || 1), 0);
 
     let liveTodayPunch: any = myTodayPunch;
+    let todaySessions: PunchSession[] = [];
+    if (myTodayPunch?.notes) {
+      try {
+        const parsed = JSON.parse(myTodayPunch.notes);
+        if (Array.isArray(parsed.punches)) todaySessions = parsed.punches;
+      } catch (e) {}
+    }
+    if (todaySessions.length === 0 && myTodayPunch?.punchIn) {
+      todaySessions.push({
+        punchIn: new Date(myTodayPunch.punchIn).toISOString(),
+        punchOut: myTodayPunch.punchOut ? new Date(myTodayPunch.punchOut).toISOString() : null,
+      });
+    }
+
     if (myTodayPunch?.punchIn && !myTodayPunch?.punchOut) {
-      let sessions: PunchSession[] = [];
-      if (myTodayPunch.notes) {
-        try {
-          const parsed = JSON.parse(myTodayPunch.notes);
-          if (Array.isArray(parsed.punches)) sessions = parsed.punches;
-        } catch (e) {}
-      }
-      if (sessions.length === 0) {
-        sessions.push({ punchIn: new Date(myTodayPunch.punchIn).toISOString(), punchOut: null });
-      }
-      const calc = calculateMultiSessionHours(sessions, myTodayPunch.punchIn, null, myTodayPunch.breakDurationMinutes ?? 60);
+      const calc = calculateMultiSessionHours(todaySessions, myTodayPunch.punchIn, null, myTodayPunch.breakDurationMinutes ?? 60);
       liveTodayPunch = {
         ...myTodayPunch,
         totalWorkingHours: calc.totalWorkingHours,
         status: calc.status,
+        sessions: todaySessions,
+      };
+    } else if (liveTodayPunch) {
+      liveTodayPunch = {
+        ...liveTodayPunch,
+        sessions: todaySessions,
       };
     }
 
@@ -249,9 +255,10 @@ export async function GET(request: NextRequest) {
         date: today,
         punchIn: null,
         punchOut: null,
-        breakDurationMinutes: 60,
+        breakDurationMinutes: 0,
         totalWorkingHours: 0,
         status: "NOT_RECORDED",
+        sessions: [],
       },
       leaveBalances: {
         totalAllowance: 24,

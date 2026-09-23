@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserFromRequest } from "@/lib/auth";
 import { isHRAdmin, isSuperAdmin } from "@/lib/permissions";
-import { calculateMonthlyStats, calculateWorkingHours } from "@/lib/hrms";
+import { calculateMonthlyStats, calculateWorkingHours, calculateMultiSessionHours, PunchSession } from "@/lib/hrms";
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,9 +55,35 @@ export async function GET(request: NextRequest) {
         orderBy: { date: "desc" },
       });
 
+      // Dynamically compute live hours for currently clocked-in team members
+      const processedRecords = records.map((rec) => {
+        let liveHours = rec.totalWorkingHours || 0;
+        let liveStatus = rec.status;
+        if (rec.punchIn && !rec.punchOut) {
+          let sessions: PunchSession[] = [];
+          if (rec.notes) {
+            try {
+              const parsed = JSON.parse(rec.notes);
+              if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+            } catch (e) {}
+          }
+          if (sessions.length === 0) {
+            sessions.push({ punchIn: new Date(rec.punchIn).toISOString(), punchOut: null });
+          }
+          const calc = calculateMultiSessionHours(sessions, rec.punchIn, null, rec.breakDurationMinutes ?? 60);
+          liveHours = calc.totalWorkingHours;
+          liveStatus = calc.status;
+        }
+        return {
+          ...rec,
+          totalWorkingHours: liveHours,
+          status: liveStatus,
+        };
+      });
+
       return NextResponse.json({
         success: true,
-        data: records,
+        data: processedRecords,
       });
     }
 
@@ -71,7 +97,7 @@ export async function GET(request: NextRequest) {
     const startOfMonth = new Date(Date.UTC(targetYear, targetMonth, 1));
     const endOfMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0, 23, 59, 59, 999));
 
-    const [attendances, leaves] = await Promise.all([
+    const [rawAttendances, leaves] = await Promise.all([
       prisma.attendance.findMany({
         where: {
           userId: targetUserId,
@@ -91,6 +117,32 @@ export async function GET(request: NextRequest) {
         },
       }),
     ]);
+
+    // Dynamically compute live hours for any active session in the month
+    const attendances = rawAttendances.map((rec) => {
+      let liveHours = rec.totalWorkingHours || 0;
+      let liveStatus = rec.status;
+      if (rec.punchIn && !rec.punchOut) {
+        let sessions: PunchSession[] = [];
+        if (rec.notes) {
+          try {
+            const parsed = JSON.parse(rec.notes);
+            if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+          } catch (e) {}
+        }
+        if (sessions.length === 0) {
+          sessions.push({ punchIn: new Date(rec.punchIn).toISOString(), punchOut: null });
+        }
+        const calc = calculateMultiSessionHours(sessions, rec.punchIn, null, rec.breakDurationMinutes ?? 60);
+        liveHours = calc.totalWorkingHours;
+        liveStatus = calc.status;
+      }
+      return {
+        ...rec,
+        totalWorkingHours: liveHours,
+        status: liveStatus,
+      };
+    });
 
     const stats = calculateMonthlyStats(attendances, leaves);
 

@@ -9,8 +9,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Not authenticated" } }, { status: 401 });
     }
 
-    // 1. Retrieve holidays directly from Holiday table
+    const { searchParams } = new URL(request.url);
+    const viewAll = searchParams.get("viewAll") === "true";
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const where: any = {};
+    if (!viewAll) {
+      where.date = { gte: today };
+    }
+
+    // 1. Retrieve holidays directly from Holiday table (upcoming by default)
     const dbHolidays = await prisma.holiday.findMany({
+      where,
       orderBy: { date: "asc" },
     });
 

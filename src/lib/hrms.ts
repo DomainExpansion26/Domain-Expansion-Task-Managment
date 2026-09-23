@@ -38,7 +38,9 @@ export function calculateWorkingHours(
   const inTime = new Date(punchIn).getTime();
   const outTime = punchOut ? new Date(punchOut).getTime() : Date.now();
 
-  const elapsedMs = Math.max(0, outTime - inTime);
+  // Cap single session span to maximum 12 hours to prevent runaway hours if unclosed
+  const MAX_SHIFT_MS = 12 * 60 * 60 * 1000;
+  const elapsedMs = Math.min(Math.max(0, outTime - inTime), MAX_SHIFT_MS);
   const elapsedHours = elapsedMs / (1000 * 60 * 60);
 
   // In a standard 9-hour shift (8 hours work + 1 hour break):
@@ -55,7 +57,7 @@ export function calculateWorkingHours(
   }
 
   const netWorkingMs = Math.max(0, elapsedMs - breakMs);
-  const totalWorkingHours = Math.round((netWorkingMs / (1000 * 60 * 60)) * 100) / 100;
+  const totalWorkingHours = Math.min(12.0, Math.round((netWorkingMs / (1000 * 60 * 60)) * 100) / 100);
 
   let status: "FULL_DAY" | "HALF_DAY" | "PRESENT" | "NOT_RECORDED" = "PRESENT";
   if (punchOut) {
@@ -73,8 +75,9 @@ export function calculateWorkingHours(
 
 /**
  * Calculates accumulated working hours across MULTIPLE punch sessions throughout the day.
- * Employees can punch in and punch out multiple times.
- * In a 9-hour total shift span, a 1-hour break is standard and 8.0 hours net work achieves FULL_DAY.
+ * Employees can punch in and punch out multiple times (e.g. for breaks).
+ * Each session [punchIn, punchOut] adds to active work hours.
+ * Time between sessions is natural break time.
  */
 export function calculateMultiSessionHours(
   sessions: PunchSession[],
@@ -89,6 +92,7 @@ export function calculateMultiSessionHours(
     return calculateWorkingHours(currentPunchIn, currentPunchOut, standardBreakMinutes);
   }
 
+  const MAX_SESSION_MS = 12 * 60 * 60 * 1000;
   let totalActiveMs = 0;
   let hasOpenSession = false;
   let earliestIn: number | null = null;
@@ -97,18 +101,21 @@ export function calculateMultiSessionHours(
   for (const s of sessions) {
     if (s.punchIn) {
       const inMs = new Date(s.punchIn).getTime();
+      if (isNaN(inMs)) continue;
       if (earliestIn === null || inMs < earliestIn) earliestIn = inMs;
 
       if (s.punchOut) {
         const outMs = new Date(s.punchOut).getTime();
+        if (isNaN(outMs)) continue;
         if (latestOut === null || outMs > latestOut) latestOut = outMs;
-        const dur = Math.max(0, outMs - inMs);
+        const dur = Math.min(Math.max(0, outMs - inMs), MAX_SESSION_MS);
         totalActiveMs += dur;
       } else {
         hasOpenSession = true;
         const nowMs = Date.now();
         if (latestOut === null || nowMs > latestOut) latestOut = nowMs;
-        totalActiveMs += Math.max(0, nowMs - inMs);
+        const dur = Math.min(Math.max(0, nowMs - inMs), MAX_SESSION_MS);
+        totalActiveMs += dur;
       }
     }
   }
@@ -120,9 +127,9 @@ export function calculateMultiSessionHours(
     naturalBreakMs = Math.max(0, totalSpanMs - totalActiveMs);
   }
 
-  // If total span reaches 9 hours and natural breaks are less than standard 1 hour break, apply 1-hour break
   let effectiveBreakMinutes = Math.round(naturalBreakMs / (60 * 1000));
-  if (effectiveBreakMinutes < standardBreakMinutes && earliestIn !== null && latestOut !== null) {
+  // If user only had 1 session and total span reaches 9 hours with no natural breaks, deduct standard 1-hour break window
+  if (effectiveBreakMinutes < standardBreakMinutes && earliestIn !== null && latestOut !== null && sessions.length <= 1) {
     const totalSpanHours = (latestOut - earliestIn) / (1000 * 60 * 60);
     if (totalSpanHours >= 9.0) {
       const additionalBreakMs = (standardBreakMinutes * 60 * 1000) - naturalBreakMs;
@@ -131,7 +138,8 @@ export function calculateMultiSessionHours(
     }
   }
 
-  const totalWorkingHours = Math.round((totalActiveMs / (1000 * 60 * 60)) * 100) / 100;
+  // Cap total active hours per day to 12.0 hours max
+  const totalWorkingHours = Math.min(12.0, Math.round((totalActiveMs / (1000 * 60 * 60)) * 100) / 100);
 
   let status: "FULL_DAY" | "HALF_DAY" | "PRESENT" | "NOT_RECORDED" = "PRESENT";
   if (!hasOpenSession) {
@@ -145,6 +153,63 @@ export function calculateMultiSessionHours(
     breakDurationMinutes: effectiveBreakMinutes,
     status,
   };
+}
+
+/**
+ * Auto-closes any unclosed attendance records from previous calendar days.
+ * Caps their hours to 8.0h (standard shift) to prevent cross-day mega hours.
+ */
+export async function autoCloseDanglingSessions(prismaClient: any, userId: string, todayUtcMidnight: Date) {
+  try {
+    const danglingRecords = await prismaClient.attendance.findMany({
+      where: {
+        userId,
+        date: { lt: todayUtcMidnight },
+        punchIn: { not: null },
+        punchOut: null,
+      },
+    });
+
+    for (const rec of danglingRecords) {
+      if (!rec.punchIn) continue;
+      const inDate = new Date(rec.punchIn);
+      const cappedOut = new Date(Math.min(inDate.getTime() + 8 * 60 * 60 * 1000, new Date(rec.date).getTime() + 23 * 3600000 + 59 * 60000));
+      
+      let sessions: PunchSession[] = [];
+      if (rec.notes) {
+        try {
+          const parsed = JSON.parse(rec.notes);
+          if (Array.isArray(parsed.punches)) sessions = parsed.punches;
+        } catch (e) {}
+      }
+      if (sessions.length === 0) {
+        sessions.push({ punchIn: inDate.toISOString(), punchOut: cappedOut.toISOString(), durationMinutes: 480 });
+      } else {
+        for (const s of sessions) {
+          if (!s.punchOut) {
+            s.punchOut = cappedOut.toISOString();
+            s.durationMinutes = Math.min(480, Math.round((cappedOut.getTime() - new Date(s.punchIn).getTime()) / 60000));
+          }
+        }
+      }
+
+      await prismaClient.attendance.update({
+        where: { id: rec.id },
+        data: {
+          punchOut: cappedOut,
+          totalWorkingHours: 8.0,
+          status: "FULL_DAY",
+          notes: JSON.stringify({
+            punches: sessions,
+            shiftRule: "9h Shift (8h Work + 1h Break)",
+            autoClosed: true,
+          }),
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Error auto-closing dangling sessions:", err);
+  }
 }
 
 /**
