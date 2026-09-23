@@ -24,6 +24,7 @@ import { SuperAdminView } from "@/components/views/SuperAdminView";
 import { AdminSettingsView } from "@/components/views/AdminSettingsView";
 import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
 import { DocumentsView } from "@/components/views/DocumentsView";
+import { MandatoryHierarchyModal } from "@/components/modals/MandatoryHierarchyModal";
 import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 
 import { useAppDispatch, useAppSelector, useAuth, useUI, useTasks, useNotifications } from "@/store/hooks";
@@ -382,6 +383,8 @@ export default function Home() {
       {currentTab === "team" && (
         <TeamView
           users={users}
+          tasks={tasks}
+          projects={projects}
           currentUser={currentUser}
           onSelectTask={(key) => setSelectedTaskKey(key)}
           onRefreshData={fetchAppData}
@@ -531,6 +534,24 @@ export default function Home() {
           currentUser={currentUser}
         />
       )}
+
+      {/* Mandatory Hierarchy Setup modal for members without Reporting Manager or Team Lead */}
+      <MandatoryHierarchyModal
+        isOpen={Boolean(
+          !authLoading &&
+          currentUser &&
+          currentUser.role !== "SUPER_ADMIN" &&
+          !currentUser.managerId &&
+          !currentUser.teamLeadId
+        )}
+        currentUser={currentUser}
+        allUsers={users}
+        onSaved={(updatedUser) => {
+          setCurrentUser(updatedUser);
+          fetchAppData();
+        }}
+        onLogout={handleLogout}
+      />
     </AppShell>
   );
 }

@@ -15,8 +15,6 @@ import {
   ChevronDown,
   Menu,
   X,
-  Sun,
-  Moon,
   ArrowRight,
   ExternalLink,
   Shield,
@@ -24,8 +22,6 @@ import {
 } from "lucide-react";
 import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 import { getInitials, getAvatarGradient } from "@/lib/utils";
-import { useAppDispatch, useUI } from "@/store/hooks";
-import { toggleTheme } from "@/store/slices/uiSlice";
 
 interface HRMSShellProps {
   currentTab: string;
@@ -42,10 +38,6 @@ export function HRMSShell({
   onLogout,
   children,
 }: HRMSShellProps) {
-  const dispatch = useAppDispatch();
-  const uiState = useUI();
-  const isDark = (uiState?.theme || "dark") === "dark";
-
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -218,15 +210,6 @@ export function HRMSShell({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Theme Toggle */}
-            <button
-              onClick={() => dispatch(toggleTheme())}
-              className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#181818] text-gray-600 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors"
-              title="Toggle Theme"
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
             {/* Profile Dropdown */}
             <div className="relative">
               <button

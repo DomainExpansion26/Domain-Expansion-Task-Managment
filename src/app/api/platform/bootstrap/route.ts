@@ -124,8 +124,19 @@ export async function GET(request: NextRequest) {
             department: true,
             avatarUrl: true,
             isActive: true,
+            createdAt: true,
             managerId: true,
-            manager: { select: { id: true, name: true } },
+            manager: { select: { id: true, name: true, email: true, role: true } },
+            teamLeadId: true,
+            teamLead: { select: { id: true, name: true, email: true, role: true } },
+            hrProfile: {
+              select: {
+                employeeId: true,
+                status: true,
+                joiningDate: true,
+                phone: true,
+              },
+            },
           },
           orderBy: { name: "asc" },
         })

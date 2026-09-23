@@ -24,7 +24,20 @@ export async function GET(request: NextRequest) {
           jobTitle: true,
           department: true,
           avatarUrl: true,
+          isActive: true,
           createdAt: true,
+          managerId: true,
+          manager: { select: { id: true, name: true, email: true, role: true } },
+          teamLeadId: true,
+          teamLead: { select: { id: true, name: true, email: true, role: true } },
+          hrProfile: {
+            select: {
+              employeeId: true,
+              status: true,
+              joiningDate: true,
+              phone: true,
+            },
+          },
           _count: {
             select: {
               assignedTasks: true,
@@ -44,6 +57,14 @@ export async function GET(request: NextRequest) {
         jobTitle: u.jobTitle || "Team Member",
         department: u.department || "General",
         avatarUrl: u.avatarUrl,
+        isActive: u.isActive,
+        createdAt: u.createdAt,
+        manager: u.manager,
+        teamLead: u.teamLead,
+        hrProfile: u.hrProfile,
+        employeeId: u.hrProfile?.employeeId || null,
+        phone: u.hrProfile?.phone || null,
+        joiningDate: u.hrProfile?.joiningDate || u.createdAt,
         stats: {
           total: u._count.assignedTasks,
           active: u._count.assignedTasks,

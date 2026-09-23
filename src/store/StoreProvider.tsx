@@ -5,36 +5,23 @@ import { Provider } from "react-redux";
 import { makeStore, AppStore } from "./index";
 import { setCredentials, setAuthLoaded } from "./slices/authSlice";
 import { loadFromLocalStorage, STORAGE_KEYS } from "./localStorage";
-import { useAppDispatch, useAppSelector } from "./hooks";
+import { useAppDispatch } from "./hooks";
 
 function ThemeInitializer() {
-  const theme = useAppSelector((state) => state.ui?.theme || "dark");
-
   useEffect(() => {
     if (typeof document !== "undefined") {
       const root = document.documentElement;
       const body = document.body;
-      if (theme === "light") {
-        root.classList.add("light");
-        root.classList.remove("dark");
-        root.setAttribute("data-theme", "light");
-        if (body) {
-          body.classList.add("light");
-          body.classList.remove("dark");
-          body.setAttribute("data-theme", "light");
-        }
-      } else {
-        root.classList.add("dark");
-        root.classList.remove("light");
-        root.setAttribute("data-theme", "dark");
-        if (body) {
-          body.classList.add("dark");
-          body.classList.remove("light");
-          body.setAttribute("data-theme", "dark");
-        }
+      root.classList.add("dark");
+      root.classList.remove("light");
+      root.setAttribute("data-theme", "dark");
+      if (body) {
+        body.classList.add("dark");
+        body.classList.remove("light");
+        body.setAttribute("data-theme", "dark");
       }
     }
-  }, [theme]);
+  }, []);
 
   return null;
 }
