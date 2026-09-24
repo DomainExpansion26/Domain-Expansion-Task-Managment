@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Password reset link has been dispatched to your email.",
-      token: process.env.NODE_ENV !== "production" ? token : undefined, // Convenient helper for local dev
+      token: token,
+      devToken: token,
+      resetUrl: `/reset-password?token=${token}`,
+      email: user.email,
     });
   } catch (error: any) {
     console.error("Forgot password error:", error);

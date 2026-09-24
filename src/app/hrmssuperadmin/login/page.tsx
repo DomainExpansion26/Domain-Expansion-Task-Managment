@@ -75,7 +75,7 @@ function HRMSSuperAdminLoginForm() {
 
   if (checkingAuth) {
     return (
-      <div className="p-12 rounded-3xl bg-[#141414] border border-[#2E2E2E] flex items-center justify-center gap-3 text-xs text-[#888898]">
+      <div className="p-12 rounded-3xl bg-white border border-slate-200 flex items-center justify-center gap-3 text-xs text-slate-500">
         <div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
         <span>Checking HRMS Admin session...</span>
       </div>
@@ -83,15 +83,15 @@ function HRMSSuperAdminLoginForm() {
   }
 
   return (
-    <div className="p-8 rounded-3xl bg-[#141414] border border-pink-500/30 shadow-[0_0_40px_rgba(236,72,153,0.15)] space-y-5">
-      <div className="flex items-center justify-between border-b border-[#2E2E2E] pb-3">
+    <div className="p-8 rounded-3xl bg-white border border-pink-500/30 shadow-[0_0_40px_rgba(236,72,153,0.15)] space-y-5">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-pink-500/15 border border-pink-500/30 text-pink-400">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-white">HRMS Super Admin Sign In</h2>
-            <p className="text-[11px] text-[#888898]">Human resources control center</p>
+            <p className="text-[11px] text-slate-500">Human resources control center</p>
           </div>
         </div>
       </div>
@@ -112,23 +112,23 @@ function HRMSSuperAdminLoginForm() {
 
       <form onSubmit={handleLogin} className="space-y-4 text-xs">
         <div>
-          <label className="block text-[#ACACB8] font-semibold mb-1.5">HRMS Admin Email</label>
+          <label className="block text-slate-700 font-semibold mb-1.5">HRMS Admin Email</label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="email"
               required
               placeholder="hrms.admin@domainexpansion.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
             />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[#ACACB8] font-semibold">Password</label>
+            <label className="text-slate-700 font-semibold">Password</label>
             <Link
               href="/forgot-password?portal=HRMSSUPERADMIN"
               className="text-[11px] text-pink-400 hover:underline font-semibold"
@@ -137,19 +137,19 @@ function HRMSSuperAdminLoginForm() {
             </Link>
           </div>
           <div className="relative">
-            <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -168,8 +168,8 @@ function HRMSSuperAdminLoginForm() {
         </button>
       </form>
 
-      <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-xs">
-        <span className="text-[#888898]">Initial HRMS setup?</span>
+      <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+        <span className="text-slate-500">Initial HRMS setup?</span>
         <Link
           href="/hrmssuperadmin/create-account"
           className="flex items-center gap-1 text-pink-400 font-bold hover:underline"
@@ -184,7 +184,7 @@ function HRMSSuperAdminLoginForm() {
 
 export default function HRMSSuperAdminLoginPage() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0B0B0C] relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-white relative overflow-hidden">
       {/* Glow Effects */}
       <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-pink-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
@@ -198,14 +198,14 @@ export default function HRMSSuperAdminLoginPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">
             HRMS <span className="text-pink-500">SUPER ADMIN</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Domain Expansion &bull; Administrative Control Center
           </p>
         </div>
 
         <Suspense
           fallback={
-            <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] text-center text-xs text-[#888898]">
+            <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-500">
               Loading HRMS Super Admin portal...
             </div>
           }
@@ -213,8 +213,8 @@ export default function HRMSSuperAdminLoginPage() {
           <HRMSSuperAdminLoginForm />
         </Suspense>
 
-        <div className="text-center text-xs text-[#888898]">
-          <Link href="/hrms/login" className="hover:text-white underline">
+        <div className="text-center text-xs text-slate-500">
+          <Link href="/hrms/login" className="hover:text-slate-900 underline">
             &larr; Switch to HRMS Employee Login
           </Link>
         </div>

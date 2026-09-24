@@ -17,8 +17,8 @@ export default function TaskDirectPage() {
   }, [params, router]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[#141414] text-white">
-      <div className="flex items-center gap-3 text-xs text-[#888898]">
+    <div className="flex h-screen w-full items-center justify-center bg-white text-white">
+      <div className="flex items-center gap-3 text-xs text-slate-500">
         <div className="w-5 h-5 border-2 border-[#FF6200] border-t-transparent rounded-full animate-spin" />
         <span>Opening Work Package #{params?.id}...</span>
       </div>

@@ -29,7 +29,7 @@ export default function HRAdminPage() {
 
   if (loading || !currentUser) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0D0D0D] text-white text-xs">
+      <div className="h-screen w-screen flex items-center justify-center bg-white text-white text-xs">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
           <span>Verifying HR Admin Authorization...</span>

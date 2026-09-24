@@ -41,10 +41,10 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-5xl h-[85vh] bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-5xl h-[85vh] bg-slate-50 border border-slate-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/30">
               <Mail className="w-5 h-5" />
@@ -56,7 +56,7 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
                   Live Dispatch Stream
                 </span>
               </div>
-              <p className="text-xs text-[#888898]">
+              <p className="text-xs text-slate-500">
                 Inspect real-time HTML transactional emails dispatched by Domain Expansion
               </p>
             </div>
@@ -64,12 +64,12 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={fetchEmails}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-[#2E2E2E] text-xs text-[#ACACB8] hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] border border-slate-200 text-xs text-slate-700 hover:text-slate-900 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
               <span>Refresh</span>
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white">
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -78,9 +78,9 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
         {/* Body Split */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Email List */}
-          <div className="w-80 border-r border-[#2E2E2E] overflow-y-auto bg-[#0D0D0D]/50 divide-y divide-[#2E2E2E]/60">
+          <div className="w-80 border-r border-slate-200 overflow-y-auto bg-slate-50/50 divide-y divide-[#2E2E2E]/60">
             {emails.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[#888898]">No sent emails yet.</div>
+              <div className="p-8 text-center text-xs text-slate-500">No sent emails yet.</div>
             ) : (
               emails.map((mail) => {
                 const isSelected = selectedEmail?.id === mail.id;
@@ -90,17 +90,17 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
                     onClick={() => setSelectedEmail(mail)}
                     className={`w-full text-left p-3.5 transition-all ${
                       isSelected
-                        ? "bg-[#1A1A1A] border-l-2 border-l-[#FF6200]"
-                        : "hover:bg-[#1A1A1A]/50 text-[#888898]"
+                        ? "bg-slate-50 border-l-2 border-l-[#FF6200]"
+                        : "hover:bg-slate-50/50 text-slate-500"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 text-[11px]">
                       <span className="font-mono text-[#FF8C42] truncate max-w-[170px]">{mail.toEmail}</span>
-                      <span className="text-[10px] text-[#888898]">{formatDateTime(mail.sentAt)}</span>
+                      <span className="text-[10px] text-slate-500">{formatDateTime(mail.sentAt)}</span>
                     </div>
                     <div className="text-xs font-semibold text-white mt-1 line-clamp-1">{mail.subject}</div>
                     <div className="mt-1.5 flex items-center gap-1.5">
-                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#252525] text-slate-300">
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#252525] text-slate-600">
                         {mail.template}
                       </span>
                       <span className="text-[9px] text-emerald-400 flex items-center gap-0.5">
@@ -114,22 +114,22 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
           </div>
 
           {/* Right HTML Preview */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-[#0D0D0D]">
+          <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
             {selectedEmail ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Meta details bar */}
-                <div className="px-6 py-3 border-b border-[#2E2E2E] bg-[#141414] text-xs flex items-center justify-between">
+                <div className="px-6 py-3 border-b border-slate-200 bg-slate-50 text-xs flex items-center justify-between">
                   <div>
                     <div>
-                      <span className="text-[#888898]">To: </span>
+                      <span className="text-slate-500">To: </span>
                       <span className="font-mono text-white">{selectedEmail.toEmail}</span>
                     </div>
                     <div className="mt-0.5">
-                      <span className="text-[#888898]">Subject: </span>
+                      <span className="text-slate-500">Subject: </span>
                       <span className="font-bold text-white">{selectedEmail.subject}</span>
                     </div>
                   </div>
-                  <div className="text-right text-[11px] text-[#888898]">
+                  <div className="text-right text-[11px] text-slate-500">
                     <div>Template: <span className="font-mono text-[#FF8C42]">{selectedEmail.template}</span></div>
                     <div>{formatDateTime(selectedEmail.sentAt)}</div>
                   </div>
@@ -140,12 +140,12 @@ export function DevMailboxModal({ isOpen, onClose }: DevMailboxModalProps) {
                   <iframe
                     title="Email Preview"
                     srcDoc={selectedEmail.htmlBody}
-                    className="w-full h-full rounded-xl border border-[#2E2E2E] bg-[#0D0D0D]"
+                    className="w-full h-full rounded-xl border border-slate-200 bg-slate-50"
                   />
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-xs text-[#888898]">
+              <div className="flex-1 flex items-center justify-center text-xs text-slate-500">
                 Select an email from the list to preview HTML payload
               </div>
             )}

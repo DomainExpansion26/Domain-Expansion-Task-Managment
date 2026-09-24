@@ -102,13 +102,13 @@ export function MandatoryHierarchyModal({
       });
 
       const json = await res.json();
-      if (json.success && json.data?.user) {
-        onSaved(json.data.user);
+      if (json.success) {
+        onSaved(json.data);
       } else {
-        setError(json.error?.message || "Failed to update reporting line. Please try again.");
+        setError(json.error?.message || "Failed to save hierarchy assignment");
       }
-    } catch {
-      setError("Network error while updating reporting line. Please check connection.");
+    } catch (err) {
+      setError("Network error saving hierarchy assignment");
     } finally {
       setLoading(false);
     }
@@ -124,48 +124,48 @@ export function MandatoryHierarchyModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl overflow-hidden my-auto animate-fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm text-slate-800">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-fade-in">
         {/* Top Header Banner */}
-        <div className="p-6 border-b border-[#2E2E2E] bg-gradient-to-r from-[#1A1A1A] via-[#161616] to-[#121212]">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/70">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-2xl bg-[#FF6200]/15 border border-[#FF6200]/30 text-[#FF8C42]">
-              <UserCheck className="w-5 h-5 text-[#FF6200]" />
+            <div className="p-2.5 rounded-2xl bg-orange-50 border border-orange-200 text-[#FF6200]">
+              <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
                 Assign Your Reporting Line
               </h2>
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/30 font-bold">
+              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-orange-100 text-[#FF6200] border border-orange-200 font-bold">
                 Mandatory Setup (One-Time)
               </span>
             </div>
           </div>
-          <p className="text-xs text-[#888898] leading-relaxed mt-2">
+          <p className="text-xs text-slate-500 leading-relaxed mt-2">
             Every team member must have an assigned <strong>Reporting Manager</strong> or{" "}
-            <strong>Reporting Team Lead</strong> to establish your approval workflow and enable task collaboration.
+            <strong>Reporting Team Lead</strong> to establish your organizational structure and enable task workflows.
           </p>
 
           {/* Current User Card */}
-          <div className="mt-4 p-3 rounded-2xl bg-[#111] border border-[#262626] flex items-center gap-3">
+          <div className="mt-4 p-3 rounded-2xl bg-white border border-slate-200 flex items-center gap-3 shadow-xs">
             {currentUser.avatarUrl ? (
               <img
                 src={currentUser.avatarUrl}
                 alt={currentUser.name}
-                className="w-10 h-10 rounded-xl object-cover border border-[#2E2E2E]"
+                className="w-10 h-10 rounded-xl object-cover border border-slate-200"
               />
             ) : (
               <div
                 className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${getAvatarGradient(
                   currentUser.name
-                )} flex items-center justify-center text-xs font-bold text-white uppercase border border-[#2E2E2E]`}
+                )} flex items-center justify-center text-xs font-bold text-white uppercase border border-slate-200`}
               >
                 {getInitials(currentUser.name)}
               </div>
             )}
             <div className="min-w-0">
-              <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
-              <div className="text-[11px] text-[#888898] truncate">
+              <div className="text-xs font-bold text-slate-900 truncate">{currentUser.name}</div>
+              <div className="text-[11px] text-slate-500 truncate">
                 {currentUser.jobTitle || "Team Member"} &bull; {currentUser.email}
               </div>
             </div>
@@ -175,7 +175,7 @@ export function MandatoryHierarchyModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -183,17 +183,17 @@ export function MandatoryHierarchyModal({
 
           {/* Reporting Manager Select */}
           <div className="space-y-1.5">
-            <label className="block text-slate-300 font-bold">
+            <label className="block text-slate-700 font-bold">
               1. Reporting Manager
             </label>
             <select
               value={managerId}
               onChange={(e) => setManagerId(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#333] hover:border-[#FF6200]/50 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#FF6200] transition-colors"
+              className="w-full bg-slate-50 border border-slate-300 hover:border-[#FF6200]/50 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-[#FF6200] transition-colors"
             >
               <option value="">-- Select Reporting Manager --</option>
               {leadershipManagers.length > 0 && (
-                <optgroup label="🏢 Executive & Managers">
+                <optgroup label="🏢 Leadership & Managers">
                   {leadershipManagers.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name} ({m.role.replace("_", " ")} &bull; {m.jobTitle || m.department || "Manager"})
@@ -211,20 +211,20 @@ export function MandatoryHierarchyModal({
                 </optgroup>
               )}
             </select>
-            <p className="text-[10px] text-[#666]">
-              Handles overall project assignments, leave approvals, and organization hierarchy.
+            <p className="text-[10px] text-slate-400">
+              Handles project oversight, leave approvals, and organizational reviews.
             </p>
           </div>
 
           {/* Reporting Team Lead Select */}
           <div className="space-y-1.5 pt-1">
-            <label className="block text-slate-300 font-bold">
+            <label className="block text-slate-700 font-bold">
               2. Reporting Team Lead
             </label>
             <select
               value={teamLeadId}
               onChange={(e) => setTeamLeadId(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#333] hover:border-[#FF6200]/50 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#FF6200] transition-colors"
+              className="w-full bg-slate-50 border border-slate-300 hover:border-[#FF6200]/50 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-[#FF6200] transition-colors"
             >
               <option value="">-- Select Reporting Team Lead --</option>
               {leadsAndSeniors.length > 0 && (
@@ -246,13 +246,13 @@ export function MandatoryHierarchyModal({
                 </optgroup>
               )}
             </select>
-            <p className="text-[10px] text-[#666]">
-              Coordinates daily sprint backlog, code reviews, and technical tasks.
+            <p className="text-[10px] text-slate-400">
+              Coordinates daily sprints, ticket reviews, and technical tasks.
             </p>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#181818] border border-[#282828] text-[11px] text-[#888898] leading-relaxed">
-            💡 <strong>Requirement:</strong> You can choose your Reporting Manager, Reporting Team Lead, or both from any company member. Once submitted, this configuration is saved to your permanent profile and you will not be prompted again.
+          <div className="p-3 rounded-xl bg-orange-50 border border-orange-200 text-[11px] text-orange-900 leading-relaxed">
+            💡 <strong>Requirement:</strong> You can select your Reporting Manager, Reporting Team Lead, or both. Once saved, this hierarchy links your profile for approvals and tasks.
           </div>
 
           {/* Action Buttons */}
@@ -260,7 +260,7 @@ export function MandatoryHierarchyModal({
             <button
               type="submit"
               disabled={loading || (!managerId && !teamLeadId)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-bold text-xs uppercase tracking-wide hover:opacity-95 shadow-[0_0_20px_rgba(255,98,0,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white font-bold text-xs uppercase tracking-wide shadow-md shadow-[#FF6200]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>{loading ? "Configuring Profile..." : "Confirm & Enter Portal"}</span>
               <ArrowRight className="w-4 h-4" />
@@ -270,7 +270,7 @@ export function MandatoryHierarchyModal({
               <button
                 type="button"
                 onClick={handleLogoutClick}
-                className="text-[11px] text-[#666] hover:text-red-400 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                className="text-[11px] text-slate-400 hover:text-red-600 transition-colors inline-flex items-center gap-1 cursor-pointer"
               >
                 <LogOut className="w-3 h-3" />
                 <span>Sign in with a different account</span>

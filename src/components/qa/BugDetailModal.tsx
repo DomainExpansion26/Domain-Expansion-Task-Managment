@@ -306,39 +306,39 @@ export function BugDetailModal({
   const getBugStatusBadge = (status: string) => {
     switch (status) {
       case "FAILED":
-        return "bg-red-500/15 border-red-500/40 text-red-400";
+        return "bg-red-50 border-red-200 text-red-600";
       case "PASSED":
-        return "bg-emerald-500/15 border-emerald-500/40 text-emerald-400";
+        return "bg-emerald-50 border-emerald-200 text-emerald-700";
       case "READY_FOR_TESTING":
-        return "bg-purple-500/15 border-purple-500/40 text-purple-300 animate-pulse";
+        return "bg-purple-50 border-purple-200 text-purple-700 animate-pulse";
       case "IN_TESTING":
-        return "bg-cyan-500/15 border-cyan-500/40 text-cyan-300";
+        return "bg-cyan-50 border-cyan-200 text-cyan-700";
       case "IN_PROGRESS":
-        return "bg-blue-500/15 border-blue-500/40 text-blue-300";
+        return "bg-blue-50 border-blue-200 text-blue-700";
       case "ASSIGNED":
-        return "bg-amber-500/15 border-amber-500/40 text-amber-300";
+        return "bg-amber-50 border-amber-200 text-amber-700";
       case "CLOSED":
-        return "bg-slate-500/15 border-slate-500/40 text-slate-300";
+        return "bg-slate-100 border-slate-200 text-slate-600";
       default:
-        return "bg-slate-500/15 border-slate-500/40 text-slate-300";
+        return "bg-slate-100 border-slate-200 text-slate-600";
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-5xl bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[92vh]">
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#181818]/70">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 flex-shrink-0">
+            <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-600 flex-shrink-0">
               <Bug className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-xs font-black text-red-400 tracking-wider">
+                <span className="font-mono text-xs font-black text-red-600 tracking-wider">
                   {bug?.bugKey || bugKey}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-red-500/15 border-red-500/30 text-red-400">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-red-50 border-red-200 text-red-600">
                   Bug
                 </span>
                 <span
@@ -354,7 +354,7 @@ export function BugDetailModal({
                   </span>
                 )}
               </div>
-              <h1 className="text-base sm:text-lg font-black text-white truncate mt-0.5">
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate mt-0.5">
                 {bug?.title || "Loading defect details..."}
               </h1>
             </div>
@@ -363,10 +363,10 @@ export function BugDetailModal({
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={copyBugKey}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#222] hover:bg-[#2A2A2A] text-[#ACACB8] hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
               title="Copy Bug Link"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? "Copied" : "Share"}</span>
             </button>
 
@@ -376,7 +376,7 @@ export function BugDetailModal({
                 type="button"
                 disabled={isDeletingBug}
                 onClick={handleDeleteBug}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-bold text-red-600 transition-all cursor-pointer disabled:opacity-50"
                 title="Permanently delete this defect"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -386,7 +386,7 @@ export function BugDetailModal({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -394,8 +394,8 @@ export function BugDetailModal({
         </div>
 
         {/* Workflow Action Command Strip */}
-        <div className="px-6 py-2.5 border-b border-[#2E2E2E] bg-[#111] flex items-center justify-between gap-3 overflow-x-auto">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#888898]">
+        <div className="px-6 py-2.5 border-b border-slate-200 bg-slate-100/70 flex items-center justify-between gap-3 overflow-x-auto">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
             <span>Workflow Actions:</span>
             {/* Developer Actions */}
             {(bug?.status === "OPEN" || bug?.status === "ASSIGNED") && (
@@ -501,21 +501,21 @@ export function BugDetailModal({
                     onClose();
                   }
                 }}
-                className="p-4 rounded-xl bg-gray-50/80 dark:bg-gradient-to-r dark:from-[#1A1A1A] dark:to-[#222] border border-gray-200 dark:border-[#333] hover:border-[#FF6200]/50 transition-all cursor-pointer group shadow-sm"
+                className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#FF6200]/50 transition-all cursor-pointer group shadow-xs"
               >
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-[#888898] uppercase">Parent Task Link</span>
-                    <span className="px-2 py-0.5 rounded bg-[#FF6200]/15 text-[#FF8C42] font-mono font-bold">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase">Parent Task Link</span>
+                    <span className="px-2 py-0.5 rounded bg-[#FF6200]/10 text-[#FF6200] font-mono font-bold">
                       {bug.relatedTask.taskKey}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#FF8C42] group-hover:underline text-[11px] font-bold">
+                  <div className="flex items-center gap-1 text-[#FF6200] group-hover:underline text-[11px] font-bold">
                     <span>Open Task Detail</span>
                     <ExternalLink className="w-3 h-3" />
                   </div>
                 </div>
-                <div className="text-sm font-bold text-white mt-1 group-hover:text-[#FF8C42] transition-colors">
+                <div className="text-sm font-bold text-slate-900 mt-1 group-hover:text-[#FF6200] transition-colors">
                   {bug.relatedTask.title}
                 </div>
               </div>
@@ -523,16 +523,16 @@ export function BugDetailModal({
 
             {/* QA Failure Alert Banner (If Failed) */}
             {bug?.status === "FAILED" && bug?.failureReason && (
-              <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/40 space-y-2">
-                <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
-                  <ShieldAlert className="w-4 h-4" />
+              <div className="p-4 rounded-2xl bg-red-50 border border-red-200 space-y-2">
+                <div className="flex items-center gap-2 text-red-700 font-bold text-xs uppercase tracking-wider">
+                  <ShieldAlert className="w-4 h-4 text-red-600" />
                   <span>QA Defect Verification Failed</span>
                 </div>
-                <div className="text-sm font-semibold text-white">
+                <div className="text-sm font-semibold text-slate-900">
                   <strong>Reason:</strong> {bug.failureReason}
                 </div>
                 {bug.actualResult && (
-                  <div className="text-xs text-red-200/90 font-mono bg-black/40 p-2.5 rounded-xl border border-red-500/20">
+                  <div className="text-xs text-red-800 font-mono bg-red-100/70 p-2.5 rounded-xl border border-red-200">
                     <strong>Observed Result:</strong> {bug.actualResult}
                   </div>
                 )}
@@ -541,10 +541,10 @@ export function BugDetailModal({
 
             {/* Defect Description */}
             <div>
-              <h3 className="text-xs font-mono font-bold text-[#888898] uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">
                 Description & Summary
               </h3>
-              <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs text-white leading-relaxed whitespace-pre-wrap">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
                 {bug?.description || "No detailed description provided."}
               </div>
             </div>
@@ -552,10 +552,10 @@ export function BugDetailModal({
             {/* Reproduction Steps */}
             {bug?.stepsToReproduce && (
               <div>
-                <h3 className="text-xs font-mono font-bold text-[#888898] uppercase tracking-wider mb-2">
+                <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider mb-2">
                   Steps to Reproduce
                 </h3>
-                <div className="p-4 rounded-xl bg-[#171717] border border-[#2E2E2E] font-mono text-xs text-emerald-400/90 leading-relaxed whitespace-pre-wrap">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
                   {bug.stepsToReproduce}
                 </div>
               </div>
@@ -564,30 +564,30 @@ export function BugDetailModal({
             {/* Expected vs Actual Comparison */}
             {(bug?.expectedResult || bug?.actualResult) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className="text-[10px] font-mono font-bold text-emerald-400 uppercase mb-1">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="text-[10px] font-mono font-bold text-emerald-600 uppercase mb-1">
                     Expected Result
                   </div>
-                  <div className="text-xs text-slate-300">{bug.expectedResult || "Not specified"}</div>
+                  <div className="text-xs text-slate-700">{bug.expectedResult || "Not specified"}</div>
                 </div>
-                <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className="text-[10px] font-mono font-bold text-red-400 uppercase mb-1">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="text-[10px] font-mono font-bold text-red-600 uppercase mb-1">
                     Actual Result
                   </div>
-                  <div className="text-xs text-slate-300">{bug.actualResult || "Not specified"}</div>
+                  <div className="text-xs text-slate-700">{bug.actualResult || "Not specified"}</div>
                 </div>
               </div>
             )}
 
             {/* Bottom Tabs: Activity & Comments */}
-            <div className="pt-4 border-t border-[#2E2E2E]">
-              <div className="flex items-center gap-4 border-b border-[#2E2E2E] pb-2 text-xs">
+            <div className="pt-4 border-t border-slate-200">
+              <div className="flex items-center gap-4 border-b border-slate-200 pb-2 text-xs">
                 <button
                   onClick={() => setActiveTab("ACTIVITY")}
                   className={`flex items-center gap-2 pb-2 font-bold transition-colors ${
                     activeTab === "ACTIVITY"
-                      ? "text-[#FF8C42] border-b-2 border-[#FF6200]"
-                      : "text-[#888898] hover:text-white"
+                      ? "text-[#FF6200] border-b-2 border-[#FF6200]"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   <ActivityIcon className="w-4 h-4" />
@@ -597,8 +597,8 @@ export function BugDetailModal({
                   onClick={() => setActiveTab("COMMENTS")}
                   className={`flex items-center gap-2 pb-2 font-bold transition-colors ${
                     activeTab === "COMMENTS"
-                      ? "text-[#FF8C42] border-b-2 border-[#FF6200]"
-                      : "text-[#888898] hover:text-white"
+                      ? "text-[#FF6200] border-b-2 border-[#FF6200]"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -608,8 +608,8 @@ export function BugDetailModal({
                   onClick={() => setActiveTab("ATTACHMENTS")}
                   className={`flex items-center gap-2 pb-2 font-bold transition-colors ${
                     activeTab === "ATTACHMENTS"
-                      ? "text-[#FF8C42] border-b-2 border-[#FF6200]"
-                      : "text-[#888898] hover:text-white"
+                      ? "text-[#FF6200] border-b-2 border-[#FF6200]"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   <Paperclip className="w-4 h-4" />
@@ -621,7 +621,7 @@ export function BugDetailModal({
               {activeTab === "ACTIVITY" && (
                 <div className="pt-4 space-y-3">
                   {bug?.activities?.length === 0 ? (
-                    <div className="text-xs text-[#888898] py-6 text-center">No activity entries yet.</div>
+                    <div className="text-xs text-slate-400 py-6 text-center">No activity entries yet.</div>
                   ) : (
                     bug?.activities?.map((act: any) => (
                       <div key={act.id} className="flex items-start gap-3 text-xs">
@@ -633,11 +633,11 @@ export function BugDetailModal({
                           {getInitials(act.user?.name)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-slate-300">
-                            <span className="font-bold text-white">{act.user?.name || "System"}</span>{" "}
+                          <div className="text-slate-700">
+                            <span className="font-bold text-slate-900">{act.user?.name || "System"}</span>{" "}
                             <span>{act.description}</span>
                           </div>
-                          <div className="text-[10px] text-[#888898] mt-0.5">
+                          <div className="text-[10px] text-slate-400 mt-0.5">
                             {formatDateTime(act.createdAt)}
                           </div>
                         </div>
@@ -657,7 +657,7 @@ export function BugDetailModal({
                       const isEdited = c.updatedAt && new Date(c.updatedAt).getTime() - new Date(c.createdAt).getTime() > 1000;
 
                       return (
-                        <div key={c.id} className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-1.5 group">
+                        <div key={c.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 group">
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
                               <div
@@ -667,11 +667,11 @@ export function BugDetailModal({
                               >
                                 {getInitials(c.author?.name)}
                               </div>
-                              <span className="font-bold text-white">{c.author?.name}</span>
-                              <span className="text-[10px] text-[#888898]">{c.author?.role?.replace("_", " ")}</span>
-                              <span className="text-[10px] text-[#888898]">&bull; {formatDateTime(c.createdAt)}</span>
+                              <span className="font-bold text-slate-800">{c.author?.name}</span>
+                              <span className="text-[10px] text-slate-500">{c.author?.role?.replace("_", " ")}</span>
+                              <span className="text-[10px] text-slate-500">&bull; {formatDateTime(c.createdAt)}</span>
                               {isEdited && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#252525] text-[#FF8C42] font-mono">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-[#FF6200] font-mono">
                                   (edited)
                                 </span>
                               )}
@@ -685,7 +685,7 @@ export function BugDetailModal({
                                     setEditingCommentId(c.id);
                                     setEditingCommentText(c.content || "");
                                   }}
-                                  className="p-1 rounded hover:bg-[#252525] text-[#888898] hover:text-[#FF6200]"
+                                  className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-[#FF6200]"
                                   title="Edit comment"
                                 >
                                   <Edit2 className="w-3 h-3" />
@@ -693,7 +693,7 @@ export function BugDetailModal({
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteComment(c.id)}
-                                  className="p-1 rounded hover:bg-red-500/15 text-[#888898] hover:text-red-400"
+                                  className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500"
                                   title="Delete comment"
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -708,14 +708,14 @@ export function BugDetailModal({
                                 rows={2}
                                 value={editingCommentText}
                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="w-full p-2 text-xs text-white bg-[#141414] border border-[#FF6200] rounded-xl focus:outline-none resize-y"
+                                className="w-full p-2 text-xs text-slate-900 bg-white border border-[#FF6200] rounded-xl focus:outline-none resize-y"
                               />
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
                                   disabled={isSavingCommentEdit || !editingCommentText.trim()}
                                   onClick={() => handleSaveEditComment(c.id)}
-                                  className="px-3 py-1 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold text-xs disabled:opacity-50"
+                                  className="px-3 py-1 rounded-lg bg-[#FF6200] hover:bg-[#e05600] text-white font-bold text-xs disabled:opacity-50"
                                 >
                                   {isSavingCommentEdit ? "Saving..." : "Save"}
                                 </button>
@@ -725,14 +725,14 @@ export function BugDetailModal({
                                     setEditingCommentId(null);
                                     setEditingCommentText("");
                                   }}
-                                  className="px-3 py-1 rounded-lg bg-[#252525] text-[#888898] text-xs font-semibold hover:text-white"
+                                  className="px-3 py-1 rounded-lg bg-slate-200 text-slate-600 text-xs font-semibold hover:text-slate-900"
                                 >
                                   Cancel
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="text-xs text-slate-200 whitespace-pre-wrap pl-8">
+                            <div className="text-xs text-slate-700 whitespace-pre-wrap pl-8">
                               {c.content}
                             </div>
                           )}
@@ -744,16 +744,16 @@ export function BugDetailModal({
                   {/* Comment Input */}
                   <form onSubmit={handleAddComment} className="relative pt-2">
                     {mentionQuery !== null && matchingUsers.length > 0 && (
-                      <div className="absolute bottom-full mb-2 left-0 w-64 bg-[#1E1E1E] border border-[#333] rounded-xl shadow-2xl p-1 z-30 space-y-0.5">
-                        <div className="px-2.5 py-1 text-[10px] font-mono text-[#888898] uppercase">Mention Member</div>
+                      <div className="absolute bottom-full mb-2 left-0 w-64 bg-white border border-slate-200 rounded-xl shadow-2xl p-1 z-30 space-y-0.5">
+                        <div className="px-2.5 py-1 text-[10px] font-mono text-slate-500 uppercase">Mention Member</div>
                         {matchingUsers.slice(0, 5).map((u) => (
                           <button
                             key={u.id}
                             type="button"
                             onClick={() => insertMention(u.name)}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-left text-xs text-white"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 text-left text-xs text-slate-800"
                           >
-                            <div className="w-5 h-5 rounded-full bg-[#FF6200] text-[9px] font-bold flex items-center justify-center">
+                            <div className="w-5 h-5 rounded-full bg-[#FF6200] text-[9px] font-bold text-white flex items-center justify-center">
                               {getInitials(u.name)}
                             </div>
                             <span className="font-semibold">{u.name}</span>
@@ -768,12 +768,12 @@ export function BugDetailModal({
                         value={newComment}
                         onChange={handleCommentChange}
                         placeholder="Write a comment or mention someone with @Name..."
-                        className="flex-1 px-3.5 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none"
+                        className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
                       />
                       <button
                         type="submit"
                         disabled={isSubmittingComment || !newComment.trim()}
-                        className="px-4 py-3 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-colors disabled:opacity-50"
+                        className="px-4 py-3 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white text-xs font-bold transition-colors disabled:opacity-50"
                       >
                         <Send className="w-4 h-4" />
                       </button>
@@ -786,7 +786,7 @@ export function BugDetailModal({
               {activeTab === "ATTACHMENTS" && (
                 <div className="pt-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#888898] uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                       Bug Proofs &amp; Attachments ({bug?.attachments?.length || 0})
                     </span>
                     <div>
@@ -823,41 +823,41 @@ export function BugDetailModal({
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-6 border-2 border-dashed border-[#2E2E2E] hover:border-[#FF6200] bg-[#141414]/60 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
+                    className="p-6 border-2 border-dashed border-slate-300 hover:border-[#FF6200] bg-slate-50 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
                   >
                     <div className="w-10 h-10 rounded-full bg-[#FF6200]/10 text-[#FF6200] mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Upload className="w-5 h-5" />
                     </div>
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs font-bold text-slate-800">
                       Drag &amp; Drop multiple screenshots or logs here, or <span className="text-[#FF6200] underline">browse</span>
                     </div>
-                    <p className="text-[11px] text-[#888898]">
+                    <p className="text-[11px] text-slate-500">
                       Supports batch upload of PNG, JPG, MP4, PDF, HAR logs, and JSON artifacts
                     </p>
                   </div>
 
                   {uploadError && (
-                    <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-500 text-xs">
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs">
                       {uploadError}
                     </div>
                   )}
 
                   <div className="space-y-2">
                     {(!bug?.attachments || bug.attachments.length === 0) ? (
-                      <div className="text-center py-8 text-[#666] text-xs italic">
+                      <div className="text-center py-8 text-slate-400 text-xs italic">
                         No attachments uploaded for this defect yet.
                       </div>
                     ) : (
                       bug.attachments.map((att: any) => (
                         <div
                           key={att.id}
-                          className="flex items-center justify-between p-3 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] shadow-sm text-xs"
+                          className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-xs text-xs"
                         >
                           <div className="flex items-center gap-3">
                             <File className="w-5 h-5 text-[#FF6200]" />
                             <div>
-                              <div className="font-bold text-white">{att.fileName}</div>
-                              <div className="text-[10px] text-[#888898]">
+                              <div className="font-bold text-slate-800">{att.fileName}</div>
+                              <div className="text-[10px] text-slate-500">
                                 {(att.fileSize / 1024).toFixed(1)} KB &bull; Uploaded on {formatDateTime(att.createdAt)}
                               </div>
                             </div>
@@ -867,7 +867,7 @@ export function BugDetailModal({
                               href={att.fileUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-2 rounded-xl border border-[#2E2E2E] hover:bg-[#252525] text-[#ACACB8] hover:text-white transition-colors"
+                              className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
                               title="Download attachment"
                             >
                               <Download className="w-4 h-4" />
@@ -876,7 +876,7 @@ export function BugDetailModal({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteAttachment(att.id, att.fileName)}
-                                className="p-2 rounded-xl border border-red-500/30 hover:bg-red-500/15 text-red-500 transition-colors"
+                                className="p-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-500 transition-colors"
                                 title="Delete attachment"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -893,20 +893,20 @@ export function BugDetailModal({
           </div>
 
           {/* Right Properties Panel */}
-          <div className="w-full md:w-80 bg-[#111] p-6 space-y-5 overflow-y-auto">
-            <h3 className="text-xs font-mono font-bold text-[#888898] uppercase tracking-wider">
+          <div className="w-full md:w-80 bg-slate-50 border-l border-slate-200 p-6 space-y-5 overflow-y-auto">
+            <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
               Defect Properties
             </h3>
 
             {/* Responsible Developer */}
             <div>
-              <label className="block text-[11px] font-mono text-[#888898] uppercase mb-1">
+              <label className="block text-[11px] font-mono text-slate-500 uppercase mb-1">
                 Assigned Developer
               </label>
               <select
                 value={bug?.assignedToId || ""}
                 onChange={(e) => handleUpdateBug({ assignedToId: e.target.value || null })}
-                className="w-full px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="">Unassigned</option>
                 {users.map((u) => (
@@ -919,8 +919,8 @@ export function BugDetailModal({
 
             {/* QA Reporter */}
             <div>
-              <label className="block text-[11px] font-mono text-[#888898] uppercase mb-1">QA Reporter</label>
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
+              <label className="block text-[11px] font-mono text-slate-500 uppercase mb-1">QA Reporter</label>
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200">
                 <div
                   className={`w-7 h-7 rounded-full bg-gradient-to-tr ${getAvatarGradient(
                     bug?.createdBy?.name
@@ -929,19 +929,19 @@ export function BugDetailModal({
                   {getInitials(bug?.createdBy?.name)}
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">{bug?.createdBy?.name || "QA Engineer"}</div>
-                  <div className="text-[10px] text-[#888898]">{bug?.createdBy?.email}</div>
+                  <div className="text-xs font-bold text-slate-800">{bug?.createdBy?.name || "QA Engineer"}</div>
+                  <div className="text-[10px] text-slate-500">{bug?.createdBy?.email}</div>
                 </div>
               </div>
             </div>
 
             {/* Priority Dropdown */}
             <div>
-              <label className="block text-[11px] font-mono text-[#888898] uppercase mb-1">Priority</label>
+              <label className="block text-[11px] font-mono text-slate-500 uppercase mb-1">Priority</label>
               <select
                 value={bug?.priority || "MEDIUM"}
                 onChange={(e) => handleUpdateBug({ priority: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="CRITICAL">Critical</option>
                 <option value="HIGH">High</option>
@@ -952,11 +952,11 @@ export function BugDetailModal({
 
             {/* Severity Dropdown */}
             <div>
-              <label className="block text-[11px] font-mono text-[#888898] uppercase mb-1">Severity</label>
+              <label className="block text-[11px] font-mono text-slate-500 uppercase mb-1">Severity</label>
               <select
                 value={bug?.severity || "MEDIUM"}
                 onChange={(e) => handleUpdateBug({ severity: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="CRITICAL">Critical (Crash / Blocker)</option>
                 <option value="MAJOR">Major</option>
@@ -968,11 +968,11 @@ export function BugDetailModal({
 
             {/* Environment */}
             <div>
-              <label className="block text-[11px] font-mono text-[#888898] uppercase mb-1">Environment</label>
+              <label className="block text-[11px] font-mono text-slate-500 uppercase mb-1">Environment</label>
               <select
                 value={bug?.environment || "Production"}
                 onChange={(e) => handleUpdateBug({ environment: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="Production">Production</option>
                 <option value="Staging">Staging</option>
@@ -982,14 +982,14 @@ export function BugDetailModal({
             </div>
 
             {/* Timestamps */}
-            <div className="pt-3 border-t border-[#2E2E2E] space-y-2 text-[11px] text-[#888898]">
+            <div className="pt-3 border-t border-slate-200 space-y-2 text-[11px] text-slate-500">
               <div className="flex justify-between">
                 <span>Reported:</span>
-                <span className="text-slate-300">{bug?.createdAt ? formatDateTime(bug.createdAt) : "—"}</span>
+                <span className="text-slate-700 font-medium">{bug?.createdAt ? formatDateTime(bug.createdAt) : "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span>Last Updated:</span>
-                <span className="text-slate-300">{bug?.updatedAt ? formatDateTime(bug.updatedAt) : "—"}</span>
+                <span className="text-slate-700 font-medium">{bug?.updatedAt ? formatDateTime(bug.updatedAt) : "—"}</span>
               </div>
             </div>
           </div>

@@ -20,7 +20,7 @@ const initialState: UIState = {
   activeWorkspace: initialSavedUI.activeWorkspace || "MAIN",
   activeProjectId: initialSavedUI.activeProjectId || null,
   sidebarCollapsed: initialSavedUI.sidebarCollapsed || false,
-  theme: initialSavedUI.theme || "dark",
+  theme: (initialSavedUI.theme === "dark" ? "light" : initialSavedUI.theme) || "light",
   searchQuery: "",
   commandPaletteOpen: false,
   createTaskModalOpen: false,

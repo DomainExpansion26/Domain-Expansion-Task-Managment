@@ -11,6 +11,9 @@ export interface UserProfile {
   avatarUrl?: string | null;
   hrmsStatus?: string;
   isHRMSActive?: boolean;
+  ndaAccepted?: boolean;
+  ndaAcceptedAt?: string | null;
+  ndaVersionAccepted?: string | null;
 }
 
 export interface AuthState {

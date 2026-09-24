@@ -74,14 +74,14 @@ export default function InviteAcceptPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#0D0D0D] text-xs text-[#888898]">
+      <div className="min-h-screen w-full flex items-center justify-center bg-white text-xs text-slate-500">
         Validating invitation link...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0D0D0D] relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-white relative overflow-hidden">
       <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-[#FF6200]/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
@@ -92,12 +92,12 @@ export default function InviteAcceptPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">
             DOMAIN <span className="text-[#FF6200]">EXPANSION</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Account Setup & Workspace Access
           </p>
         </div>
 
-        <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] shadow-2xl space-y-5">
+        <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-2xl space-y-5">
           {error && (
             <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -107,52 +107,52 @@ export default function InviteAcceptPage() {
 
           {invitation && (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#ACACB8]">
+              <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-slate-700">
                 You have been invited to join as{" "}
                 <span className="text-[#FF8C42] font-bold font-mono">{invitation.role}</span> by{" "}
                 <span className="text-white font-semibold">{invitation.invitedBy}</span>.
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Email</label>
+                <label className="block text-slate-700 font-semibold mb-1">Email</label>
                 <input
                   type="text"
                   disabled
                   value={invitation.email}
-                  className="w-full bg-[#0D0D0D] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-[#888898] font-mono"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Full Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Full Name</label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Create Password *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Create Password *</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="Min 6 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white focus:outline-none focus:border-[#FF6200]/60"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -163,24 +163,24 @@ export default function InviteAcceptPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Job Title</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Job Title</label>
                   <input
                     type="text"
                     placeholder="e.g. Software Engineer"
                     value={jobTitle}
                     onChange={(e) => setJobTitle(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]/60"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]/60"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Department</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Department</label>
                   <input
                     type="text"
                     placeholder="e.g. Engineering"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]/60"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]/60"
                   />
                 </div>
               </div>

@@ -67,7 +67,7 @@ export default function HRMSSuperAdminCreateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0B0B0C] relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-white relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-pink-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
@@ -81,16 +81,16 @@ export default function HRMSSuperAdminCreateAccountPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">
             HRMS <span className="text-pink-500">SUPER ADMIN</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Initial Administrative Account Setup
           </p>
         </div>
 
         {/* Card */}
-        <div className="p-8 rounded-3xl bg-[#141414] border border-pink-500/30 shadow-[0_0_40px_rgba(236,72,153,0.15)] space-y-5">
-          <div className="border-b border-[#2E2E2E] pb-3">
+        <div className="p-8 rounded-3xl bg-white border border-pink-500/30 shadow-[0_0_40px_rgba(236,72,153,0.15)] space-y-5">
+          <div className="border-b border-slate-200 pb-3">
             <h2 className="text-sm font-bold text-white">Create HRMS Super Admin</h2>
-            <p className="text-[11px] text-[#888898]">
+            <p className="text-[11px] text-slate-500">
               Setup HR control center administrator credentials.
             </p>
           </div>
@@ -104,54 +104,54 @@ export default function HRMSSuperAdminCreateAccountPage() {
 
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Administrator Name *</label>
+              <label className="block text-slate-700 font-semibold mb-1.5">Administrator Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
                   placeholder="e.g. HR Director"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[#ACACB8] font-semibold">HRMS Super Admin Email *</label>
+                <label className="block text-slate-700 font-semibold">HRMS Super Admin Email *</label>
                 <span className="text-[10px] text-pink-400 font-mono">Configured Default</span>
               </div>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   required
                   placeholder="hrms.admin@domainexpansion.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Password *</label>
+              <label className="block text-slate-700 font-semibold mb-1.5">Password *</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder="Min 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -161,21 +161,21 @@ export default function HRMSSuperAdminCreateAccountPage() {
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Confirm Password *</label>
+              <label className="block text-slate-700 font-semibold mb-1.5">Confirm Password *</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   required
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-pink-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                   tabIndex={-1}
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
@@ -194,16 +194,16 @@ export default function HRMSSuperAdminCreateAccountPage() {
             </button>
           </form>
 
-          <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-xs">
-            <span className="text-[#888898]">Already configured?</span>
+          <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+            <span className="text-slate-500">Already configured?</span>
             <Link href="/hrmssuperadmin/login" className="text-pink-400 font-bold hover:underline">
               HRMS Admin Sign In
             </Link>
           </div>
         </div>
 
-        <div className="text-center text-xs text-[#888898]">
-          <Link href="/hrms/login" className="hover:text-white underline">
+        <div className="text-center text-xs text-slate-500">
+          <Link href="/hrms/login" className="hover:text-slate-900 underline">
             &larr; Return to HRMS Employee Portal
           </Link>
         </div>

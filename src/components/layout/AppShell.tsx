@@ -103,10 +103,9 @@ export function AppShell({
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "work-packages", label: "Work Packages", icon: ListTodo, hideForHR: true },
+    { id: "work-packages", label: "Task Management", icon: ListTodo, hideForHR: true },
     { id: "my-work", label: "My Work", icon: CheckSquare, hideForExecs: true },
     { id: "projects", label: "Projects", icon: FolderKanban, hideForHR: true },
-    { id: "kanban", label: "Kanban Board", icon: Columns3, hideForHR: true },
     { id: "backlog", label: "Backlog & Sprints", icon: Layers, requireManagerOrLead: true },
     { id: "qa", label: "QA & Defects", icon: Bug, requireQAOrLead: true },
     { id: "hrms", label: "HRMS & Attendance", icon: Clock },
@@ -132,19 +131,19 @@ export function AppShell({
   };
 
   const renderSidebarContent = () => (
-    <div className="flex flex-col justify-between h-full">
+    <div className="flex flex-col justify-between h-full bg-white text-slate-800">
       <div>
         {/* Brand Logo & Name */}
-        <div className="flex items-center justify-between px-5 py-4 sm:py-5 border-b border-[#2E2E2E]">
+        <div className="flex items-center justify-between px-5 py-4 sm:py-5 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-[0_0_20px_rgba(255,98,0,0.35)]">
+            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-md shadow-[#FF6200]/25">
               <span className="font-extrabold text-lg tracking-tighter">DX</span>
             </div>
             <div>
-              <div className="flex items-center gap-1.5 font-bold tracking-tight text-white text-base">
+              <div className="flex items-center gap-1.5 font-bold tracking-tight text-slate-900 text-base">
                 DOMAIN <span className="text-[#FF6200]">EXPANSION</span>
               </div>
-              <div className="text-[10px] text-[#888898] font-mono uppercase tracking-wider">
+              <div className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
                 Enterprise Portal
               </div>
             </div>
@@ -153,7 +152,7 @@ export function AppShell({
           {/* Close button on mobile drawer */}
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#252525]"
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,11 +166,11 @@ export function AppShell({
                 onOpenCreateTask();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-semibold text-xs tracking-wide uppercase hover:opacity-95 shadow-[0_0_15px_rgba(255,98,0,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white font-semibold text-xs tracking-wide uppercase shadow-md shadow-[#FF6200]/20 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Task</span>
-              <kbd className="hidden sm:inline ml-auto text-[10px] bg-black/25 px-1.5 py-0.5 rounded font-mono">C</kbd>
+              <kbd className="hidden sm:inline ml-auto text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">C</kbd>
             </button>
           </div>
         )}
@@ -195,8 +194,8 @@ export function AppShell({
                 onClick={() => handleNavClick(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                   isActive
-                    ? "bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 shadow-[0_0_15px_rgba(255,98,0,0.1)] font-bold"
-                    : "text-[#ACACB8] hover:text-white hover:bg-[#1A1A1A]"
+                    ? "bg-orange-50 text-[#FF6200] border border-orange-200 shadow-sm font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -204,7 +203,7 @@ export function AppShell({
                     className={`w-4 h-4 ${
                       isActive
                         ? "text-[#FF6200]"
-                        : "text-[#888898]"
+                        : "text-slate-400"
                     }`}
                   />
                   <span>{item.label}</span>
@@ -221,47 +220,47 @@ export function AppShell({
       </div>
 
       {/* Bottom User Profile Section */}
-      <div className="p-3 border-t border-[#2E2E2E] bg-[#101010]/80">
+      <div className="p-3 border-t border-slate-200 bg-slate-50/80">
         <div className="relative">
           <button
             onClick={() => setProfileOpen(!profileOpen)}
-            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-[#1C1C1C] transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 transition-all group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               {currentUser?.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
                   alt={currentUser.name}
-                  className="w-8 h-8 rounded-xl object-cover ring-1 ring-[#2E2E2E] flex-shrink-0"
+                  className="w-8 h-8 rounded-xl object-cover ring-1 ring-slate-200 flex-shrink-0"
                 />
               ) : (
                 <div
                   className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${getAvatarGradient(
                     currentUser?.name
-                  )} text-xs font-bold text-white flex items-center justify-center flex-shrink-0 uppercase shadow-md`}
+                  )} text-xs font-bold text-white flex items-center justify-center flex-shrink-0 uppercase shadow-sm`}
                 >
                   {getInitials(currentUser?.name)}
                 </div>
               )}
               <div className="text-left min-w-0">
-                <div className="text-xs font-semibold text-white truncate group-hover:text-[#FF8C42] transition-colors">
+                <div className="text-xs font-semibold text-slate-900 truncate group-hover:text-[#FF6200] transition-colors">
                   {currentUser?.name || "User"}
                 </div>
-                <div className="text-[10px] text-[#888898] truncate">
+                <div className="text-[10px] text-slate-500 truncate">
                   {currentUser?.jobTitle || currentUser?.role?.replace("_", " ")}
                 </div>
               </div>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-[#888898] group-hover:text-white transition-colors flex-shrink-0" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors flex-shrink-0" />
           </button>
 
           {/* Profile Dropdown Menu */}
           {profileOpen && (
-            <div className="absolute bottom-14 left-0 right-0 p-2 rounded-2xl bg-[#1A1A1A] border border-[#2E2E2E] shadow-2xl z-50 animate-fade-in space-y-1">
-              <div className="px-3 py-2 border-b border-[#2E2E2E]/60 text-xs">
-                <div className="font-semibold text-white">{currentUser?.name}</div>
-                <div className="text-[11px] text-[#888898] truncate">{currentUser?.email}</div>
-                <div className="text-[10px] font-bold text-[#FF8C42] mt-0.5 font-mono">
+            <div className="absolute bottom-14 left-0 right-0 p-2 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 animate-fade-in space-y-1">
+              <div className="px-3 py-2 border-b border-slate-100 text-xs">
+                <div className="font-semibold text-slate-900">{currentUser?.name}</div>
+                <div className="text-[11px] text-slate-500 truncate">{currentUser?.email}</div>
+                <div className="text-[10px] font-bold text-[#FF6200] mt-0.5 font-mono">
                   {currentUser?.role?.replace("_", " ")}
                 </div>
               </div>
@@ -272,20 +271,20 @@ export function AppShell({
                     handleNavClick("profile");
                     setProfileOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-[#ACACB8] hover:text-white hover:bg-[#252525] transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <User className="w-3.5 h-3.5 text-[#FF6200]" />
                   <span>My Profile & Settings</span>
                 </button>
 
-                <div className="border-t border-[#2E2E2E]/60 my-1" />
+                <div className="border-t border-slate-100 my-1" />
 
                 <button
                   onClick={() => {
                     setProfileOpen(false);
                     onLogout();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-600 hover:bg-red-50 transition-colors cursor-pointer font-medium"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Sign Out</span>
@@ -299,9 +298,9 @@ export function AppShell({
   );
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0D0D0D] text-[#F3F4F6]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC] text-slate-800">
       {/* 1. Desktop Left Navigation Sidebar (Hidden on mobile) */}
-      <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col justify-between border-r border-[#2E2E2E] bg-[#141414]/90 backdrop-blur-xl z-20">
+      <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col justify-between border-r border-slate-200 bg-white z-20 shadow-sm">
         {renderSidebarContent()}
       </aside>
 
@@ -311,11 +310,11 @@ export function AppShell({
           {/* Backdrop */}
           <div
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
           />
 
           {/* Slide Drawer */}
-          <div className="relative w-72 max-w-[85vw] h-full bg-[#141414] border-r border-[#2E2E2E] shadow-2xl z-50 flex flex-col">
+          <div className="relative w-72 max-w-[85vw] h-full bg-white border-r border-slate-200 shadow-2xl z-50 flex flex-col">
             {renderSidebarContent()}
           </div>
         </div>
@@ -324,15 +323,15 @@ export function AppShell({
       {/* 3. Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Header Bar (Responsive) */}
-        <header className="h-14 sm:h-16 flex-shrink-0 flex items-center justify-between px-3 sm:px-6 border-b border-[#2E2E2E] bg-[#141414]/80 backdrop-blur-md z-10">
+        <header className="h-14 sm:h-16 flex-shrink-0 flex items-center justify-between px-3 sm:px-6 border-b border-slate-200 bg-white/95 backdrop-blur-md z-10 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             {/* Mobile Hamburger Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] hover:text-white hover:border-[#FF6200]/40 transition-colors"
+              className="lg:hidden p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
               title="Open Navigation Menu"
             >
-              <Menu className="w-5 h-5 text-white" />
+              <Menu className="w-5 h-5" />
             </button>
 
             {/* Mobile Brand Title */}
@@ -340,7 +339,7 @@ export function AppShell({
               <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white text-xs font-extrabold flex items-center justify-center shadow-sm">
                 DX
               </div>
-              <span className="font-bold text-xs text-white tracking-tight hidden sm:inline">
+              <span className="font-bold text-xs text-slate-900 tracking-tight hidden sm:inline">
                 DOMAIN <span className="text-[#FF6200]">EXPANSION</span>
               </span>
             </div>
@@ -348,11 +347,11 @@ export function AppShell({
             {/* Global Search Bar Button */}
             <button
               onClick={onOpenSearch}
-              className="hidden md:flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs text-[#888898] hover:text-white hover:border-[#FF6200]/50 transition-all w-60 lg:w-72 cursor-pointer"
+              className="hidden md:flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-500 hover:text-slate-800 hover:border-[#FF6200]/50 transition-all w-60 lg:w-72 cursor-pointer"
             >
-              <Search className="w-3.5 h-3.5 text-[#888898]" />
+              <Search className="w-3.5 h-3.5 text-slate-400" />
               <span className="truncate">Search tasks, projects, docs...</span>
-              <kbd className="ml-auto text-[10px] bg-[#2E2E2E] px-1.5 py-0.5 rounded font-mono text-slate-400">
+              <kbd className="ml-auto text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded font-mono text-slate-500 shadow-xs">
                 Ctrl+K
               </kbd>
             </button>
@@ -363,21 +362,19 @@ export function AppShell({
             {/* Mobile Quick Search Button */}
             <button
               onClick={onOpenSearch}
-              className="md:hidden p-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] hover:text-white transition-colors"
+              className="md:hidden p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
               title="Search"
             >
-              <Search className="w-4 h-4 text-white" />
+              <Search className="w-4 h-4 text-slate-600" />
             </button>
-
-
 
             {/* Notification Bell */}
             <button
               onClick={onOpenNotifications}
-              className="relative p-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-[#888898] hover:text-white hover:border-[#FF6200]/40 transition-colors cursor-pointer"
+              className="relative p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#FF6200]/40 transition-colors cursor-pointer"
               title="Notifications"
             >
-              <Bell className="w-4 h-4 text-white" />
+              <Bell className="w-4 h-4 text-slate-700" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF6200] text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                   {unreadCount}
@@ -388,7 +385,7 @@ export function AppShell({
             {/* Create Task Button */}
             <button
               onClick={onOpenCreateTask}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white text-xs font-bold hover:opacity-95 shadow-md shadow-[#FF6200]/20 transition-all cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white text-xs font-bold shadow-md shadow-[#FF6200]/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">New Task</span>
@@ -397,7 +394,7 @@ export function AppShell({
         </header>
 
         {/* Scrollable View Container */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#0D0D0D] p-3 sm:p-6 pb-16 sm:pb-6 min-w-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F8FAFC] p-3 sm:p-6 pb-16 sm:pb-6 min-w-0">
           {children}
         </main>
       </div>

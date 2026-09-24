@@ -192,31 +192,31 @@ export function RaiseBugModal({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#181818]/60">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400">
+            <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-600">
               <Bug className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-red-400 uppercase tracking-widest">
+                <span className="text-xs font-mono font-bold text-red-600 uppercase tracking-widest">
                   QA Defect Management
                 </span>
                 {parentTask && (
-                  <span className="px-2 py-0.5 rounded-md bg-[#252525] border border-[#333] text-[11px] font-mono text-[#FF8C42]">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[11px] font-mono text-[#FF6200]">
                     Linked: {parentTask.taskKey}
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-black text-white tracking-tight">Raise QA Bug</h2>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">Raise QA Bug</h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -225,7 +225,7 @@ export function RaiseBugModal({
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           {error && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -233,20 +233,20 @@ export function RaiseBugModal({
 
           {/* Context Banner if Linked to Task */}
           {parentTask && (
-            <div className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between gap-4">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-[10px] text-[#888898] uppercase font-mono tracking-wider">
+                <div className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">
                   Target Work Item Context
                 </div>
-                <div className="text-xs font-bold text-white truncate mt-0.5 flex items-center gap-2">
+                <div className="text-xs font-bold text-slate-900 truncate mt-0.5 flex items-center gap-2">
                   <span className="text-[#FF6200] font-mono">{parentTask.taskKey}</span>
-                  <span className="text-[#888898]">&bull;</span>
+                  <span className="text-slate-400">&bull;</span>
                   <span className="truncate">{parentTask.title}</span>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-[10px] text-[#888898] uppercase font-mono">Project</div>
-                <div className="text-xs font-semibold text-[#ACACB8]">{currentProjectName}</div>
+                <div className="text-[10px] text-slate-500 uppercase font-mono">Project</div>
+                <div className="text-xs font-semibold text-slate-700">{currentProjectName}</div>
               </div>
             </div>
           )}
@@ -254,15 +254,15 @@ export function RaiseBugModal({
           {/* Bug Title */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-[#ACACB8] flex items-center gap-1">
+              <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
                 <span>Bug Title</span>
-                <span className="text-red-400">*</span>
+                <span className="text-red-500">*</span>
               </label>
               <button
                 type="button"
                 onClick={handleAIEnhance}
                 disabled={aiEnhancing}
-                className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 disabled:opacity-50"
+                className="text-[11px] font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{aiEnhancing ? "Enhancing..." : "AI Auto-Fill Steps"}</span>
@@ -274,7 +274,7 @@ export function RaiseBugModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Registration API returns 500 error for duplicate email"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none transition-colors"
             />
           </div>
 
@@ -282,13 +282,13 @@ export function RaiseBugModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Assignee (Defaults to original task assignee) */}
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">
-                Responsible Developer <span className="text-red-400">*</span>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Responsible Developer <span className="text-red-500">*</span>
               </label>
               <select
                 value={assignedToId}
                 onChange={(e) => setAssignedToId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               >
                 <option value="">Select Developer...</option>
                 {users.map((u) => (
@@ -297,18 +297,18 @@ export function RaiseBugModal({
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-[#888898] mt-1">
+              <p className="text-[10px] text-slate-500 mt-1">
                 Auto-assigned to task owner &bull; Can be adjusted manually
               </p>
             </div>
 
             {/* Environment */}
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Environment</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Environment</label>
               <select
                 value={environment}
                 onChange={(e) => setEnvironment(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               >
                 <option value="Production">Production</option>
                 <option value="Staging">Staging</option>
@@ -321,11 +321,11 @@ export function RaiseBugModal({
           {/* Priority & Severity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Priority</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               >
                 <option value="CRITICAL">Critical Priority</option>
                 <option value="HIGH">High Priority</option>
@@ -335,11 +335,11 @@ export function RaiseBugModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Severity</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Severity</label>
               <select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               >
                 <option value="CRITICAL">Critical (Blocks Release / Crash)</option>
                 <option value="MAJOR">Major (Broken Core Functionality)</option>
@@ -352,70 +352,70 @@ export function RaiseBugModal({
 
           {/* Steps to Reproduce */}
           <div>
-            <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Steps to Reproduce</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Steps to Reproduce</label>
             <textarea
               rows={3}
               value={stepsToReproduce}
               onChange={(e) => setStepsToReproduce(e.target.value)}
               placeholder="1. Open user registration modal&#10;2. Input an existing email (e.g. test@domain.com)&#10;3. Submit registration form"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none font-mono"
             />
           </div>
 
           {/* Expected vs Actual Result */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Expected Result</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Expected Result</label>
               <textarea
                 rows={2}
                 value={expectedResult}
                 onChange={(e) => setExpectedResult(e.target.value)}
                 placeholder="User friendly 400 validation: 'Email already registered'"
-                className="w-full px-3.5 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Actual Result</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Actual Result</label>
               <textarea
                 rows={2}
                 value={actualResult}
                 onChange={(e) => setActualResult(e.target.value)}
                 placeholder="API unhandled exception returns 500 Internal Server Error"
-                className="w-full px-3.5 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none"
+                className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
               />
             </div>
           </div>
 
           {/* Additional Description / Notes */}
           <div>
-            <label className="block text-xs font-bold text-[#ACACB8] mb-1.5">Defect Description / Summary</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Defect Description / Summary</label>
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Provide any additional logs, stack traces, or observed edge cases..."
-              className="w-full px-3.5 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-white text-xs placeholder-[#666] focus:border-[#FF6200] focus:outline-none"
+              className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200] focus:outline-none"
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-[#2E2E2E] flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[11px] text-[#888898]">
-              <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+          <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
               <span>Developer will be automatically notified via in-app banner & email.</span>
             </div>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-[#222] hover:bg-[#2A2A2A] text-[#ACACB8] hover:text-white text-xs font-semibold transition-colors"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm shadow-red-600/20 transition-all disabled:opacity-50"
               >
                 <Bug className="w-4 h-4" />
                 <span>{loading ? "Raising Bug..." : "Log & Assign Bug"}</span>

@@ -146,23 +146,23 @@ export function DocumentUploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in text-[#F3F4F6]">
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in text-slate-800">
+      <div className="relative w-full max-w-2xl max-h-[90vh] bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[#FF6200]/15 border border-[#FF6200]/30 text-[#FF8C42]">
+            <div className="p-2.5 rounded-xl bg-[#FF6200]/10 border border-[#FF6200]/20 text-[#FF6200]">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-white">Super Admin — Upload Documentation</h2>
-              <p className="text-xs text-[#888898]">Publish official team guidelines, architecture, and phase documentation</p>
+              <h2 className="text-base font-bold text-slate-900">Super Admin — Upload Documentation</h2>
+              <p className="text-xs text-slate-500">Publish official team guidelines, architecture, and phase documentation</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[#888898] hover:text-white hover:bg-[#252525] transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -171,7 +171,7 @@ export function DocumentUploadModal({
         {/* Content Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -179,7 +179,7 @@ export function DocumentUploadModal({
 
           {/* Row 1: Title */}
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+            <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase">
               Document Title *
             </label>
             <input
@@ -188,21 +188,21 @@ export function DocumentUploadModal({
               placeholder="e.g. Master Backend Architecture & API Specifications"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#FF6200]"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 font-medium focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
             />
           </div>
 
           {/* Row 2: Department & Category / Team */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+              <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
                 <Building className="w-3.5 h-3.5 text-[#FF6200]" />
                 <span>Department *</span>
               </label>
               <select
                 value={department}
                 onChange={(e) => handleDeptChange(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
               >
                 {DEPARTMENTS.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -213,14 +213,14 @@ export function DocumentUploadModal({
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+              <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-[#FF6200]" />
                 <span>Team / Category *</span>
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
               >
                 {currentCategoryList.map((cat) => (
                   <option key={cat} value={cat}>
@@ -234,7 +234,7 @@ export function DocumentUploadModal({
 
           {category === "CUSTOM" && (
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+              <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase">
                 Custom Category / Team Name
               </label>
               <input
@@ -242,7 +242,7 @@ export function DocumentUploadModal({
                 placeholder="e.g. Microservices, AI Copilot, Cloud Infra"
                 value={customCategory}
                 onChange={(e) => setCustomCategory(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
               />
             </div>
           )}
@@ -250,7 +250,7 @@ export function DocumentUploadModal({
           {/* Row 3: Phase Number & Phase Name (Unbounded) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
+              <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-[#FF6200]" />
                 <span>Phase Number</span>
               </label>
@@ -259,12 +259,12 @@ export function DocumentUploadModal({
                 min="1"
                 value={phaseNumber}
                 onChange={(e) => handlePhaseChange(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-bold focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+              <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase">
                 Phase Title / Milestone Name
               </label>
               <input
@@ -272,7 +272,7 @@ export function DocumentUploadModal({
                 placeholder="e.g. Phase 1: Architecture & API Specifications"
                 value={phaseName}
                 onChange={(e) => setPhaseName(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
               />
             </div>
           </div>
@@ -280,22 +280,22 @@ export function DocumentUploadModal({
           {/* Row 4: Version, Status, Visibility */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Version</label>
+              <label className="block text-slate-700 font-semibold mb-1 font-mono text-[10px] uppercase">Version</label>
               <input
                 type="text"
                 placeholder="1.0"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-1.5 text-white font-mono focus:outline-none"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 font-mono focus:outline-none focus:border-[#FF6200]"
               />
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Status</label>
+              <label className="block text-slate-700 font-semibold mb-1 font-mono text-[10px] uppercase">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-white focus:outline-none"
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="PUBLISHED">Published (Active)</option>
                 <option value="DRAFT">Draft (Admin Only)</option>
@@ -304,11 +304,11 @@ export function DocumentUploadModal({
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1 font-mono text-[10px] uppercase">Visibility</label>
+              <label className="block text-slate-700 font-semibold mb-1 font-mono text-[10px] uppercase">Visibility</label>
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-white focus:outline-none"
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-[#FF6200]"
               >
                 <option value="DEPARTMENT">Department Only</option>
                 <option value="COMPANY_WIDE">Company-Wide</option>
@@ -319,7 +319,7 @@ export function DocumentUploadModal({
 
           {/* Row 5: Description */}
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+            <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase">
               Summary / Scope
             </label>
             <textarea
@@ -327,13 +327,13 @@ export function DocumentUploadModal({
               placeholder="Brief summary of what this document covers..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl p-3 text-white placeholder-[#666] focus:outline-none"
+              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#FF6200] focus:ring-1 focus:ring-[#FF6200]"
             />
           </div>
 
           {/* Row 6: File Upload Area */}
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1.5 font-mono text-[11px] uppercase">
+            <label className="block text-slate-700 font-semibold mb-1.5 font-mono text-[11px] uppercase">
               File Attachment(s) * (PDF, DOCX, XLSX, TXT, JSON, Markdown, Images, ZIP)
             </label>
             <div
@@ -348,8 +348,8 @@ export function DocumentUploadModal({
                 dragOver
                   ? "border-[#FF6200] bg-[#FF6200]/10"
                   : files.length > 0
-                  ? "border-emerald-500/50 bg-emerald-500/5"
-                  : "border-[#2E2E2E] bg-[#1A1A1A] hover:border-[#FF6200]/50"
+                  ? "border-emerald-500/50 bg-emerald-50"
+                  : "border-slate-300 bg-slate-50 hover:border-[#FF6200]/50"
               }`}
             >
               <input
@@ -361,16 +361,16 @@ export function DocumentUploadModal({
               />
               <div className="flex justify-center">
                 {files.length > 0 ? (
-                  <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                 ) : (
-                  <UploadCloud className="w-8 h-8 text-[#888898]" />
+                  <UploadCloud className="w-8 h-8 text-slate-400" />
                 )}
               </div>
               <div>
-                <div className="font-semibold text-white text-xs">
+                <div className="font-semibold text-slate-800 text-xs">
                   {files.length > 0 ? `${files.length} file(s) selected - click or drop to add more` : "Click to browse multiple files or drop them here"}
                 </div>
-                <div className="text-[10px] text-[#888898]">Supported: PDF, DOC, DOCX, XLSX, TXT, JSON, MD, PNG, ZIP</div>
+                <div className="text-[10px] text-slate-500">Supported: PDF, DOC, DOCX, XLSX, TXT, JSON, MD, PNG, ZIP</div>
               </div>
             </div>
 
@@ -380,12 +380,12 @@ export function DocumentUploadModal({
                 {files.map((f, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs"
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs shadow-xs"
                   >
                     <div className="flex items-center gap-2 truncate">
                       <FileText className="w-4 h-4 text-[#FF6200] flex-shrink-0" />
-                      <span className="text-white truncate font-medium">{f.name}</span>
-                      <span className="text-[10px] text-[#888898] flex-shrink-0">
+                      <span className="text-slate-800 truncate font-medium">{f.name}</span>
+                      <span className="text-[10px] text-slate-500 flex-shrink-0">
                         ({(f.size / 1024).toFixed(1)} KB)
                       </span>
                     </div>
@@ -395,7 +395,7 @@ export function DocumentUploadModal({
                         e.stopPropagation();
                         removeFile(i);
                       }}
-                      className="p-1 rounded hover:bg-red-500/20 text-[#888898] hover:text-red-400"
+                      className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500"
                       title="Remove file"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -407,18 +407,18 @@ export function DocumentUploadModal({
           </div>
 
           {/* Footer Submit */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#2E2E2E]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs font-semibold text-[#ACACB8] hover:text-white"
+              className="px-5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[#FF6200]/25 transition-all"
+              className="px-6 py-2.5 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white text-xs font-bold shadow-sm shadow-[#FF6200]/25 transition-all"
             >
               {loading ? "Publishing Document..." : "Publish to Vault"}
             </button>

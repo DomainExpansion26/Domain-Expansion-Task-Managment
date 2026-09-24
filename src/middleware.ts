@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 const COOKIE_NAME = "dx_session_token";
 
 // Helper to decode and check expiration of JWT in Edge runtime
-function isTokenValid(token?: string): boolean {
-  if (!token) return false;
+function decodeToken(token?: string): { valid: boolean; userId?: string; role?: string; ndaAccepted?: boolean } {
+  if (!token) return { valid: false };
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return false;
+    if (parts.length !== 3) return { valid: false };
     
     // Base64Url decode payload
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -20,18 +20,24 @@ function isTokenValid(token?: string): boolean {
     const decoded = JSON.parse(jsonPayload);
     
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-      return false;
+      return { valid: false };
     }
-    return Boolean(decoded.userId);
+    return {
+      valid: Boolean(decoded.userId),
+      userId: decoded.userId,
+      role: decoded.role,
+      ndaAccepted: Boolean(decoded.ndaAccepted),
+    };
   } catch {
-    return false;
+    return { valid: false };
   }
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_NAME)?.value;
-  const authenticated = isTokenValid(token);
+  const session = decodeToken(token);
+  const authenticated = session.valid;
 
   // Define route categories
   const isAuthRoute =
@@ -45,6 +51,8 @@ export function middleware(request: NextRequest) {
     pathname === "/hrmssuperadmin/login" ||
     pathname === "/hrmssuperadmin/create-account";
 
+  const isNDARoute = pathname === "/nda";
+
   const isProtectedRoute =
     pathname === "/" ||
     pathname.startsWith("/dashboard") ||
@@ -53,10 +61,11 @@ export function middleware(request: NextRequest) {
     (pathname.startsWith("/superadmin") && pathname !== "/superadmin/login" && pathname !== "/superadmin/create-account") ||
     (pathname.startsWith("/hrmssuperadmin") && pathname !== "/hrmssuperadmin/login" && pathname !== "/hrmssuperadmin/create-account") ||
     pathname.startsWith("/qa") ||
+    pathname.startsWith("/tasks") ||
     pathname.startsWith("/invite");
 
-  // 1. If unauthenticated user tries to access protected routes, redirect to login
-  if (!authenticated && isProtectedRoute) {
+  // 1. If unauthenticated user tries to access protected routes or NDA, redirect to login
+  if (!authenticated && (isProtectedRoute || isNDARoute)) {
     const url = request.nextUrl.clone();
     if (pathname.startsWith("/hrms")) {
       url.pathname = "/hrms/login";
@@ -72,10 +81,31 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // 2. If authenticated user tries to access login/register pages, redirect to dashboard
-  if (authenticated && isAuthRoute) {
+  // 2. MANDATORY NDA ENFORCEMENT
+  // If user is authenticated but has NOT accepted NDA, force them to /nda screen
+  if (authenticated && !session.ndaAccepted && session.role !== "SUPER_ADMIN") {
+    if (!isNDARoute && !pathname.startsWith("/api/auth/logout") && !pathname.startsWith("/api/nda") && !pathname.startsWith("/api/auth/me")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/nda";
+      const response = NextResponse.redirect(url);
+      response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      return response;
+    }
+  }
+
+  // 3. If user already accepted NDA and visits /nda, redirect to dashboard
+  if (authenticated && (session.ndaAccepted || session.role === "SUPER_ADMIN") && isNDARoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
+    const response = NextResponse.redirect(url);
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    return response;
+  }
+
+  // 4. If authenticated user tries to access login/register pages, redirect to dashboard
+  if (authenticated && isAuthRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = session.ndaAccepted || session.role === "SUPER_ADMIN" ? "/dashboard" : "/nda";
     const response = NextResponse.redirect(url);
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     return response;

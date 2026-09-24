@@ -1,39 +1,63 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, ArrowRight, AlertCircle, CheckCircle2, Shield, Clock, ArrowLeft, KeyRound } from "lucide-react";
+import {
+  KeyRound,
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  CheckCircle2,
+  Lock,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  ShieldCheck,
+  Copy,
+  Check,
+} from "lucide-react";
 
 function ForgotPasswordForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const portalParam = (searchParams.get("portal") || "MAIN").toUpperCase();
+  const portalParam = searchParams.get("portal") || "MAIN"; // MAIN, SUPERADMIN, HRMS
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [devToken, setDevToken] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [resetUrl, setResetUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const getLoginLink = () => {
-    switch (portalParam) {
+  // In-line reset form states
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [passwordResetDone, setPasswordResetDone] = useState(false);
+
+  const getPortalLogin = () => {
+    switch (portalParam.toUpperCase()) {
       case "SUPERADMIN":
-        return { text: "Back to Super Admin Login", href: "/superadmin/login", color: "text-red-400" };
+        return { href: "/superadmin/login", text: "Back to Super Admin Login", color: "text-red-600" };
       case "HRMS":
-        return { text: "Back to HRMS Login", href: "/hrms/login", color: "text-cyan-400" };
-      case "HRMSSUPERADMIN":
-        return { text: "Back to HRMS Super Admin Login", href: "/hrmssuperadmin/login", color: "text-purple-400" };
+        return { href: "/hrms/login", text: "Back to HRMS Login", color: "text-cyan-600" };
       default:
-        return { text: "Back to Main Login", href: "/login", color: "text-[#FF8C42]" };
+        return { href: "/login", text: "Back to Member Login", color: "text-[#FF6200]" };
     }
   };
 
-  const loginInfo = getLoginLink();
+  const loginInfo = getPortalLogin();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRequestToken = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError("Please enter your registered work email.");
+      setError("Please provide your registered account email.");
       return;
     }
 
@@ -50,66 +74,245 @@ function ForgotPasswordForm() {
       const json = await res.json();
       if (json.success) {
         setSuccess(true);
-        if (json.token) setDevToken(json.token);
+        const token = json.token || json.devToken || null;
+        setResetToken(token);
+        if (token) {
+          setResetUrl(`/reset-password?token=${token}&portal=${portalParam}`);
+        }
       } else {
-        setError(json.error?.message || "Failed to process request. Please try again.");
+        setError(json.error?.message || "Failed to process password reset request.");
       }
     } catch {
-      setError("Network error. Please check your connection and try again.");
+      setError("Network error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleInlineReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetToken) {
+      setResetError("Reset token is missing. Please request a new link.");
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setResetError("New password must be at least 6 characters.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError(null);
+
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, newPassword }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setPasswordResetDone(true);
+      } else {
+        setResetError(json.error?.message || "Failed to update password. Token may have expired.");
+      }
+    } catch {
+      setResetError("Network error while resetting password. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!resetUrl) return;
+    const fullUrl = `${window.location.origin}${resetUrl}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  // If password was reset successfully
+  if (passwordResetDone) {
+    return (
+      <div className="p-8 rounded-3xl bg-white border border-emerald-200 shadow-xl space-y-5 text-slate-800 text-center animate-fade-in">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 mx-auto flex items-center justify-center">
+          <CheckCircle2 className="w-7 h-7" />
+        </div>
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Password Reset Successfully!</h2>
+          <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto leading-relaxed">
+            Your new password has been securely updated for <strong className="text-slate-900">{email}</strong>. You can now log into your account.
+          </p>
+        </div>
+
+        <div className="pt-2">
+          <Link
+            href={loginInfo.href}
+            className="w-full py-3 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-[#FF6200]/20 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Proceed to Login</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] shadow-2xl space-y-5">
-      {/* Header Info */}
-      <div className="space-y-1">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <KeyRound className="w-5 h-5 text-[#FF6200]" />
+    <div className="p-8 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-5 text-slate-800">
+      <div className="border-b border-slate-100 pb-3">
+        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <KeyRound className="w-4 h-4 text-[#FF6200]" />
           <span>Reset Your Password</span>
         </h2>
-        <p className="text-xs text-[#888898]">
-          Enter the email address associated with your account and we&apos;ll send you a password reset link.
+        <p className="text-xs text-slate-500 mt-0.5">
+          Enter your registered work email to verify and update your account password.
         </p>
       </div>
 
-      {/* Success Notification */}
       {success ? (
-        <div className="space-y-4 pt-2">
-          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-bold text-sm">
+        <div className="space-y-4 pt-1 animate-fade-in">
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-bold text-sm text-emerald-700">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-              <span>Password Reset Email Dispatched!</span>
+              <span>Password Reset Ready for {email}</span>
             </div>
-            <p className="leading-relaxed text-slate-300">
-              If an account with <strong className="text-white">{email}</strong> exists, you will receive an email shortly with instructions to create a new password.
-            </p>
-            <p className="text-[11px] text-[#888898]">
-              The link is valid for 1 hour. Be sure to check your spam/junk folder if you do not see it in a few minutes.
+            <p className="leading-relaxed text-slate-700">
+              A secure password reset authorization token has been generated. You can proceed directly to create your new password below.
             </p>
           </div>
 
-          {/* Development Quick Link */}
-          {devToken && (
-            <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/40 text-xs space-y-1.5">
-              <div className="font-mono font-bold text-purple-300 text-[11px]">Developer Shortcut:</div>
+          {/* Direct Reset Action Buttons */}
+          {resetUrl && (
+            <div className="space-y-2 pt-1">
               <Link
-                href={`/reset-password?token=${devToken}`}
-                className="inline-flex items-center gap-1.5 text-purple-400 hover:underline font-bold text-xs"
+                href={resetUrl}
+                className="w-full py-3 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white text-xs font-bold transition-all shadow-md shadow-[#FF6200]/20 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Click here to test Reset Password Page &rarr;</span>
+                <span>Proceed to Dedicated Reset Page</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
+
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-700 font-bold">Reset Link Copied to Clipboard!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Copy Reset Link</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
 
-          <div className="pt-2 flex justify-between items-center text-xs">
+          {/* In-Line Direct Password Reset Form */}
+          {resetToken && (
+            <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                <ShieldCheck className="w-4 h-4 text-[#FF6200]" />
+                <span>Or Set New Password Right Now:</span>
+              </div>
+
+              {resetError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                  <span>{resetError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleInlineReset} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">New Password</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      placeholder="Enter new password (min. 6 chars)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#FF6200]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-semibold mb-1">Confirm New Password</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#FF6200]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {resetLoading ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Updating Password...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Save New Password &amp; Finish</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          <div className="pt-2 flex justify-between items-center text-xs border-t border-slate-100">
             <button
               onClick={() => {
                 setSuccess(false);
-                setDevToken(null);
+                setResetToken(null);
+                setResetUrl(null);
+                setNewPassword("");
+                setConfirmPassword("");
+                setResetError(null);
               }}
-              className="text-[#888898] hover:text-white underline"
+              className="text-slate-500 hover:text-slate-800 underline cursor-pointer"
             >
               Try another email
             </button>
@@ -119,25 +322,25 @@ function ForgotPasswordForm() {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleRequestToken} className="space-y-4 text-xs">
           {error && (
-            <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-[#ACACB8] font-semibold mb-1.5">Work Email</label>
+            <label className="block text-slate-700 font-semibold mb-1.5">Registered Account Email</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
                 placeholder="name@domainexpansion.in"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]/60"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#FF6200]"
               />
             </div>
           </div>
@@ -145,13 +348,13 @@ function ForgotPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(255,98,0,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            className="w-full py-3 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white font-bold tracking-wide transition-all shadow-md shadow-[#FF6200]/20 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
-            <span>{loading ? "Sending link..." : "Send Password Reset Link"}</span>
+            <span>{loading ? "Verifying Account..." : "Authorize Password Reset"}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
             <Link
               href={loginInfo.href}
               className={`flex items-center gap-1.5 font-bold hover:underline ${loginInfo.color}`}
@@ -168,29 +371,26 @@ function ForgotPasswordForm() {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0D0D0D] relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-[#FF6200]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-[#6D28D9]/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#F8FAFC] relative overflow-hidden text-slate-800">
+      <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-orange-100/60 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
-        {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-[0_0_25px_rgba(255,98,0,0.4)] mb-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-md shadow-[#FF6200]/25 mb-2">
             <span className="font-extrabold text-xl">DX</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-white">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">
             DOMAIN <span className="text-[#FF6200]">EXPANSION</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Security &amp; Account Recovery
           </p>
         </div>
 
-        {/* Form inside Suspense */}
         <Suspense
           fallback={
-            <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] text-center text-xs text-[#888898]">
+            <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-500 shadow-sm">
               Loading recovery portal...
             </div>
           }
@@ -198,19 +398,18 @@ export default function ForgotPasswordPage() {
           <ForgotPasswordForm />
         </Suspense>
 
-        {/* Portal Gateway Links */}
-        <div className="p-4 rounded-2xl bg-[#141414]/60 border border-[#222] text-xs text-center space-y-2 text-[#888898]">
-          <div className="font-semibold text-white/80">Choose Portal:</div>
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-center space-y-2 text-slate-500 shadow-sm">
+          <div className="font-semibold text-slate-700">Choose Portal:</div>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/login" className="text-[#FF8C42] hover:underline font-medium">
+            <Link href="/login" className="text-[#FF6200] hover:underline font-medium">
               Main Member
             </Link>
             <span>&bull;</span>
-            <Link href="/superadmin/login" className="text-red-400 hover:text-red-300 font-medium">
+            <Link href="/superadmin/login" className="text-red-600 hover:text-red-700 font-medium">
               Super Admin
             </Link>
             <span>&bull;</span>
-            <Link href="/hrms/login" className="text-cyan-400 hover:text-cyan-300 font-medium">
+            <Link href="/hrms/login" className="text-cyan-600 hover:text-cyan-700 font-medium">
               HRMS Portal
             </Link>
           </div>

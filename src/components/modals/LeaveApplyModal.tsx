@@ -140,8 +140,8 @@ export function LeaveApplyModal({
           description:
             "Applied when regular accrued paid leave quota has been exhausted. Requires supervisor approval.",
           icon: Info,
-          color: "text-amber-600 dark:text-amber-400",
-          bg: "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30",
+          color: "text-amber-600",
+          bg: "bg-amber-50 border-amber-200",
         };
       default:
         return {
@@ -149,8 +149,8 @@ export function LeaveApplyModal({
           badge: "Standard Policy",
           description: "All leave requests are subject to approval by your Team Lead or Reporting Manager.",
           icon: Info,
-          color: "text-gray-600 dark:text-[#888898]",
-          bg: "bg-gray-50 dark:bg-[#1A1A1A] border-gray-200 dark:border-[#2E2E2E]",
+          color: "text-slate-600",
+          bg: "bg-slate-50 border-slate-200",
         };
     }
   };
@@ -159,27 +159,27 @@ export function LeaveApplyModal({
   const PolicyIcon = policy.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-2xl overflow-hidden text-gray-900 dark:text-[#F3F4F6]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-800">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/70 dark:bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+            <div className="p-2 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-200">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white">Apply for Leave</h2>
-              <p className="text-[11px] text-gray-500 dark:text-[#888898]">24-Day Annual Quota (2 Leaves Credited Monthly on 1st)</p>
+              <h2 className="text-sm font-bold text-slate-900">Apply for Leave</h2>
+              <p className="text-[11px] text-slate-500">24-Day Annual Quota (2 Leaves Credited Monthly on 1st)</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-500 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -192,21 +192,21 @@ export function LeaveApplyModal({
                 <PolicyIcon className={`w-4 h-4 ${policy.color}`} />
                 <span className={policy.color}>{policy.title}</span>
               </div>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/80 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] text-gray-700 dark:text-gray-300">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">
                 {policy.badge}
               </span>
             </div>
-            <p className="text-[11px] text-gray-600 dark:text-[#ACACB8] leading-relaxed">
+            <p className="text-[11px] text-slate-600 leading-relaxed">
               {policy.description}
             </p>
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">Select Leave Category *</label>
+            <label className="block text-slate-700 font-semibold mb-1">Select Leave Category *</label>
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 font-semibold"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-semibold"
             >
               <option value="CL">Casual / Sick Leave (CL / SL) — 12 Days/Yr (1 Day/Mo)</option>
               <option value="PL">Privilege / Earned Leave (PL / EL) — 12 Days/Yr (1 Day/Mo)</option>
@@ -218,7 +218,7 @@ export function LeaveApplyModal({
 
           {/* Leave Duration Selector: Full Day vs Half Day */}
           <div>
-            <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1.5">Leave Duration *</label>
+            <label className="block text-slate-700 font-semibold mb-1.5">Leave Duration *</label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
@@ -226,7 +226,7 @@ export function LeaveApplyModal({
                 className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                   durationType === "FULL_DAY"
                     ? "bg-cyan-600 text-white border-cyan-600 shadow-sm"
-                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-cyan-500/50"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:border-cyan-500/50"
                 }`}
               >
                 Full Day (1.0)
@@ -237,7 +237,7 @@ export function LeaveApplyModal({
                 className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                   durationType === "FIRST_HALF"
                     ? "bg-amber-600 text-white border-amber-600 shadow-sm"
-                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-amber-500/50"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-500/50"
                 }`}
               >
                 Half Day - 1st Half (0.5)
@@ -248,7 +248,7 @@ export function LeaveApplyModal({
                 className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                   durationType === "SECOND_HALF"
                     ? "bg-amber-600 text-white border-amber-600 shadow-sm"
-                    : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-700 dark:text-[#ACACB8] border-gray-200 dark:border-[#2E2E2E] hover:border-amber-500/50"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-500/50"
                 }`}
               >
                 Half Day - 2nd Half (0.5)
@@ -258,7 +258,7 @@ export function LeaveApplyModal({
 
           <div className={`grid ${isHalfDay ? "grid-cols-1" : "grid-cols-2"} gap-3`}>
             <div>
-              <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">
+              <label className="block text-slate-700 font-semibold mb-1">
                 {isHalfDay ? "Leave Date *" : "Start Date *"}
               </label>
               <input
@@ -266,39 +266,39 @@ export function LeaveApplyModal({
                 required
                 value={startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
               />
             </div>
 
             {!isHalfDay && (
               <div>
-                <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">End Date *</label>
+                <label className="block text-slate-700 font-semibold mb-1">End Date *</label>
                 <input
                   type="date"
                   required
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                 />
               </div>
             )}
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-[#ACACB8] font-semibold mb-1">Reason for Leave *</label>
+            <label className="block text-slate-700 font-semibold mb-1">Reason for Leave *</label>
             <textarea
               rows={3}
               required
               placeholder="Provide reason for time-off request..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl p-3 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 leading-relaxed"
+              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 leading-relaxed"
             />
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-[#2E2E2E]">
-            <div className="text-[11px] text-gray-500 dark:text-[#888898] flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Dec Year-End Carry Forward Enabled</span>
             </div>
 
@@ -306,14 +306,14 @@ export function LeaveApplyModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] text-gray-600 dark:text-[#888898] hover:bg-gray-100 dark:hover:bg-[#202020]"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md disabled:opacity-50 transition-all cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs shadow-sm disabled:opacity-50 transition-all cursor-pointer"
               >
                 {loading ? "Submitting..." : "Submit Application"}
               </button>

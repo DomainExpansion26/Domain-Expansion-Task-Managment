@@ -194,15 +194,15 @@ export function WorkPackagesView({
       {/* Left Sidebar: Filter / Views Section (Matching OpenProject Reference) */}
       <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-4">
         {/* Project Selector Box */}
-        <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-2xl p-4 shadow-sm">
-          <label className="block text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <FolderKanban className="w-4 h-4 text-[#FF6200]" />
             <span>Scope / Project</span>
           </label>
           <select
             value={selectedProjectId}
             onChange={(e) => setSelectedProjectId(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-xs font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#FF6200]"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#FF6200]"
           >
             <option value="ALL">🌐 All Projects (Enterprise Scope)</option>
             {projects.map((p) => (
@@ -214,18 +214,18 @@ export function WorkPackagesView({
         </div>
 
         {/* Views Navigation Panel */}
-        <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-2xl p-3 shadow-sm flex-1 flex flex-col">
-          <div className="px-3 py-2 flex items-center justify-between border-b border-gray-100 dark:border-[#2E2E2E] mb-2">
-            <div className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-white border border-gray-200 rounded-2xl p-3 shadow-sm flex-1 flex flex-col">
+          <div className="px-3 py-2 flex items-center justify-between border-b border-gray-100 mb-2">
+            <div className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
               <ListFilter className="w-4 h-4 text-[#FF6200]" />
               <span>Work packages</span>
             </div>
-            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#252525] text-gray-600 dark:text-[#ACACB8]">
+            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
               {sortedTasks.length}
             </span>
           </div>
 
-          <div className="text-[11px] font-bold text-gray-400 dark:text-[#666] px-3 pt-2 pb-1 uppercase tracking-wider">
+          <div className="text-[11px] font-bold text-gray-400 px-3 pt-2 pb-1 uppercase tracking-wider">
             Default Views
           </div>
 
@@ -240,12 +240,12 @@ export function WorkPackagesView({
                   onClick={() => setActiveFilterView(view.id)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-left group cursor-pointer ${
                     isActive
-                      ? "bg-[#FF6200]/10 text-[#FF6200] font-bold border-l-4 border-[#FF6200] dark:bg-[#FF6200]/15"
-                      : "text-gray-600 dark:text-[#ACACB8] hover:bg-gray-50 dark:hover:bg-[#1A1A1A] hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-[#FF6200]/10 text-[#FF6200] font-bold border-l-4 border-[#FF6200] "
+                      : "text-gray-600  hover:bg-gray-50  hover:text-gray-900 "
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#FF6200]" : "text-gray-400 dark:text-[#666] group-hover:text-[#FF6200]"}`} />
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[#FF6200]" : "text-gray-400  group-hover:text-[#FF6200]"}`} />
                     <span className="truncate">{view.label}</span>
                   </div>
                   {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#FF6200]" />}
@@ -255,14 +255,14 @@ export function WorkPackagesView({
           </div>
 
           {/* Quick Stats Footer */}
-          <div className="mt-auto pt-4 border-t border-gray-100 dark:border-[#2E2E2E] px-3">
-            <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-[#888898]">
+          <div className="mt-auto pt-4 border-t border-gray-100 px-3">
+            <div className="flex items-center justify-between text-[11px] text-gray-500">
               <span>Assigned to you:</span>
-              <span className="font-bold text-gray-900 dark:text-white">
+              <span className="font-bold text-gray-900">
                 {tasks.filter((t) => t.assignees?.some((a: any) => a.id === currentUser?.id || a.email === currentUser?.email)).length}
               </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-[#888898] mt-1">
+            <div className="flex items-center justify-between text-[11px] text-gray-500 mt-1">
               <span>Overdue tasks:</span>
               <span className="font-bold text-rose-500">
                 {
@@ -279,20 +279,20 @@ export function WorkPackagesView({
       </div>
 
       {/* Center & Main: Work Packages Table Section (OpenProject 2nd Screenshot reference) */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-sm overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
         {/* Top Header & Breadcrumbs Bar */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/50 dark:bg-[#1A1A1A]/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-[#888898] mb-1">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
               <span className="font-semibold hover:underline cursor-pointer">
                 {currentProject ? `${currentProject.name} (${currentProject.key})` : "Enterprise Workspace"}
               </span>
               <span>/</span>
               <span className="hover:underline cursor-pointer">Work packages</span>
               <span>/</span>
-              <span className="font-bold text-gray-900 dark:text-white">Default: {activeViewObj.label}</span>
+              <span className="font-bold text-gray-900">Default: {activeViewObj.label}</span>
             </div>
-            <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2.5">
+            <h1 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
               <span>{activeViewObj.label}</span>
               <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30">
                 {sortedTasks.length} items
@@ -306,7 +306,7 @@ export function WorkPackagesView({
               <button
                 type="button"
                 onClick={() => setSelectedProjectForMembers(currentProject)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-[#1A1A1A] hover:bg-[#FF6200] hover:text-white border border-gray-200 dark:border-[#2E2E2E] text-xs font-bold text-gray-700 dark:text-[#ACACB8] transition-all cursor-pointer shadow-sm hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 hover:bg-[#FF6200] hover:text-slate-900 border border-gray-200 text-xs font-bold text-gray-700 transition-all cursor-pointer shadow-sm hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
                 title="View & manage project members"
               >
                 <Users className="w-3.5 h-3.5 text-[#FF8C42]" />
@@ -326,7 +326,7 @@ export function WorkPackagesView({
               <button
                 onClick={onRefreshData}
                 title="Refresh platform records"
-                className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -335,16 +335,16 @@ export function WorkPackagesView({
         </div>
 
         {/* Filter Controls Row */}
-        <div className="px-6 py-3 border-b border-gray-100 dark:border-[#2E2E2E] bg-white dark:bg-[#141414] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-6 py-3 border-b border-gray-100 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#666]" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search by ID, subject, assignee, or project..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl pl-9 pr-4 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-[#666] focus:outline-none focus:border-[#FF6200]"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF6200]"
             />
           </div>
 
@@ -354,7 +354,7 @@ export function WorkPackagesView({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-[#ACACB8] focus:outline-none focus:border-[#FF6200]"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:border-[#FF6200]"
             >
               <option value="ALL">Status: All</option>
               <option value="TODO">To Do</option>
@@ -369,7 +369,7 @@ export function WorkPackagesView({
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-[#ACACB8] focus:outline-none focus:border-[#FF6200]"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:border-[#FF6200]"
             >
               <option value="ALL">Priority: All</option>
               <option value="CRITICAL">🔴 Critical</option>
@@ -382,7 +382,7 @@ export function WorkPackagesView({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-[#ACACB8] focus:outline-none focus:border-[#FF6200]"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:border-[#FF6200]"
             >
               <option value="ALL">Type: All</option>
               <option value="TASK">📋 Task</option>
@@ -399,10 +399,10 @@ export function WorkPackagesView({
           {sortedTasks.length === 0 ? (
             /* Strict Clean Empty State - No Fake Data */
             <div className="py-20 flex flex-col items-center justify-center text-center px-4">
-              <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] flex items-center justify-center text-gray-400 dark:text-[#666] mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 mb-4">
                 <CheckSquare className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-base font-bold text-gray-900 mb-1">
                 {activeFilterView === "assigned-to-me"
                   ? "No tasks assigned to you"
                   : activeFilterView === "created-by-me"
@@ -413,7 +413,7 @@ export function WorkPackagesView({
                   ? "No tasks shared with you"
                   : "No work packages found"}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-[#888898] max-w-sm mb-5">
+              <p className="text-xs text-gray-500 max-w-sm mb-5">
                 {searchQuery
                   ? "No database records match your active query. Try clearing search keywords or filters."
                   : "There are currently no matching work packages for this filter preset in your authorized projects."}
@@ -429,10 +429,10 @@ export function WorkPackagesView({
           ) : (
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/75 dark:bg-[#181818] text-gray-500 dark:text-[#888898] font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-gray-200 bg-gray-50/75 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                   <th
                     onClick={() => toggleSort("id")}
-                    className="py-3 px-4 w-28 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-4 w-28 cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>ID</span>
@@ -441,7 +441,7 @@ export function WorkPackagesView({
                   </th>
                   <th
                     onClick={() => toggleSort("title")}
-                    className="py-3 px-4 min-w-[240px] cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-4 min-w-[240px] cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>SUBJECT</span>
@@ -451,7 +451,7 @@ export function WorkPackagesView({
                   <th className="py-3 px-3 w-28">TYPE</th>
                   <th
                     onClick={() => toggleSort("status")}
-                    className="py-3 px-3 w-32 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-3 w-32 cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>STATUS</span>
@@ -462,7 +462,7 @@ export function WorkPackagesView({
                   <th className="py-3 px-3 w-36">ACCOUNTABLE</th>
                   <th
                     onClick={() => toggleSort("priority")}
-                    className="py-3 px-3 w-28 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-3 w-28 cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>PRIORITY</span>
@@ -471,7 +471,7 @@ export function WorkPackagesView({
                   </th>
                   <th
                     onClick={() => toggleSort("dueDate")}
-                    className="py-3 px-3 w-32 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-3 w-32 cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>END / DUE</span>
@@ -480,7 +480,7 @@ export function WorkPackagesView({
                   </th>
                   <th
                     onClick={() => toggleSort("progress")}
-                    className="py-3 px-4 w-28 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="py-3 px-4 w-28 cursor-pointer hover:text-gray-900 transition-colors"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>PROGRESS</span>
@@ -489,7 +489,7 @@ export function WorkPackagesView({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+              <tbody className="divide-y divide-gray-100">
                 {sortedTasks.map((task) => {
                   const hasSubtasks = Array.isArray(task.subtasks) && task.subtasks.length > 0;
                   const isCollapsed = Boolean(collapsedParents[task.id]);
@@ -498,16 +498,16 @@ export function WorkPackagesView({
                   return (
                     <React.Fragment key={task.id}>
                       <tr
-                        className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-colors group cursor-pointer"
+                        className="hover:bg-gray-50 transition-colors group cursor-pointer"
                         onClick={() => onSelectTask(task.taskKey)}
                       >
                         {/* ID Column */}
-                        <td className="py-3 px-4 font-mono font-bold text-[#0066CC] dark:text-[#3399FF] hover:underline">
+                        <td className="py-3 px-4 font-mono font-bold text-[#0066CC] hover:underline">
                           #{task.taskKey.replace(/^[A-Za-z]+-/, "") || task.taskKey}
                         </td>
 
                         {/* SUBJECT Column with Subtask Toggle */}
-                        <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        <td className="py-3 px-4 font-semibold text-gray-900">
                           <div className="flex items-center gap-2">
                             {hasSubtasks ? (
                               <button
@@ -516,7 +516,7 @@ export function WorkPackagesView({
                                   e.stopPropagation();
                                   toggleCollapse(task.id);
                                 }}
-                                className="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-[#333] text-gray-500 dark:text-[#888898]"
+                                className="p-0.5 rounded hover:bg-gray-200 text-gray-500"
                               >
                                 {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                               </button>
@@ -525,7 +525,7 @@ export function WorkPackagesView({
                             )}
                             <span className="hover:text-[#FF6200] transition-colors line-clamp-1">{task.title}</span>
                             {task.commentsCount > 0 && (
-                              <span className="text-[10px] text-gray-400 dark:text-[#666] font-mono">
+                              <span className="text-[10px] text-gray-400 font-mono">
                                 💬{task.commentsCount}
                               </span>
                             )}
@@ -575,7 +575,7 @@ export function WorkPackagesView({
                                   {getInitials(firstAssignee.name)}
                                 </div>
                               )}
-                              <span className="truncate max-w-[100px] text-gray-800 dark:text-[#F3F4F6]">
+                              <span className="truncate max-w-[100px] text-gray-800">
                                 {firstAssignee.name}
                               </span>
                               {task.assignees.length > 1 && (
@@ -585,7 +585,7 @@ export function WorkPackagesView({
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-400 dark:text-[#666] italic">-</span>
+                            <span className="text-gray-400 italic">-</span>
                           )}
                         </td>
 
@@ -608,12 +608,12 @@ export function WorkPackagesView({
                                   {getInitials(task.accountable.name)}
                                 </div>
                               )}
-                              <span className="truncate max-w-[90px] text-gray-800 dark:text-[#F3F4F6]">
+                              <span className="truncate max-w-[90px] text-gray-800">
                                 {task.accountable.name}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-400 dark:text-[#666] italic">-</span>
+                            <span className="text-gray-400 italic">-</span>
                           )}
                         </td>
 
@@ -629,7 +629,7 @@ export function WorkPackagesView({
                         </td>
 
                         {/* END / DUE DATE */}
-                        <td className="py-3 px-3 text-gray-600 dark:text-[#ACACB8] font-mono text-[11px]">
+                        <td className="py-3 px-3 text-gray-600 font-mono text-[11px]">
                           {task.endDate
                             ? formatDate(task.endDate)
                             : task.dueDate
@@ -640,13 +640,13 @@ export function WorkPackagesView({
                         {/* PROGRESS */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-14 h-2 rounded-full bg-gray-200 dark:bg-[#252525] overflow-hidden">
+                            <div className="w-14 h-2 rounded-full bg-gray-200 overflow-hidden">
                               <div
                                 className="h-full bg-[#00875A] rounded-full transition-all"
                                 style={{ width: `${Math.min(100, Math.max(0, task.progress || 0))}%` }}
                               />
                             </div>
-                            <span className="text-[10px] font-mono text-gray-500 dark:text-[#888898]">
+                            <span className="text-[10px] font-mono text-gray-500">
                               {task.progress || 0}%
                             </span>
                           </div>
@@ -659,15 +659,15 @@ export function WorkPackagesView({
                         task.subtasks.map((st: any) => (
                           <tr
                             key={st.id}
-                            className="bg-gray-50/40 dark:bg-[#121212] hover:bg-gray-100/50 dark:hover:bg-[#181818] transition-colors border-l-4 border-l-[#FF6200]/40 text-xs"
+                            className="bg-gray-50/40 hover:bg-gray-100/50 transition-colors border-l-4 border-l-[#FF6200]/40 text-xs"
                             onClick={() => onSelectTask(task.taskKey)}
                           >
-                            <td className="py-2 px-4 font-mono text-[11px] text-gray-400 dark:text-[#666] pl-8">
+                            <td className="py-2 px-4 font-mono text-[11px] text-gray-400 pl-8">
                               ↳
                             </td>
-                            <td className="py-2 px-4 pl-10 text-gray-700 dark:text-[#D1D5DB]">
+                            <td className="py-2 px-4 pl-10 text-gray-700">
                               <div className="flex items-center gap-2">
-                                <span className={st.completed ? "line-through text-gray-400 dark:text-[#666]" : ""}>
+                                <span className={st.completed ? "line-through text-gray-400 " : ""}>
                                   {st.title}
                                 </span>
                               </div>

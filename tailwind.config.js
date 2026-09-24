@@ -9,15 +9,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#0D0D0D",
-        foreground: "#F3F4F6",
+        background: "#F8FAFC",
+        foreground: "#0F172A",
         surface: {
-          50: "#1A1A1A",
-          100: "#141414",
-          200: "#0D0D0D",
-          300: "#080808",
-          border: "#2E2E2E",
-          hover: "#222222",
+          50: "#FFFFFF",
+          100: "#F8FAFC",
+          200: "#F1F5F9",
+          300: "#E2E8F0",
+          border: "#E2E8F0",
+          hover: "#F1F5F9",
         },
         brand: {
           orange: "#FF6200",

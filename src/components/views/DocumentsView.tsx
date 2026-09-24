@@ -73,7 +73,7 @@ const DEPARTMENT_SECTIONS = [
     icon: Palette,
     accentBorder: "border-pink-500/30 hover:border-pink-500/60",
     badgeColor: "bg-pink-500/15 text-pink-400 border-pink-500/30",
-    iconBg: "bg-pink-500/10 text-pink-400 group-hover:bg-pink-500 group-hover:text-white",
+    iconBg: "bg-pink-500/10 text-pink-400 group-hover:bg-pink-500 group-hover:text-slate-900",
     defaultCategories: ["Figma", "Design System", "User Research", "Project Designs", "Components", "Wireframes"],
   },
   {
@@ -83,7 +83,7 @@ const DEPARTMENT_SECTIONS = [
     icon: Code2,
     accentBorder: "border-[#FF6200]/30 hover:border-[#FF6200]/60",
     badgeColor: "bg-[#FF6200]/15 text-[#FF8C42] border-[#FF6200]/30",
-    iconBg: "bg-[#FF6200]/10 text-[#FF8C42] group-hover:bg-[#FF6200] group-hover:text-white",
+    iconBg: "bg-[#FF6200]/10 text-[#FF8C42] group-hover:bg-[#FF6200] group-hover:text-slate-900",
     defaultCategories: ["Backend", "Frontend", "Mobile", "DevOps", "Database", "Architecture", "API"],
   },
   {
@@ -93,7 +93,7 @@ const DEPARTMENT_SECTIONS = [
     icon: CheckSquare,
     accentBorder: "border-emerald-500/30 hover:border-emerald-500/60",
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    iconBg: "bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white",
+    iconBg: "bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-900",
     defaultCategories: ["Testing Guidelines", "Automation", "Release Checklist", "Test Cases"],
   },
   {
@@ -103,7 +103,7 @@ const DEPARTMENT_SECTIONS = [
     icon: Megaphone,
     accentBorder: "border-purple-500/30 hover:border-purple-500/60",
     badgeColor: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    iconBg: "bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white",
+    iconBg: "bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-slate-900",
     defaultCategories: ["Brand Guidelines", "SEO & Content", "Social Media", "Campaigns"],
   },
   {
@@ -113,7 +113,7 @@ const DEPARTMENT_SECTIONS = [
     icon: Building,
     accentBorder: "border-blue-500/30 hover:border-blue-500/60",
     badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    iconBg: "bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white",
+    iconBg: "bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-slate-900",
     defaultCategories: ["Company Policies", "Engineering Standards", "General Guidelines"],
   },
 ];
@@ -297,9 +297,9 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
   ).sort((a, b) => a - b);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in pb-12 text-gray-900 dark:text-[#F3F4F6]">
+    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in pb-12 text-gray-900">
       {/* Top Header & Welcome Banner */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-[#141418] border border-[#2A2A32] shadow-xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3.5 rounded-2xl bg-gradient-to-tr from-[#FF6200] to-[#FF8C42] text-white shadow-lg shadow-[#FF6200]/25 flex-shrink-0">
             <BookOpen className="w-6 h-6" />
@@ -311,7 +311,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                 {superAdmin ? "Super Admin Control" : canManageDocs ? `${currentUser?.role?.replace("_", " ") || "Lead"} Access` : `${currentUser?.department || "Team"} Access`}
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-1">
+            <p className="text-xs text-slate-600 mt-1">
               Official technical specifications, architecture blueprints, UI/UX guidelines, QA standards, and team milestone phases
             </p>
           </div>
@@ -323,7 +323,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             <button
               type="button"
               onClick={() => setIsNewCategoryModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#1E1E24] hover:bg-[#282830] border border-[#333] text-slate-200 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white hover:bg-white border border-slate-200 text-slate-200 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer"
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FF6200]" />
               <span>+ Category</span>
@@ -332,7 +332,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             <button
               type="button"
               onClick={() => setIsNewPhaseModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#1E1E24] hover:bg-[#282830] border border-[#333] text-slate-200 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white hover:bg-white border border-slate-200 text-slate-200 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5 text-[#FF6200]" />
               <span>+ Phase</span>
@@ -351,7 +351,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
       </div>
 
       {/* Breadcrumb Navigation Bar */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#141418] border border-[#2A2A32] text-xs text-slate-300 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-600 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => {
@@ -365,7 +365,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
           <span>Documentation</span>
         </button>
 
-        <ChevronRight className="w-3.5 h-3.5 text-[#555] flex-shrink-0" />
+        <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
 
         <button
           type="button"
@@ -374,7 +374,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             setSelectedPhase("ALL_PHASES");
           }}
           className={`font-semibold transition-colors cursor-pointer flex-shrink-0 ${
-            selectedCategory === "ALL_CATEGORIES" ? "text-[#FF8C42]" : "text-slate-300 hover:text-white"
+            selectedCategory === "ALL_CATEGORIES" ? "text-[#FF8C42]" : "text-slate-600 hover:text-slate-900"
           }`}
         >
           {selectedDept === "ALL_DEPTS" ? "All Departments" : selectedDept}
@@ -382,12 +382,12 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
         {selectedCategory !== "ALL_CATEGORIES" && (
           <>
-            <ChevronRight className="w-3.5 h-3.5 text-[#555] flex-shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
             <button
               type="button"
               onClick={() => setSelectedPhase("ALL_PHASES")}
               className={`font-semibold transition-colors cursor-pointer flex-shrink-0 ${
-                selectedPhase === "ALL_PHASES" ? "text-[#FF8C42]" : "text-slate-300 hover:text-white"
+                selectedPhase === "ALL_PHASES" ? "text-[#FF8C42]" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {selectedCategory}
@@ -397,7 +397,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
         {selectedPhase !== "ALL_PHASES" && (
           <>
-            <ChevronRight className="w-3.5 h-3.5 text-[#555] flex-shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
             <span className="text-emerald-400 font-bold font-mono flex-shrink-0">
               Phase {selectedPhase}
             </span>
@@ -406,7 +406,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
       </div>
 
       {/* Department Tabs (for Super Admin or multi-dept access) */}
-      <div className="flex items-center gap-2 p-2 rounded-2xl bg-[#141418] border border-[#2A2A32] overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 p-2 rounded-2xl bg-white border border-slate-200 overflow-x-auto no-scrollbar">
         {DEPARTMENTS.map((dept) => (
           <button
             key={dept.id}
@@ -419,7 +419,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               selectedDept === dept.id
                 ? "bg-gradient-to-r from-[#FF6200] to-[#FF8C42] text-white font-bold shadow-md shadow-[#FF6200]/25"
-                : "text-slate-300 bg-[#1E1E24] hover:bg-[#282830] hover:text-white border border-[#2E2E36]"
+                : "text-slate-600 bg-white hover:bg-white hover:text-slate-900 border border-slate-200"
             }`}
           >
             {dept.label}
@@ -428,15 +428,15 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-[#141418] border border-[#2A2A32]">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-white border border-slate-200">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search documentation by title, description, category, phase..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#1A1A20] border border-[#333] rounded-xl pl-10 pr-3.5 py-2 text-xs text-white placeholder-[#777] focus:outline-none focus:border-[#FF6200]"
+            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2 text-xs text-white placeholder-[#777] focus:outline-none focus:border-[#FF6200]"
           />
         </div>
 
@@ -448,7 +448,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
               setSelectedCategory(e.target.value);
               setSelectedPhase("ALL_PHASES");
             }}
-            className="bg-[#1A1A20] border border-[#333] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
           >
             <option value="ALL_CATEGORIES">All Teams & Categories</option>
             {visibleCategories.map((cat) => (
@@ -462,7 +462,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
           <select
             value={selectedPhase}
             onChange={(e) => setSelectedPhase(e.target.value)}
-            className="bg-[#1A1A20] border border-[#333] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF6200]"
           >
             <option value="ALL_PHASES">All Phases</option>
             {Array.from({ length: 10 }, (_, i) => (
@@ -477,7 +477,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#1A1A20] border border-[#333] rounded-xl px-3 py-2 text-xs text-[#FF8C42] font-semibold focus:outline-none"
+              className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#FF8C42] font-semibold focus:outline-none"
             >
               <option value="ALL_STATUSES">All Statuses</option>
               <option value="PUBLISHED">Published</option>
@@ -508,7 +508,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
             const DeptIcon = dept.icon;
 
             return (
-              <div key={dept.id} className="space-y-3 p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] shadow-lg">
+              <div key={dept.id} className="space-y-3 p-5 rounded-3xl bg-white border border-slate-200 shadow-lg">
                 <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#22222A]">
                   <div className="flex items-center gap-2.5">
                     <div className={`p-2 rounded-xl border ${dept.badgeColor}`}>
@@ -523,14 +523,14 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                           {dept.badge}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#888898]">
+                      <p className="text-[11px] text-slate-500">
                         Browse official specifications, assets, and design guidelines for {dept.label}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-300 font-semibold px-2.5 py-1 rounded-xl bg-[#1E1E24] border border-[#333]">
+                    <span className="text-xs font-mono text-slate-600 font-semibold px-2.5 py-1 rounded-xl bg-white border border-slate-200">
                       {deptTotalDocs} Document{deptTotalDocs === 1 ? "" : "s"}
                     </span>
                     {selectedDept === "ALL_DEPTS" && (
@@ -541,7 +541,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                           setSelectedCategory("ALL_CATEGORIES");
                           setSelectedPhase("ALL_PHASES");
                         }}
-                        className="px-3 py-1 rounded-xl bg-[#1E1E24] hover:bg-[#282830] text-[11px] font-semibold text-[#FF8C42] border border-[#333] transition-colors cursor-pointer"
+                        className="px-3 py-1 rounded-xl bg-white hover:bg-white text-[11px] font-semibold text-[#FF8C42] border border-slate-200 transition-colors cursor-pointer"
                       >
                         View Section &rarr;
                       </button>
@@ -562,7 +562,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                           setSelectedCategory(cat);
                           setSelectedPhase("ALL_PHASES");
                         }}
-                        className={`p-4 rounded-2xl bg-[#1A1A20] border border-[#2E2E38] ${dept.accentBorder} transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md hover:translate-y-[-2px]`}
+                        className={`p-4 rounded-2xl bg-white border border-[#2E2E38] ${dept.accentBorder} transition-all cursor-pointer group flex flex-col justify-between space-y-3 shadow-md hover:translate-y-[-2px]`}
                       >
                         <div className="flex items-center justify-between">
                           <div className={`p-2 rounded-xl border border-transparent transition-colors ${dept.iconBg}`}>
@@ -571,7 +571,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                             catDocs.length > 0
                               ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                              : "bg-[#22222A] text-slate-400"
+                              : "bg-[#22222A] text-slate-500"
                           }`}>
                             {catDocs.length} Docs
                           </span>
@@ -581,7 +581,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                           <h4 className="font-bold text-white text-xs sm:text-sm group-hover:text-[#FF8C42] transition-colors">
                             {cat}
                           </h4>
-                          <p className="text-[10px] text-[#888898] line-clamp-1 mt-0.5">
+                          <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
                             {dept.id === "UI_UX" && cat === "Figma" ? "Figma libraries, assets & screens" : `Explore ${cat} specifications`}
                           </p>
                         </div>
@@ -615,7 +615,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {phasesInCurrentCategory.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-[#141418] border border-[#2A2A32] text-center text-xs text-slate-300 col-span-full">
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-600 col-span-full">
                 No phase documents uploaded yet for {selectedCategory}.
               </div>
             ) : (
@@ -626,14 +626,14 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                 return (
                   <div
                     key={phNum}
-                    className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 shadow-md"
+                    className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 shadow-md"
                   >
                     <div>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                           Phase {phNum}
                         </span>
-                        <span className="text-xs font-mono text-slate-300">{phaseDocs.length} Document(s)</span>
+                        <span className="text-xs font-mono text-slate-600">{phaseDocs.length} Document(s)</span>
                       </div>
 
                       <h4 className="font-bold text-white text-sm mt-2">
@@ -644,7 +644,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                     <button
                       type="button"
                       onClick={() => setSelectedPhase(phNum.toString())}
-                      className="w-full py-2.5 rounded-xl bg-[#1E1E24] hover:bg-[#FF6200] text-slate-200 hover:text-white text-xs font-bold border border-[#333] transition-all cursor-pointer"
+                      className="w-full py-2.5 rounded-xl bg-white hover:bg-[#FF6200] text-slate-200 hover:text-slate-900 text-xs font-bold border border-slate-200 transition-all cursor-pointer"
                     >
                       View Phase {phNum} Documents &rarr;
                     </button>
@@ -681,7 +681,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
               </button>
             )}
           </div>
-          <span className="text-[10px] text-slate-300 font-mono">
+          <span className="text-[10px] text-slate-600 font-mono">
             {superAdmin ? "Super Admin Full Access" : canManageDocs ? "Management Access" : "Read-Only Protected"}
           </span>
         </div>
@@ -694,12 +694,12 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
         )}
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-300">Loading documents...</div>
+          <div className="p-12 text-center text-xs text-slate-600">Loading documents...</div>
         ) : documents.length === 0 ? (
-          <div className="p-12 rounded-3xl bg-[#141418] border border-[#2A2A32] text-center space-y-3">
-            <FileText className="w-10 h-10 text-[#666] mx-auto" />
+          <div className="p-12 rounded-3xl bg-white border border-slate-200 text-center space-y-3">
+            <FileText className="w-10 h-10 text-slate-500 mx-auto" />
             <div className="font-bold text-white text-sm">No documentation available in this view</div>
-            <p className="text-xs text-[#888898] max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
               There are currently no documents matching your selected department or category filters.
             </p>
           </div>
@@ -709,11 +709,11 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
               <div
                 key={doc.id}
                 onClick={() => setViewingDoc(doc)}
-                className="p-5 rounded-3xl bg-[#141418] border border-[#2A2A32] hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md hover:translate-y-[-2px]"
+                className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#FF6200]/50 transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-md hover:translate-y-[-2px]"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="p-3 rounded-2xl bg-[#1E1E24] border border-[#333] flex-shrink-0">
+                    <div className="p-3 rounded-2xl bg-white border border-slate-200 flex-shrink-0">
                       {getFileIcon(doc.fileName)}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -731,13 +731,13 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                       {doc.title}
                     </h4>
                     {doc.description && (
-                      <p className="text-xs text-slate-300 line-clamp-2 mt-1">{doc.description}</p>
+                      <p className="text-xs text-slate-600 line-clamp-2 mt-1">{doc.description}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-3 border-t border-[#2A2A32] text-[11px]">
-                  <div className="flex items-center justify-between text-slate-300">
+                <div className="space-y-3 pt-3 border-t border-slate-200 text-[11px]">
+                  <div className="flex items-center justify-between text-slate-600">
                     <span className="font-medium text-white">{doc.category || "General"}</span>
                     <span className="font-mono">{(doc.fileSize / 1024).toFixed(1)} KB</span>
                   </div>
@@ -759,7 +759,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                       <button
                         type="button"
                         onClick={(e) => handleDelete(doc.id, doc.title, e)}
-                        className="p-1.5 rounded-lg text-[#666] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                         title="Delete Document"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -797,22 +797,22 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
       {/* New Category Modal (Super Admin Only) */}
       {isNewCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in text-[#F3F4F6]">
-          <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#2E2E2E] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in text-slate-700">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-sm font-bold text-white">Create Documentation Category / Team</h3>
-              <button onClick={() => setIsNewCategoryModalOpen(false)} className="text-[#888898] hover:text-white">
+              <button onClick={() => setIsNewCategoryModalOpen(false)} className="text-slate-500 hover:text-slate-900">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateCategory} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Department</label>
+                <label className="block text-slate-700 font-semibold mb-1">Department</label>
                 <select
                   value={newCatDept}
                   onChange={(e) => setNewCatDept(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-white focus:outline-none"
                 >
                   {DEPARTMENTS.filter((d) => d.id !== "ALL_DEPTS").map((d) => (
                     <option key={d.id} value={d.id}>
@@ -823,25 +823,25 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Category / Team Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Category / Team Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Microservices, AI Copilot, Store Deployment"
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-white focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Description (Optional)</label>
+                <label className="block text-slate-700 font-semibold mb-1">Description (Optional)</label>
                 <input
                   type="text"
                   placeholder="Brief summary of category documentation..."
                   value={newCatDesc}
                   onChange={(e) => setNewCatDesc(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-white focus:outline-none"
                 />
               </div>
 
@@ -849,7 +849,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                 <button
                   type="button"
                   onClick={() => setIsNewCategoryModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#1A1A1A] text-[#888898] hover:text-white"
+                  className="px-4 py-2 rounded-xl bg-white text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>
@@ -867,22 +867,22 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
 
       {/* New Phase Modal (Super Admin Only - Unbounded Phases) */}
       {isNewPhaseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in text-[#F3F4F6]">
-          <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#2E2E2E] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in text-slate-700">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-sm font-bold text-white">Create Documentation Phase Milestone</h3>
-              <button onClick={() => setIsNewPhaseModalOpen(false)} className="text-[#888898] hover:text-white">
+              <button onClick={() => setIsNewPhaseModalOpen(false)} className="text-slate-500 hover:text-slate-900">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreatePhase} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Department</label>
+                <label className="block text-slate-700 font-semibold mb-1">Department</label>
                 <select
                   value={newPhaseDept}
                   onChange={(e) => setNewPhaseDept(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-white focus:outline-none"
                 >
                   {DEPARTMENTS.filter((d) => d.id !== "ALL_DEPTS").map((d) => (
                     <option key={d.id} value={d.id}>
@@ -893,26 +893,26 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Phase Number (Unbounded)</label>
+                <label className="block text-slate-700 font-semibold mb-1">Phase Number (Unbounded)</label>
                 <input
                   type="number"
                   min="1"
                   required
                   value={newPhaseNum}
                   onChange={(e) => setNewPhaseNum(parseInt(e.target.value) || 1)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white font-mono font-bold focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-white font-mono font-bold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Phase Milestone Title</label>
+                <label className="block text-slate-700 font-semibold mb-1">Phase Milestone Title</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Phase 7: Real-Time WebSockets & Scalability"
                   value={newPhaseTitle}
                   onChange={(e) => setNewPhaseTitle(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-white focus:outline-none"
                 />
               </div>
 
@@ -920,7 +920,7 @@ export function DocumentsView({ currentUser, onRefreshData }: DocumentsViewProps
                 <button
                   type="button"
                   onClick={() => setIsNewPhaseModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#1A1A1A] text-[#888898] hover:text-white"
+                  className="px-4 py-2 rounded-xl bg-white text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>

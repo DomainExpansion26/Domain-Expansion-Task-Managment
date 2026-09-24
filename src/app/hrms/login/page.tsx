@@ -103,7 +103,7 @@ function HRMSLoginForm() {
 
   if (checkingAuth) {
     return (
-      <div className="p-12 rounded-3xl bg-[#141414] border border-[#2E2E2E] flex items-center justify-center gap-3 text-xs text-[#888898]">
+      <div className="p-12 rounded-3xl bg-white border border-slate-200 flex items-center justify-center gap-3 text-xs text-slate-500">
         <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
         <span>Checking HRMS session...</span>
       </div>
@@ -111,15 +111,15 @@ function HRMSLoginForm() {
   }
 
   return (
-    <div className="p-8 rounded-3xl bg-[#141414] border border-cyan-500/30 shadow-[0_0_40px_rgba(6,182,212,0.12)] space-y-5">
-      <div className="flex items-center justify-between border-b border-[#2E2E2E] pb-3">
+    <div className="p-8 rounded-3xl bg-white border border-cyan-500/30 shadow-[0_0_40px_rgba(6,182,212,0.12)] space-y-5">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
             <Clock className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-white">HRMS Employee Authentication</h2>
-            <p className="text-[11px] text-[#888898]">Workforce, attendance & leave portal</p>
+            <p className="text-[11px] text-slate-500">Workforce, attendance & leave portal</p>
           </div>
         </div>
       </div>
@@ -153,23 +153,23 @@ function HRMSLoginForm() {
 
       <form onSubmit={handleLogin} className="space-y-4 text-xs">
         <div>
-          <label className="block text-[#ACACB8] font-semibold mb-1.5">Organization Work Email</label>
+          <label className="block text-slate-700 font-semibold mb-1.5">Organization Work Email</label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="email"
               required
               placeholder="employee@domainexpansion.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
             />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[#ACACB8] font-semibold">Password</label>
+            <label className="text-slate-700 font-semibold">Password</label>
             <Link
               href="/forgot-password?portal=HRMS"
               className="text-[11px] text-cyan-400 hover:underline font-semibold"
@@ -178,19 +178,19 @@ function HRMSLoginForm() {
             </Link>
           </div>
           <div className="relative">
-            <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
@@ -209,8 +209,8 @@ function HRMSLoginForm() {
         </button>
       </form>
 
-      <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-xs">
-        <span className="text-[#888898]">Don&apos;t have an identity yet?</span>
+      <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+        <span className="text-slate-500">Don&apos;t have an identity yet?</span>
         <Link href="/hrms/create-account" className="text-cyan-400 font-bold hover:underline flex items-center gap-1">
           <UserPlus className="w-3.5 h-3.5" />
           <span>Register Account</span>
@@ -222,7 +222,7 @@ function HRMSLoginForm() {
 
 export default function HRMSLoginPage() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0B0C0E] relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-white relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
@@ -236,14 +236,14 @@ export default function HRMSLoginPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">
             HRMS <span className="text-cyan-400">PORTAL</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Domain Expansion &bull; Employee & Attendance Suite
           </p>
         </div>
 
         <Suspense
           fallback={
-            <div className="p-8 rounded-3xl bg-[#141414] border border-[#2E2E2E] text-center text-xs text-[#888898]">
+            <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs text-slate-500">
               Loading HRMS portal...
             </div>
           }
@@ -251,10 +251,10 @@ export default function HRMSLoginPage() {
           <HRMSLoginForm />
         </Suspense>
 
-        <div className="p-4 rounded-2xl bg-[#141414]/60 border border-[#222] text-xs text-center space-y-2 text-[#888898]">
+        <div className="p-4 rounded-2xl bg-white/60 border border-slate-200 text-xs text-center space-y-2 text-slate-500">
           <div className="font-semibold text-white/80">Other Portals:</div>
           <div className="flex items-center justify-center gap-4">
-            <Link href="/login" className="hover:text-white underline">
+            <Link href="/login" className="hover:text-slate-900 underline">
               Main Dashboard
             </Link>
             <span>&bull;</span>

@@ -123,11 +123,11 @@ export function MyWorkView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <CheckSquare className="w-5 h-5 text-[#FF6200]" />
             <span>My Work & Engineering Cockpit</span>
           </h1>
-          <p className="text-xs text-[#888898] mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Personal workbench &bull; Assigned tasks, QA defect triage, verification queue, and mentions
           </p>
         </div>
@@ -135,7 +135,7 @@ export function MyWorkView({
         <div className="flex items-center gap-2.5">
           <button
             onClick={onOpenCreateTask}
-            className="px-3.5 py-1.5 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-colors"
+            className="px-3.5 py-1.5 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white text-xs font-bold transition-colors shadow-xs"
           >
             + Create Task
           </button>
@@ -143,13 +143,13 @@ export function MyWorkView({
       </div>
 
       {/* Main 5 Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#2E2E2E] pb-3 text-xs overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 text-xs overflow-x-auto">
         <button
           onClick={() => setMainTab("TASKS")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
             mainTab === "TASKS"
-              ? "bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30 shadow-sm"
-              : "text-[#888898] hover:text-white hover:bg-[#1A1A1A]"
+              ? "bg-[#FF6200]/15 text-[#FF6200] border border-[#FF6200]/30 shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
           <CheckSquare className="w-4 h-4" />
@@ -160,14 +160,14 @@ export function MyWorkView({
           onClick={() => setMainTab("BUGS")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
             mainTab === "BUGS"
-              ? "bg-red-500/15 text-red-400 border border-red-500/30 shadow-sm"
-              : "text-[#888898] hover:text-white hover:bg-[#1A1A1A]"
+              ? "bg-rose-50 text-rose-600 border border-rose-200 shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
           <Bug className="w-4 h-4" />
           <span>My Bugs ({myBugs.length})</span>
           {failedBugs.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[10px] font-mono">
+            <span className="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-mono">
               {failedBugs.length} Failed
             </span>
           )}
@@ -177,8 +177,8 @@ export function MyWorkView({
           onClick={() => setMainTab("READY_TESTING")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
             mainTab === "READY_TESTING"
-              ? "bg-purple-500/15 text-purple-400 border border-purple-500/30 shadow-sm"
-              : "text-[#888898] hover:text-white hover:bg-[#1A1A1A]"
+              ? "bg-purple-50 text-purple-600 border border-purple-200 shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
           <CheckCircle2 className="w-4 h-4" />
@@ -189,8 +189,8 @@ export function MyWorkView({
           onClick={() => setMainTab("MENTIONS")}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
             mainTab === "MENTIONS"
-              ? "bg-blue-500/15 text-blue-400 border border-blue-500/30 shadow-sm"
-              : "text-[#888898] hover:text-white hover:bg-[#1A1A1A]"
+              ? "bg-blue-50 text-blue-600 border border-blue-200 shadow-xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           }`}
         >
           <AtSign className="w-4 h-4" />
@@ -205,69 +205,69 @@ export function MyWorkView({
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <button
               onClick={() => setTaskCategory("ALL")}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
                 taskCategory === "ALL"
-                  ? "bg-[#1A1A1A] border-[#FF6200] shadow-[0_0_15px_rgba(255,98,0,0.15)]"
-                  : "bg-[#141414] border-[#2E2E2E] hover:border-[#444]"
+                  ? "bg-orange-50/70 border-[#FF6200] shadow-xs"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <div className="text-[11px] text-[#888898] font-mono uppercase">All Assigned</div>
-              <div className="text-xl font-black text-white mt-1">{myTasks.length}</div>
+              <div className="text-[11px] text-slate-500 font-mono uppercase font-semibold">All Assigned</div>
+              <div className="text-xl font-black text-slate-900 mt-1">{myTasks.length}</div>
             </button>
 
             <button
               onClick={() => setTaskCategory("TODAY")}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
                 taskCategory === "TODAY"
-                  ? "bg-[#1A1A1A] border-[#FF6200] shadow-[0_0_15px_rgba(255,98,0,0.15)]"
-                  : "bg-[#141414] border-[#2E2E2E] hover:border-[#444]"
+                  ? "bg-orange-50/70 border-[#FF6200] shadow-xs"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Due Today</div>
-              <div className="text-xl font-black text-amber-400 mt-1">{todayTasks.length}</div>
+              <div className="text-[11px] text-slate-500 font-mono uppercase font-semibold">Due Today</div>
+              <div className="text-xl font-black text-amber-600 mt-1">{todayTasks.length}</div>
             </button>
 
             <button
               onClick={() => setTaskCategory("IN_PROGRESS")}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
                 taskCategory === "IN_PROGRESS"
-                  ? "bg-[#1A1A1A] border-[#FF6200] shadow-[0_0_15px_rgba(255,98,0,0.15)]"
-                  : "bg-[#141414] border-[#2E2E2E] hover:border-[#444]"
+                  ? "bg-orange-50/70 border-[#FF6200] shadow-xs"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <div className="text-[11px] text-[#888898] font-mono uppercase">In Progress</div>
-              <div className="text-xl font-black text-blue-400 mt-1">{inProgressTasks.length}</div>
+              <div className="text-[11px] text-slate-500 font-mono uppercase font-semibold">In Progress</div>
+              <div className="text-xl font-black text-blue-600 mt-1">{inProgressTasks.length}</div>
             </button>
 
             <button
               onClick={() => setTaskCategory("OVERDUE")}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
                 taskCategory === "OVERDUE"
-                  ? "bg-[#1A1A1A] border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
-                  : "bg-[#141414] border-[#2E2E2E] hover:border-[#444]"
+                  ? "bg-rose-50 border-rose-400 shadow-xs"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Overdue</div>
-              <div className="text-xl font-black text-red-400 mt-1">{overdueTasks.length}</div>
+              <div className="text-[11px] text-slate-500 font-mono uppercase font-semibold">Overdue</div>
+              <div className="text-xl font-black text-rose-600 mt-1">{overdueTasks.length}</div>
             </button>
 
             <button
               onClick={() => setTaskCategory("COMPLETED")}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
                 taskCategory === "COMPLETED"
-                  ? "bg-[#1A1A1A] border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                  : "bg-[#141414] border-[#2E2E2E] hover:border-[#444]"
+                  ? "bg-emerald-50 border-emerald-400 shadow-xs"
+                  : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Done</div>
-              <div className="text-xl font-black text-emerald-400 mt-1">{completedTasks.length}</div>
+              <div className="text-[11px] text-slate-500 font-mono uppercase font-semibold">Done</div>
+              <div className="text-xl font-black text-emerald-600 mt-1">{completedTasks.length}</div>
             </button>
           </div>
 
           {/* Tasks List */}
           <div className="space-y-2.5">
             {displayedTasks.length === 0 ? (
-              <div className="py-16 text-center text-xs text-[#888898] bg-[#141414] rounded-2xl border border-[#2E2E2E]">
+              <div className="py-16 text-center text-xs text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-xs">
                 No tasks in this category.
               </div>
             ) : (
@@ -275,13 +275,13 @@ export function MyWorkView({
                 <div
                   key={task.id}
                   onClick={() => onSelectTask(task.taskKey)}
-                  className="p-4 rounded-xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/50 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                  className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#FF6200]/50 hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 group shadow-xs"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono text-xs font-black text-[#FF8C42]">
+                    <span className="font-mono text-xs font-black text-[#FF6200]">
                       {task.taskKey}
                     </span>
-                    <span className="text-sm font-bold text-white group-hover:text-[#FF8C42] transition-colors truncate">
+                    <span className="text-sm font-bold text-slate-800 group-hover:text-[#FF6200] transition-colors truncate">
                       {task.title}
                     </span>
                   </div>
@@ -294,11 +294,11 @@ export function MyWorkView({
                       {task.status?.replace(/_/g, " ")}
                     </span>
                     {task.dueDate && (
-                      <span className="text-[11px] text-[#888898] font-mono">
+                      <span className="text-[11px] text-slate-500 font-mono">
                         {formatDate(task.dueDate)}
                       </span>
                     )}
-                    <ChevronRight className="w-4 h-4 text-[#888898] group-hover:text-white" />
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </div>
                 </div>
               ))
@@ -312,16 +312,16 @@ export function MyWorkView({
         <div className="space-y-4">
           {/* Failed Bugs Alert Banner */}
           {failedBugs.length > 0 && (
-            <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/40 flex items-center justify-between gap-4">
+            <div className="p-4 rounded-3xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-red-500/20 text-red-400">
+                <div className="p-2 rounded-2xl bg-rose-100 text-rose-600">
                   <XCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-red-300 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-rose-800 uppercase tracking-wider">
                     {failedBugs.length} Defect(s) Failed QA Verification
                   </h4>
-                  <p className="text-xs text-white mt-0.5">
+                  <p className="text-xs text-rose-700 mt-0.5">
                     QA has tested and marked these bugs as failed. Please review QA notes and re-test.
                   </p>
                 </div>
@@ -330,24 +330,24 @@ export function MyWorkView({
           )}
 
           {/* Bugs Table */}
-          <div className="rounded-2xl border border-[#2E2E2E] bg-[#141414] overflow-hidden shadow-xl">
+          <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#181818] border-b border-[#2E2E2E] text-[10px] font-mono uppercase text-[#888898]">
+                <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-mono uppercase text-slate-500">
                   <tr>
-                    <th className="py-3 px-4">Bug ID</th>
-                    <th className="py-3 px-4">Title</th>
-                    <th className="py-3 px-4">Related Task</th>
-                    <th className="py-3 px-4">Priority</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">QA Reporter</th>
-                    <th className="py-3 px-4">Updated</th>
+                    <th className="py-3 px-4 font-bold">Bug ID</th>
+                    <th className="py-3 px-4 font-bold">Title</th>
+                    <th className="py-3 px-4 font-bold">Related Task</th>
+                    <th className="py-3 px-4 font-bold">Priority</th>
+                    <th className="py-3 px-4 font-bold">Status</th>
+                    <th className="py-3 px-4 font-bold">QA Reporter</th>
+                    <th className="py-3 px-4 font-bold">Updated</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2E2E2E]/60">
+                <tbody className="divide-y divide-slate-100">
                   {myBugs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center text-xs text-[#888898]">
+                      <td colSpan={7} className="py-16 text-center text-xs text-slate-400">
                         🎉 No active bugs assigned to you.
                       </td>
                     </tr>
@@ -356,17 +356,17 @@ export function MyWorkView({
                       <tr
                         key={b.id}
                         onClick={() => handleBugClick(b.bugKey)}
-                        className={`hover:bg-[#1A1A1A] transition-colors cursor-pointer group ${
-                          b.status === "FAILED" ? "bg-red-950/15" : ""
+                        className={`hover:bg-slate-50 transition-colors cursor-pointer group ${
+                          b.status === "FAILED" ? "bg-rose-50/50" : ""
                         }`}
                       >
-                        <td className="py-3.5 px-4 font-mono font-bold text-red-400 whitespace-nowrap">
+                        <td className="py-3.5 px-4 font-mono font-bold text-rose-600 whitespace-nowrap">
                           {b.bugKey}
                         </td>
-                        <td className="py-3.5 px-4 font-bold text-white group-hover:text-[#FF8C42] max-w-xs truncate">
+                        <td className="py-3.5 px-4 font-bold text-slate-800 group-hover:text-[#FF6200] max-w-xs truncate">
                           {b.title}
                           {b.failureReason && (
-                            <div className="text-[10px] text-red-400 font-semibold truncate mt-0.5">
+                            <div className="text-[10px] text-rose-600 font-semibold truncate mt-0.5">
                               Fail reason: {b.failureReason}
                             </div>
                           )}
@@ -378,12 +378,12 @@ export function MyWorkView({
                                 e.stopPropagation();
                                 onSelectTask(b.relatedTask.taskKey);
                               }}
-                              className="px-2 py-0.5 rounded bg-[#FF6200]/15 text-[#FF8C42] font-mono font-bold hover:underline"
+                              className="px-2 py-0.5 rounded-lg bg-orange-50 text-[#FF6200] border border-orange-200 font-mono font-bold hover:underline"
                             >
                               {b.relatedTask.taskKey}
                             </span>
                           ) : (
-                            <span className="text-[#666]">Standalone</span>
+                            <span className="text-slate-400">Standalone</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
@@ -395,21 +395,21 @@ export function MyWorkView({
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border uppercase ${
                               b.status === "FAILED"
-                                ? "bg-red-500/20 border-red-500/40 text-red-400"
+                                ? "bg-rose-50 border-rose-200 text-rose-700"
                                 : b.status === "READY_FOR_TESTING"
-                                ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                                ? "bg-purple-50 border-purple-200 text-purple-700"
                                 : b.status === "PASSED"
-                                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
-                                : "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                : "bg-blue-50 border-blue-200 text-blue-700"
                             }`}
                           >
                             {b.status?.replace(/_/g, " ")}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap text-[#888898]">
+                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-600">
                           {b.createdBy?.name || "QA"}
                         </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap text-[10px] text-[#888898]">
+                        <td className="py-3.5 px-4 whitespace-nowrap text-[10px] text-slate-400">
                           {formatDateTime(b.updatedAt || b.createdAt)}
                         </td>
                       </tr>
@@ -425,13 +425,13 @@ export function MyWorkView({
       {/* TAB 3: READY FOR TESTING */}
       {mainTab === "READY_TESTING" && (
         <div className="space-y-4">
-          <div className="text-xs text-[#888898]">
+          <div className="text-xs text-slate-500">
             Items currently awaiting QA verification and defect re-testing:
           </div>
 
           <div className="space-y-2.5">
             {readyBugs.length === 0 && readyTasks.length === 0 ? (
-              <div className="py-16 text-center text-xs text-[#888898] bg-[#141414] rounded-2xl border border-[#2E2E2E]">
+              <div className="py-16 text-center text-xs text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-xs">
                 No items currently in "Ready for Testing" state.
               </div>
             ) : (
@@ -440,19 +440,19 @@ export function MyWorkView({
                   <div
                     key={b.id}
                     onClick={() => handleBugClick(b.bugKey)}
-                    className="p-4 rounded-xl bg-[#141414] border border-purple-500/40 hover:border-purple-500 transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                    className="p-4 rounded-2xl bg-white border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group shadow-xs"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs font-black text-red-400">{b.bugKey}</span>
-                      <span className="text-xs font-bold text-white group-hover:text-purple-300">
+                      <span className="font-mono text-xs font-black text-rose-600">{b.bugKey}</span>
+                      <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">
                         {b.title}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-purple-500/20 border-purple-500/40 text-purple-300 uppercase">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-purple-50 border-purple-200 text-purple-700 uppercase">
                         Ready for Testing
                       </span>
-                      <ChevronRight className="w-4 h-4 text-[#888898]" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 ))}
@@ -461,19 +461,19 @@ export function MyWorkView({
                   <div
                     key={t.id}
                     onClick={() => onSelectTask(t.taskKey)}
-                    className="p-4 rounded-xl bg-[#141414] border border-purple-500/40 hover:border-purple-500 transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                    className="p-4 rounded-2xl bg-white border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group shadow-xs"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-xs font-black text-[#FF8C42]">{t.taskKey}</span>
-                      <span className="text-xs font-bold text-white group-hover:text-purple-300">
+                      <span className="font-mono text-xs font-black text-[#FF6200]">{t.taskKey}</span>
+                      <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">
                         {t.title}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-purple-500/20 border-purple-500/40 text-purple-300 uppercase">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border bg-purple-50 border-purple-200 text-purple-700 uppercase">
                         Task: Ready for Testing
                       </span>
-                      <ChevronRight className="w-4 h-4 text-[#888898]" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 ))}
@@ -487,7 +487,7 @@ export function MyWorkView({
       {mainTab === "MENTIONS" && (
         <div className="space-y-3">
           {mentions.length === 0 ? (
-            <div className="py-16 text-center text-xs text-[#888898] bg-[#141414] rounded-2xl border border-[#2E2E2E]">
+            <div className="py-16 text-center text-xs text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-xs">
               No active @mentions found.
             </div>
           ) : (
@@ -498,16 +498,16 @@ export function MyWorkView({
                   if (m.bugId) handleBugClick(m.bugId);
                   else if (m.taskId) onSelectTask(m.taskId);
                 }}
-                className="p-4 rounded-xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/40 transition-all cursor-pointer"
+                className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#FF6200]/50 hover:shadow-md transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5">
-                    <AtSign className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <AtSign className="w-3.5 h-3.5 text-blue-600" />
                     <span>{m.title}</span>
                   </span>
-                  <span className="text-[10px] text-[#888898]">{formatDateTime(m.createdAt)}</span>
+                  <span className="text-[10px] text-slate-400">{formatDateTime(m.createdAt)}</span>
                 </div>
-                <div className="text-xs text-[#ACACB8] mt-1">{m.message}</div>
+                <div className="text-xs text-slate-600 mt-1">{m.message}</div>
               </div>
             ))
           )}

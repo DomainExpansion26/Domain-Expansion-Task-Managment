@@ -3,13 +3,13 @@ import { AlertCircle, Home } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0D0D0D] p-6 text-[#F3F4F6]">
-      <div className="w-full max-w-md rounded-3xl border border-[#2E2E2E] bg-[#141414] p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FF6200]/30 bg-[#FF6200]/15 text-[#FF8C42]">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8FAFC] p-6 text-[#0F172A]">
+      <div className="w-full max-w-md rounded-3xl border border-[#E2E8F0] bg-white p-8 text-center shadow-xl">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FF6200]/30 bg-[#FF6200]/15 text-[#FF6200]">
           <AlertCircle className="h-7 w-7" />
         </div>
-        <h2 className="mb-2 text-lg font-bold text-white">404 - Page Not Found</h2>
-        <p className="mb-6 text-xs text-[#888898]">
+        <h2 className="mb-2 text-lg font-bold text-[#0F172A]">404 - Page Not Found</h2>
+        <p className="mb-6 text-xs text-[#64748B]">
           The page you requested does not exist or has been moved.
         </p>
         <Link

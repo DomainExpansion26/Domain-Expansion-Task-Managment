@@ -154,19 +154,19 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
           <Settings className="w-5 h-5 text-[#FF6200]" />
           <span>Platform Administration & Settings</span>
         </h1>
-        <p className="text-xs text-[#888898] mt-1">
+        <p className="text-xs text-slate-500 mt-1">
           Configure Multi-Provider AI models, automation workflows, token budgets, and security permissions
         </p>
       </div>
 
       {/* Tabs (Responsive scroll on mobile) */}
-      <div className="flex items-center gap-2 border-b border-[#2E2E2E] pb-2 text-xs font-semibold overflow-x-auto max-w-full">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-semibold overflow-x-auto max-w-full">
         <button
           onClick={() => setActiveTab("AI_PROVIDERS")}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AI_PROVIDERS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
-              : "text-[#888898] hover:text-white"
+              : "text-slate-500 hover:text-slate-900"
           }`}
         >
           <Sparkles className="w-4 h-4 text-purple-400" />
@@ -178,7 +178,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AI_USAGE"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
-              : "text-[#888898] hover:text-white"
+              : "text-slate-500 hover:text-slate-900"
           }`}
         >
           <Activity className="w-4 h-4 text-cyan-400" />
@@ -190,7 +190,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "AUTOMATIONS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
-              : "text-[#888898] hover:text-white"
+              : "text-slate-500 hover:text-slate-900"
           }`}
         >
           <Zap className="w-4 h-4 text-amber-400" />
@@ -202,7 +202,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-colors flex-shrink-0 whitespace-nowrap ${
             activeTab === "PERMISSIONS"
               ? "bg-[#FF6200]/20 text-[#FF8C42] border border-[#FF6200]/40"
-              : "text-[#888898] hover:text-white"
+              : "text-slate-500 hover:text-slate-900"
           }`}
         >
           <Shield className="w-4 h-4 text-emerald-400" />
@@ -242,17 +242,17 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
             {providers.map((p) => (
               <div
                 key={p.id}
-                className="p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] space-y-4 flex flex-col justify-between"
+                className="p-5 rounded-2xl bg-white border border-slate-200 space-y-4 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E] text-[#FF8C42] font-mono text-xs font-bold">
+                      <div className="p-2 rounded-lg bg-white border border-slate-200 text-[#FF8C42] font-mono text-xs font-bold">
                         {p.provider}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-white">{p.provider} Gateway</div>
-                        <div className="text-[10px] text-[#888898] font-mono">Model: {p.defaultModel}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">Model: {p.defaultModel}</div>
                       </div>
                     </div>
 
@@ -261,7 +261,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-[#888898] mt-4 bg-[#1A1A1A] p-3 rounded-xl border border-[#2E2E2E]">
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 mt-4 bg-white p-3 rounded-xl border border-slate-200">
                     <div>
                       Budget: <span className="text-white font-mono font-bold">${p.monthlyBudget}/mo</span>
                     </div>
@@ -269,12 +269,12 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                       Spent: <span className="text-[#FF8C42] font-mono font-bold">${p.currentUsageCost}</span>
                     </div>
                     <div className="col-span-2 truncate">
-                      API Key: <span className="text-slate-400 font-mono">{p.apiKeyEncrypted || "Configured in Environment"}</span>
+                      API Key: <span className="text-slate-500 font-mono">{p.apiKeyEncrypted || "Configured in Environment"}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-[#2E2E2E]">
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
                   <button
                     onClick={() => handleTestConnection(p.provider, p.defaultModel)}
                     disabled={testingProvider === p.provider}
@@ -305,30 +305,30 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
       {activeTab === "AI_USAGE" && (
         <div className="space-y-5">
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-[#141414] border border-[#2E2E2E]">
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Total Requests</div>
+            <div className="p-4 rounded-xl bg-white border border-slate-200">
+              <div className="text-[11px] text-slate-500 font-mono uppercase">Total Requests</div>
               <div className="text-2xl font-black text-white mt-1">{usageData.metrics?.totalRequests || 0}</div>
             </div>
-            <div className="p-4 rounded-xl bg-[#141414] border border-[#2E2E2E]">
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Tokens Processed</div>
+            <div className="p-4 rounded-xl bg-white border border-slate-200">
+              <div className="text-[11px] text-slate-500 font-mono uppercase">Tokens Processed</div>
               <div className="text-2xl font-black text-purple-400 mt-1">{usageData.metrics?.totalTokens || 0}</div>
             </div>
-            <div className="p-4 rounded-xl bg-[#141414] border border-[#2E2E2E]">
-              <div className="text-[11px] text-[#888898] font-mono uppercase">Total Spend (Est.)</div>
+            <div className="p-4 rounded-xl bg-white border border-slate-200">
+              <div className="text-[11px] text-slate-500 font-mono uppercase">Total Spend (Est.)</div>
               <div className="text-2xl font-black text-[#FF8C42] mt-1">${usageData.metrics?.totalCost || 0}</div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[#141414] border border-[#2E2E2E] overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#2E2E2E] bg-[#1A1A1A] font-bold text-xs text-white">
+          <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-200 bg-white font-bold text-xs text-white">
               Recent AI Interactions & Tool Executions
             </div>
             <div className="divide-y divide-[#2E2E2E]/60 text-xs">
               {usageData.usages.map((u) => (
-                <div key={u.id} className="p-3.5 flex items-center justify-between hover:bg-[#1A1A1A]/40">
+                <div key={u.id} className="p-3.5 flex items-center justify-between hover:bg-white/40">
                   <div className="space-y-1">
                     <div className="font-semibold text-white">{u.promptSummary}</div>
-                    <div className="text-[10px] text-[#888898] flex items-center gap-2">
+                    <div className="text-[10px] text-slate-500 flex items-center gap-2">
                       <span>User: {u.user?.name}</span>
                       <span>&bull;</span>
                       <span className="font-mono text-purple-400">{u.provider} ({u.model})</span>
@@ -338,7 +338,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                   </div>
                   <div className="text-right">
                     <div className="font-mono font-bold text-[#FF8C42]">{u.totalTokens} tokens</div>
-                    <div className="text-[10px] text-[#888898]">{formatDateTime(u.createdAt)}</div>
+                    <div className="text-[10px] text-slate-500">{formatDateTime(u.createdAt)}</div>
                   </div>
                 </div>
               ))}
@@ -350,7 +350,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
       {/* Tab 3: Automations */}
       {activeTab === "AUTOMATIONS" && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-[#141414] border border-[#2E2E2E] divide-y divide-[#2E2E2E]/60">
+          <div className="rounded-2xl bg-white border border-slate-200 divide-y divide-[#2E2E2E]/60">
             {automations.map((rule) => (
               <div key={rule.id} className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -359,7 +359,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-white">{rule.name}</div>
-                    <div className="text-[11px] text-[#888898] font-mono mt-0.5">
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                       Trigger: <span className="text-[#FF8C42]">{rule.triggerType}</span> &rarr; Action:{" "}
                       <span className="text-emerald-400">{rule.actionType}</span>
                     </div>
@@ -371,7 +371,7 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-colors ${
                     rule.isEnabled
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : "bg-[#252525] text-[#888898]"
+                      : "bg-[#252525] text-slate-500"
                   }`}
                 >
                   {rule.isEnabled ? "ACTIVE" : "DISABLED"}
@@ -384,9 +384,9 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
       {/* Tab 4: RBAC Matrix */}
       {activeTab === "PERMISSIONS" && (
-        <div className="rounded-2xl bg-[#141414] border border-[#2E2E2E] overflow-hidden">
+        <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#1A1A1A] border-b border-[#2E2E2E] text-[#888898] font-mono text-[10px] uppercase">
+            <thead className="bg-white border-b border-slate-200 text-slate-500 font-mono text-[10px] uppercase">
               <tr>
                 <th className="p-3.5">Permission Scope</th>
                 <th className="p-3.5 text-center">Super Admin</th>
@@ -394,24 +394,24 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
                 <th className="p-3.5 text-center">Team Member</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2E2E2E]/60 text-slate-300">
+            <tbody className="divide-y divide-[#2E2E2E]/60 text-slate-600">
               <tr>
                 <td className="p-3.5 font-medium text-white">Create & Delete Projects</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
-                <td className="p-3.5 text-center text-[#888898]">&mdash;</td>
+                <td className="p-3.5 text-center text-slate-500">&mdash;</td>
               </tr>
               <tr>
                 <td className="p-3.5 font-medium text-white">Invite & Manage Users</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
-                <td className="p-3.5 text-center text-[#888898]">&mdash;</td>
+                <td className="p-3.5 text-center text-slate-500">&mdash;</td>
               </tr>
               <tr>
                 <td className="p-3.5 font-medium text-white">Manage Sprints & Backlog</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
-                <td className="p-3.5 text-center text-[#888898]">&mdash;</td>
+                <td className="p-3.5 text-center text-slate-500">&mdash;</td>
               </tr>
               <tr>
                 <td className="p-3.5 font-medium text-white">Create & Update Tasks</td>
@@ -422,8 +422,8 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
               <tr>
                 <td className="p-3.5 font-medium text-white">Configure AI Gateways & Keys</td>
                 <td className="p-3.5 text-center text-emerald-400 font-bold">&check;</td>
-                <td className="p-3.5 text-center text-[#888898]">&mdash;</td>
-                <td className="p-3.5 text-center text-[#888898]">&mdash;</td>
+                <td className="p-3.5 text-center text-slate-500">&mdash;</td>
+                <td className="p-3.5 text-center text-slate-500">&mdash;</td>
               </tr>
             </tbody>
           </table>
@@ -432,13 +432,13 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
       {/* Edit Provider Modal */}
       {editingProvider && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
               <h2 className="text-sm font-bold text-white">Configure {editingProvider.provider}</h2>
               <button
                 onClick={() => setEditingProvider(null)}
-                className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white"
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900"
               >
                 &times;
               </button>
@@ -446,19 +446,19 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
 
             <form onSubmit={handleSaveProvider} className="p-6 space-y-4 text-xs">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">API Key</label>
+                <label className="block text-slate-700 font-semibold mb-1">API Key</label>
                 <div className="relative">
                   <input
                     type={showApiKey ? "text" : "password"}
                     placeholder="sk-... (Leave empty to keep existing)"
                     value={apiKeyInput}
                     onChange={(e) => setApiKeyInput(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-3 pr-9 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-lg pl-3 pr-9 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                     tabIndex={-1}
                     aria-label={showApiKey ? "Hide key" : "Show key"}
                   >
@@ -468,31 +468,31 @@ export function AdminSettingsView({ currentUser }: AdminSettingsViewProps) {
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Default Model</label>
+                <label className="block text-slate-700 font-semibold mb-1">Default Model</label>
                 <input
                   type="text"
                   placeholder="e.g. gpt-4o or claude-3-5-sonnet-20241022"
                   value={modelInput}
                   onChange={(e) => setModelInput(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Monthly Budget Limit ($)</label>
+                <label className="block text-slate-700 font-semibold mb-1">Monthly Budget Limit ($)</label>
                 <input
                   type="number"
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(Number(e.target.value))}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#2E2E2E]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setEditingProvider(null)}
-                  className="px-4 py-2 rounded-lg text-[#888898] hover:text-white"
+                  className="px-4 py-2 rounded-lg text-slate-500 hover:text-slate-900"
                 >
                   Cancel
                 </button>

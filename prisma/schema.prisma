@@ -65,6 +65,18 @@ model User {
 
   // Organization Documents & Vault
   organizationDocuments OrganizationDocument[] @relation("DocumentUploadedBy")
+
+  // Account Status & Organization Metadata
+  accountStatus    String      @default("ACTIVE") // ACTIVE, PENDING, SUSPENDED, DEACTIVATED
+  joiningDate      DateTime?
+
+  // NDA Compliance & Policies
+  ndaAccepted      Boolean     @default(false)
+  ndaAcceptedAt    DateTime?
+  ndaVersionAccepted String?
+  createdNDAs      NDATemplate[]   @relation("NDACreatedBy")
+  ndaAcceptances   NDAAcceptance[]
+  createdPolicies  CompanyPolicy[] @relation("PolicyCreatedBy")
 }
 
 model HRProfile {
@@ -838,6 +850,63 @@ model HRSetting {
   description        String?
   updatedAt          DateTime @updatedAt
   createdAt          DateTime @default(now())
+}
+
+model NDATemplate {
+  id          String          @id @default(cuid())
+  version     String          @unique // e.g. "v1.0", "v2.0"
+  title       String          @default("Domain Expansion Non-Disclosure & Confidentiality Agreement")
+  content     String
+  summary     String?
+  isActive    Boolean         @default(true) // Currently enforced version
+  publishedAt DateTime        @default(now())
+  createdById String?
+  createdBy   User?           @relation("NDACreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  acceptances NDAAcceptance[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model NDAAcceptance {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId   String
+  template     NDATemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  version      String
+  acceptedAt   DateTime    @default(now())
+  ipAddress    String?
+  userAgent    String?
+  checkboxText String      @default("I have read, understood, and agree to the above Terms & Conditions and NDA.")
+  createdAt    DateTime    @default(now())
+
+  @@unique([userId, version])
+}
+
+model CompanyPolicy {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   @default("GENERAL") // GENERAL, SECURITY, CODE_OF_CONDUCT, LEAVE, IT_SECURITY
+  version     String   @default("v1.0")
+  content     String
+  summary     String?
+  isPublished Boolean  @default(true)
+  createdById String?
+  createdBy   User?    @relation("PolicyCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DatabaseBackupRecord {
+  id           String   @id @default(cuid())
+  filename     String   @unique
+  tag          String   @default("manual") // manual, pre-migration, scheduled
+  totalRecords Int      @default(0)
+  sizeBytes    Int      @default(0)
+  createdById  String?
+  status       String   @default("COMPLETED") // COMPLETED, RESTORED, FAILED
+  notes        String?
+  createdAt    DateTime @default(now())
 }
 
 

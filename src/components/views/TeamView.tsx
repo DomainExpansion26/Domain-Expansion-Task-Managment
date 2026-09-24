@@ -250,11 +250,11 @@ export function TeamView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Users className="w-5 h-5 text-[#FF6200]" />
             <span>Team Directory & Capacity</span>
           </h1>
-          <p className="text-xs text-[#888898] mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Manage organization members, assign roles, monitor live workloads, and inspect team profiles
           </p>
         </div>
@@ -287,7 +287,7 @@ export function TeamView({
                 setModalTab("OVERVIEW");
                 setTaskStatusFilter("ALL");
               }}
-              className="p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/40 hover:shadow-[0_0_20px_rgba(255,98,0,0.08)] transition-all cursor-pointer space-y-4 group"
+              className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-[#FF6200]/50 hover:shadow-md transition-all cursor-pointer space-y-4 group shadow-xs"
             >
               {/* Member Profile Header */}
               <div className="flex items-start justify-between gap-3">
@@ -296,23 +296,23 @@ export function TeamView({
                     <img
                       src={user.avatarUrl}
                       alt={user.name}
-                      className="w-12 h-12 rounded-2xl object-cover border border-[#2E2E2E] shadow-sm flex-shrink-0"
+                      className="w-12 h-12 rounded-2xl object-cover border border-slate-200 shadow-sm flex-shrink-0"
                     />
                   ) : (
                     <div
-                      className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-sm font-bold text-white uppercase border border-[#2E2E2E] shadow-sm flex-shrink-0`}
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(user.name)} flex items-center justify-center text-sm font-bold text-white uppercase border border-slate-200 shadow-sm flex-shrink-0`}
                     >
                       {getInitials(user.name)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-white group-hover:text-[#FF8C42] transition-colors truncate">
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors truncate">
                       {user.name}
                     </h3>
-                    <div className="text-xs text-[#888898] truncate">
+                    <div className="text-xs text-slate-500 truncate">
                       {user.jobTitle || "Team Member"}
                     </div>
-                    <div className="text-[11px] font-mono text-[#666] truncate">{user.email}</div>
+                    <div className="text-[11px] font-mono text-slate-400 truncate">{user.email}</div>
                   </div>
                 </div>
                 <span
@@ -323,45 +323,45 @@ export function TeamView({
               </div>
 
               {/* Reporting Line Badge */}
-              <div className="flex items-center gap-1.5 text-[11px] text-[#888898] py-0.5 truncate">
-                <span className="text-[#666]">Reports to:</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 py-0.5 truncate">
+                <span className="text-slate-400">Reports to:</span>
                 {user.role === "SUPER_ADMIN" ? (
-                  <span className="text-purple-300 font-medium">Executive Leadership</span>
+                  <span className="text-purple-600 font-semibold">Executive Leadership</span>
                 ) : user.manager?.name || user.teamLead?.name ? (
-                  <span className="text-slate-200 font-medium truncate">
+                  <span className="text-slate-700 font-semibold truncate">
                     {user.manager?.name && user.teamLead?.name
                       ? `${user.manager.name} / ${user.teamLead.name}`
                       : user.manager?.name || user.teamLead?.name}
                   </span>
                 ) : (
-                  <span className="text-amber-400 font-semibold flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-amber-400" />
+                  <span className="text-amber-600 font-semibold flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-500" />
                     Not Set
                   </span>
                 )}
               </div>
 
               {/* Workload Stats Bar */}
-              <div className="grid grid-cols-4 gap-2 pt-3 border-t border-[#2E2E2E]/60 text-center text-xs">
-                <div className="p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className="text-[10px] text-[#888898]">Active</div>
-                  <div className="font-bold text-white mt-0.5">{stats.active}</div>
+              <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-100 text-center text-xs">
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="text-[10px] text-slate-500">Active</div>
+                  <div className="font-bold text-slate-900 mt-0.5">{stats.active}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className="text-[10px] text-blue-400">Review</div>
-                  <div className="font-bold text-blue-400 mt-0.5">{stats.inReview}</div>
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="text-[10px] text-blue-600">Review</div>
+                  <div className="font-bold text-blue-600 mt-0.5">{stats.inReview}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className={`text-[10px] ${stats.overdue > 0 ? "text-red-400 font-bold" : "text-gray-400"}`}>
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className={`text-[10px] ${stats.overdue > 0 ? "text-rose-600 font-bold" : "text-slate-400"}`}>
                     Overdue
                   </div>
-                  <div className={`font-bold mt-0.5 ${stats.overdue > 0 ? "text-red-400" : "text-gray-400"}`}>
+                  <div className={`font-bold mt-0.5 ${stats.overdue > 0 ? "text-rose-600" : "text-slate-500"}`}>
                     {stats.overdue}
                   </div>
                 </div>
-                <div className="p-2 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E]">
-                  <div className="text-[10px] text-emerald-400">Done</div>
-                  <div className="font-bold text-emerald-400 mt-0.5">{stats.completed}</div>
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="text-[10px] text-emerald-600">Done</div>
+                  <div className="font-bold text-emerald-600 mt-0.5">{stats.completed}</div>
                 </div>
               </div>
             </div>
@@ -374,14 +374,14 @@ export function TeamView({
         selectedUser &&
         createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-slate-900/40 backdrop-blur-sm"
             onClick={(e) => {
               if (e.target === e.currentTarget) setSelectedUser(null);
             }}
           >
-            <div className="relative w-full max-w-2xl bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl flex flex-col overflow-hidden my-auto max-h-[85vh]">
+            <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
               {/* Modal Header */}
-              <div className="p-4 sm:p-5 border-b border-[#2E2E2E] bg-gradient-to-r from-[#1A1A1A] to-[#141414]">
+              <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/80">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className="relative flex-shrink-0">
@@ -389,20 +389,20 @@ export function TeamView({
                         <img
                           src={selectedUser.avatarUrl}
                           alt={selectedUser.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-[#2E2E2E] shadow"
+                          className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow"
                         />
                       ) : (
                         <div
                           className={`w-12 h-12 rounded-xl bg-gradient-to-tr ${getAvatarGradient(
                             selectedUser.name
-                          )} flex items-center justify-center text-base font-bold text-white uppercase border border-[#2E2E2E] shadow`}
+                          )} flex items-center justify-center text-base font-bold text-white uppercase border border-slate-200 shadow`}
                         >
                           {getInitials(selectedUser.name)}
                         </div>
                       )}
                       <span
-                        className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#141414] ${
-                          selectedUser.isActive !== false ? "bg-emerald-500" : "bg-gray-500"
+                        className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                          selectedUser.isActive !== false ? "bg-emerald-500" : "bg-gray-400"
                         }`}
                         title={selectedUser.isActive !== false ? "Active Member" : "Inactive Member"}
                       />
@@ -410,7 +410,7 @@ export function TeamView({
 
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-base font-bold text-white truncate">{selectedUser.name}</h2>
+                        <h2 className="text-base font-bold text-slate-900 truncate">{selectedUser.name}</h2>
                         <span
                           className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${
                             getRoleBadge(selectedUser.role).bg
@@ -419,39 +419,39 @@ export function TeamView({
                           {getRoleBadge(selectedUser.role).label}
                         </span>
                         {(selectedUser.employeeId || selectedUser.hrProfile?.employeeId) && (
-                          <span className="text-[10px] font-mono bg-[#222] text-[#888898] border border-[#333] px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-mono bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full">
                             {selectedUser.employeeId || selectedUser.hrProfile?.employeeId}
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-[#888898] mt-0.5 flex flex-wrap items-center gap-1.5 truncate">
-                        <span className="text-slate-300 font-medium">
+                      <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5 truncate">
+                        <span className="text-slate-700 font-semibold">
                           {selectedUser.jobTitle || "Team Member"}
                         </span>
                         <span>&bull;</span>
                         <span>{selectedUser.department || "General"}</span>
                         <span>&bull;</span>
-                        <span className="font-mono text-[#777]">{selectedUser.email}</span>
+                        <span className="font-mono text-slate-400">{selectedUser.email}</span>
                       </div>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setSelectedUser(null)}
-                    className="p-1.5 rounded-lg bg-[#202020] border border-[#2E2E2E] hover:border-[#FF6200]/40 text-[#888898] hover:text-white transition-colors cursor-pointer flex-shrink-0"
+                    className="p-1.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer flex-shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="flex items-center gap-1.5 mt-4 border-t border-[#2E2E2E]/60 pt-3">
+                <div className="flex items-center gap-1.5 mt-4 border-t border-slate-200 pt-3">
                   <button
                     onClick={() => setModalTab("OVERVIEW")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       modalTab === "OVERVIEW"
                         ? "bg-[#FF6200] text-white shadow-sm"
-                        : "text-[#888898] hover:text-white hover:bg-[#202020]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <UserCheck className="w-3.5 h-3.5" />
@@ -460,17 +460,17 @@ export function TeamView({
 
                   <button
                     onClick={() => setModalTab("TASKS")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       modalTab === "TASKS"
                         ? "bg-[#FF6200] text-white shadow-sm"
-                        : "text-[#888898] hover:text-white hover:bg-[#202020]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                     <span>Assigned Tasks</span>
                     <span
                       className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                        modalTab === "TASKS" ? "bg-white/20 text-white" : "bg-[#252525] text-[#888898]"
+                        modalTab === "TASKS" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"
                       }`}
                     >
                       {selectedUserTasks.length}
@@ -479,17 +479,17 @@ export function TeamView({
 
                   <button
                     onClick={() => setModalTab("PROJECTS")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       modalTab === "PROJECTS"
                         ? "bg-[#FF6200] text-white shadow-sm"
-                        : "text-[#888898] hover:text-white hover:bg-[#202020]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <FolderKanban className="w-3.5 h-3.5" />
                     <span>Projects</span>
                     <span
                       className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                        modalTab === "PROJECTS" ? "bg-white/20 text-white" : "bg-[#252525] text-[#888898]"
+                        modalTab === "PROJECTS" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"
                       }`}
                     >
                       {selectedUserProjects.length}
@@ -505,63 +505,63 @@ export function TeamView({
                   <div className="space-y-4">
                     {/* Organization & Contact Details (6 cards) */}
                     <div>
-                      <div className="text-[11px] font-bold text-[#888898] uppercase tracking-wider mb-2">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                         Member Information
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {/* Email Card */}
-                        <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                          <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center justify-between">
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3 h-3 text-[#FF6200]" />
                               Email
                             </span>
                             <button
                               onClick={() => handleCopyEmail(selectedUser.email)}
-                              className="text-[#888898] hover:text-white transition-colors cursor-pointer"
+                              className="text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                               title="Copy email"
                             >
                               {copiedEmail ? (
-                                <Check className="w-3 h-3 text-emerald-400" />
+                                <Check className="w-3 h-3 text-emerald-600" />
                               ) : (
                                 <Copy className="w-3 h-3" />
                               )}
                             </button>
                           </div>
-                          <div className="font-semibold text-white text-xs mt-1 truncate" title={selectedUser.email}>
+                          <div className="font-semibold text-slate-900 text-xs mt-1 truncate" title={selectedUser.email}>
                             {selectedUser.email}
                           </div>
                         </div>
 
                         {/* Phone Card */}
-                        <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                          <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-cyan-400" />
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-cyan-600" />
                             Phone
                           </div>
-                          <div className="font-semibold text-white text-xs mt-1 truncate">
+                          <div className="font-semibold text-slate-900 text-xs mt-1 truncate">
                             {selectedUser.phone || selectedUser.hrProfile?.phone || "Not specified"}
                           </div>
                         </div>
 
                         {/* Department Card */}
-                        <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                          <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center gap-1">
-                            <Building2 className="w-3 h-3 text-purple-400" />
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                            <Building2 className="w-3 h-3 text-purple-600" />
                             Department
                           </div>
-                          <div className="font-semibold text-white text-xs mt-1 truncate">
+                          <div className="font-semibold text-slate-900 text-xs mt-1 truncate">
                             {selectedUser.department || "General"}
                           </div>
                         </div>
 
                         {/* Joined Date */}
-                        <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                          <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-amber-400" />
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                          <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-amber-600" />
                             Joined
                           </div>
-                          <div className="font-semibold text-white text-xs mt-1 truncate">
+                          <div className="font-semibold text-slate-900 text-xs mt-1 truncate">
                             {formatDate(
                               selectedUser.createdAt || selectedUser.joiningDate || selectedUser.hrProfile?.joiningDate
                             )}
@@ -573,7 +573,7 @@ export function TeamView({
                     {/* Reporting Line Hierarchy Section */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-[11px] font-bold text-[#888898] uppercase tracking-wider flex items-center gap-1.5">
+                        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                           <UserCheck className="w-3.5 h-3.5 text-[#FF6200]" />
                           <span>Reporting Hierarchy</span>
                         </div>
@@ -581,7 +581,7 @@ export function TeamView({
                           <button
                             type="button"
                             onClick={() => setIsEditingHierarchy(!isEditingHierarchy)}
-                            className="text-xs text-[#FF8C42] hover:underline font-bold cursor-pointer"
+                            className="text-xs text-[#FF6200] hover:underline font-bold cursor-pointer"
                           >
                             {isEditingHierarchy ? "Cancel" : "Change Assignment"}
                           </button>
@@ -590,28 +590,28 @@ export function TeamView({
 
                       {/* Not assigned warning banner */}
                       {!selectedUser.managerId && !selectedUser.teamLeadId && selectedUser.role !== "SUPER_ADMIN" && (
-                        <div className="mb-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
+                        <div className="mb-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-600" />
                           <span>No Reporting Manager or Team Lead assigned yet.</span>
                         </div>
                       )}
 
                       {isEditingHierarchy ? (
-                        <div className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#FF6200]/40 space-y-3">
+                        <div className="p-3.5 rounded-2xl bg-slate-50 border border-[#FF6200]/40 space-y-3">
                           {hierarchyError && (
-                            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                            <div className="p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
                               {hierarchyError}
                             </div>
                           )}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                                 Reporting Manager
                               </label>
                               <select
                                 value={editManagerId}
                                 onChange={(e) => setEditManagerId(e.target.value)}
-                                className="w-full bg-[#111] border border-[#333] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#FF6200]"
                               >
                                 <option value="">-- No Manager --</option>
                                 {eligibleManagersForSelected.map((m: any) => (
@@ -622,13 +622,13 @@ export function TeamView({
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
                                 Reporting Team Lead
                               </label>
                               <select
                                 value={editTeamLeadId}
                                 onChange={(e) => setEditTeamLeadId(e.target.value)}
-                                className="w-full bg-[#111] border border-[#333] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#FF6200]"
+                                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#FF6200]"
                               >
                                 <option value="">-- No Team Lead --</option>
                                 {eligibleTeamLeadsForSelected.map((tl: any) => (
@@ -643,7 +643,7 @@ export function TeamView({
                             <button
                               type="button"
                               onClick={() => setIsEditingHierarchy(false)}
-                              className="px-3 py-1.5 rounded-lg text-xs text-[#888898] hover:text-white cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -660,16 +660,16 @@ export function TeamView({
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {/* Manager */}
-                          <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                            <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center gap-1">
-                              <Shield className="w-3 h-3 text-blue-400" />
+                          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                              <Shield className="w-3 h-3 text-blue-600" />
                               Reporting Manager
                             </div>
-                            <div className="font-semibold text-white text-xs mt-1 truncate">
+                            <div className="font-semibold text-slate-900 text-xs mt-1 truncate">
                               {selectedUser.manager?.name ? (
                                 <span>{selectedUser.manager.name}</span>
                               ) : (
-                                <span className={selectedUser.role === "SUPER_ADMIN" ? "text-[#888898]" : "text-amber-400 font-normal"}>
+                                <span className={selectedUser.role === "SUPER_ADMIN" ? "text-slate-500" : "text-amber-600 font-normal"}>
                                   {selectedUser.role === "SUPER_ADMIN" ? "Executive Leadership" : "None Assigned"}
                                 </span>
                               )}
@@ -677,16 +677,16 @@ export function TeamView({
                           </div>
 
                           {/* Team Lead */}
-                          <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]">
-                            <div className="text-[10px] font-bold text-[#888898] uppercase flex items-center gap-1">
-                              <UserCheck className="w-3 h-3 text-emerald-400" />
+                          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                              <UserCheck className="w-3 h-3 text-emerald-600" />
                               Team Lead
                             </div>
-                            <div className="font-semibold text-white text-xs mt-1 truncate">
+                            <div className="font-semibold text-slate-900 text-xs mt-1 truncate">
                               {selectedUser.teamLead?.name ? (
                                 <span>{selectedUser.teamLead.name}</span>
                               ) : (
-                                <span className={selectedUser.role === "SUPER_ADMIN" ? "text-[#888898]" : "text-amber-400 font-normal"}>
+                                <span className={selectedUser.role === "SUPER_ADMIN" ? "text-slate-500" : "text-amber-600 font-normal"}>
                                   {selectedUser.role === "SUPER_ADMIN" ? "Executive Leadership" : "None Assigned"}
                                 </span>
                               )}
@@ -698,64 +698,64 @@ export function TeamView({
 
                     {/* Workload & Performance Summary */}
                     <div>
-                      <div className="text-[11px] font-bold text-[#888898] uppercase tracking-wider mb-2">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                         Workload & Velocity
                       </div>
-                      <div className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
+                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                         {/* Progress Bar */}
                         <div>
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="font-semibold text-white flex items-center gap-1.5">
-                              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
                               Task Completion Velocity
                             </span>
-                            <span className="font-mono font-bold text-[#FF8C42]">
+                            <span className="font-mono font-bold text-[#FF6200]">
                               {selectedUserStats.completionRate}%
                             </span>
                           </div>
-                          <div className="w-full bg-[#111] h-2 rounded-full overflow-hidden border border-[#2E2E2E]">
+                          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-200">
                             <div
-                              className="h-full bg-gradient-to-r from-[#FF6200] to-emerald-400 transition-all duration-500"
+                              className="h-full bg-gradient-to-r from-[#FF6200] to-emerald-500 transition-all duration-500"
                               style={{ width: `${Math.min(100, Math.max(0, selectedUserStats.completionRate))}%` }}
                             />
                           </div>
-                          <div className="text-[10px] text-[#888898] mt-1">
+                          <div className="text-[10px] text-slate-500 mt-1">
                             {selectedUserStats.completed} of {selectedUserStats.total} total assigned tasks closed
                           </div>
                         </div>
 
                         {/* 4 Stat Pills */}
-                        <div className="grid grid-cols-4 gap-2 text-center text-xs pt-2 border-t border-[#2E2E2E]">
-                          <div className="p-2 rounded-lg bg-[#141414] border border-[#2E2E2E]">
-                            <div className="text-[10px] text-[#888898]">Active</div>
-                            <div className="font-bold text-white mt-0.5">{selectedUserStats.active}</div>
+                        <div className="grid grid-cols-4 gap-2 text-center text-xs pt-2 border-t border-slate-200">
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
+                            <div className="text-[10px] text-slate-500">Active</div>
+                            <div className="font-bold text-slate-900 mt-0.5">{selectedUserStats.active}</div>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-[#141414] border border-[#2E2E2E]">
-                            <div className="text-[10px] text-blue-400">In Review</div>
-                            <div className="font-bold text-blue-400 mt-0.5">{selectedUserStats.inReview}</div>
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
+                            <div className="text-[10px] text-blue-600">In Review</div>
+                            <div className="font-bold text-blue-600 mt-0.5">{selectedUserStats.inReview}</div>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-[#141414] border border-[#2E2E2E]">
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
                             <div
                               className={`text-[10px] ${
-                                selectedUserStats.overdue > 0 ? "text-red-400 font-bold" : "text-gray-400"
+                                selectedUserStats.overdue > 0 ? "text-rose-600 font-bold" : "text-slate-400"
                               }`}
                             >
                               Overdue
                             </div>
                             <div
                               className={`font-bold mt-0.5 ${
-                                selectedUserStats.overdue > 0 ? "text-red-400" : "text-gray-400"
+                                selectedUserStats.overdue > 0 ? "text-rose-600" : "text-slate-500"
                               }`}
                             >
                               {selectedUserStats.overdue}
                             </div>
                           </div>
 
-                          <div className="p-2 rounded-lg bg-[#141414] border border-[#2E2E2E]">
-                            <div className="text-[10px] text-emerald-400">Completed</div>
-                            <div className="font-bold text-emerald-400 mt-0.5">{selectedUserStats.completed}</div>
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
+                            <div className="text-[10px] text-emerald-600">Completed</div>
+                            <div className="font-bold text-emerald-600 mt-0.5">{selectedUserStats.completed}</div>
                           </div>
                         </div>
                       </div>
@@ -764,13 +764,13 @@ export function TeamView({
                     {/* Active Projects Association */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-[11px] font-bold text-[#888898] uppercase tracking-wider">
+                        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Assigned Projects ({selectedUserProjects.length})
                         </div>
                         {selectedUserProjects.length > 0 && (
                           <button
                             onClick={() => setModalTab("PROJECTS")}
-                            className="text-xs text-[#FF8C42] hover:underline font-bold cursor-pointer"
+                            className="text-xs text-[#FF6200] hover:underline font-bold cursor-pointer"
                           >
                             View all
                           </button>
@@ -778,7 +778,7 @@ export function TeamView({
                       </div>
 
                       {selectedUserProjects.length === 0 ? (
-                        <div className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-xs text-[#888898] text-center">
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">
                           No projects currently associated with this member.
                         </div>
                       ) : (
@@ -786,15 +786,15 @@ export function TeamView({
                           {selectedUserProjects.slice(0, 4).map((p: any) => (
                             <div
                               key={p.id}
-                              className="p-2.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] flex items-center justify-between"
+                              className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between"
                             >
                               <div className="flex items-center gap-2 min-w-0">
-                                <span className="font-mono text-xs font-bold text-[#FF8C42] bg-[#FF6200]/10 px-1.5 py-0.5 rounded border border-[#FF6200]/20 flex-shrink-0">
+                                <span className="font-mono text-xs font-bold text-[#FF6200] bg-[#FF6200]/10 px-1.5 py-0.5 rounded border border-[#FF6200]/20 flex-shrink-0">
                                   {p.key}
                                 </span>
-                                <span className="text-xs font-bold text-white truncate">{p.name}</span>
+                                <span className="text-xs font-bold text-slate-900 truncate">{p.name}</span>
                               </div>
-                              <span className="text-[10px] text-[#888898] font-mono whitespace-nowrap ml-2">
+                              <span className="text-[10px] text-slate-500 font-mono whitespace-nowrap ml-2">
                                 {p._count?.tasks ?? 0} tasks
                               </span>
                             </div>
@@ -822,10 +822,10 @@ export function TeamView({
                         <button
                           key={f.id}
                           onClick={() => setTaskStatusFilter(f.id)}
-                          className={`px-2.5 py-1 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
                             taskStatusFilter === f.id
                               ? "bg-[#FF6200] text-white shadow-sm"
-                              : "bg-[#1A1A1A] text-[#888898] hover:text-white border border-[#2E2E2E]"
+                              : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
                           }`}
                         >
                           {f.label}
@@ -835,10 +835,10 @@ export function TeamView({
 
                     {/* Task Items List */}
                     {filteredTasks.length === 0 ? (
-                      <div className="py-8 text-center rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-1.5">
-                        <CheckCircle2 className="w-6 h-6 text-[#666] mx-auto" />
-                        <div className="text-xs font-bold text-white">No tasks found</div>
-                        <p className="text-[11px] text-[#888898]">
+                      <div className="py-8 text-center rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <CheckCircle2 className="w-6 h-6 text-slate-400 mx-auto" />
+                        <div className="text-xs font-bold text-slate-800">No tasks found</div>
+                        <p className="text-[11px] text-slate-500">
                           This member has no tasks under the selected &apos;{taskStatusFilter.toLowerCase()}&apos; filter.
                         </p>
                       </div>
@@ -857,24 +857,24 @@ export function TeamView({
                                 onSelectTask(task.taskKey);
                                 setSelectedUser(null);
                               }}
-                              className="p-3 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] hover:border-[#FF6200]/50 hover:bg-[#202020] transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 group"
+                              className="p-3 rounded-2xl bg-slate-50/70 border border-slate-200 hover:border-[#FF6200]/50 hover:bg-white transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 group shadow-xs"
                             >
                               <div className="flex items-start sm:items-center gap-2.5 min-w-0">
-                                <span className="font-mono text-xs font-extrabold text-[#FF8C42] bg-[#FF6200]/10 border border-[#FF6200]/25 px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="font-mono text-xs font-extrabold text-[#FF6200] bg-[#FF6200]/10 border border-[#FF6200]/25 px-1.5 py-0.5 rounded flex-shrink-0">
                                   {task.taskKey}
                                 </span>
                                 <div className="min-w-0">
-                                  <h4 className="text-xs font-bold text-white group-hover:text-[#FF8C42] transition-colors truncate">
+                                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors truncate">
                                     {task.title}
                                   </h4>
-                                  <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] text-[#888898]">
+                                  <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] text-slate-500">
                                     {task.project?.name && (
-                                      <span className="text-[#ACACB8]">{task.project.name}</span>
+                                      <span className="text-slate-600">{task.project.name}</span>
                                     )}
                                     {task.dueDate && (
                                       <span
                                         className={`flex items-center gap-1 ${
-                                          isOverdue ? "text-red-400 font-bold" : "text-[#888898]"
+                                          isOverdue ? "text-rose-600 font-bold" : "text-slate-500"
                                         }`}
                                       >
                                         <Clock className="w-3 h-3" />
@@ -900,7 +900,7 @@ export function TeamView({
                                 >
                                   {statusStyle.label}
                                 </span>
-                                <ChevronRight className="w-3.5 h-3.5 text-[#666] group-hover:text-white transition-colors" />
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors" />
                               </div>
                             </div>
                           );
@@ -914,10 +914,10 @@ export function TeamView({
                 {modalTab === "PROJECTS" && (
                   <div className="space-y-2.5">
                     {selectedUserProjects.length === 0 ? (
-                      <div className="py-8 text-center rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-1.5">
-                        <FolderKanban className="w-6 h-6 text-[#666] mx-auto" />
-                        <div className="text-xs font-bold text-white">No projects assigned</div>
-                        <p className="text-[11px] text-[#888898]">
+                      <div className="py-8 text-center rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                        <FolderKanban className="w-6 h-6 text-slate-400 mx-auto" />
+                        <div className="text-xs font-bold text-slate-800">No projects assigned</div>
+                        <p className="text-[11px] text-slate-500">
                           This member is not currently assigned to any active workspace projects.
                         </p>
                       </div>
@@ -931,46 +931,46 @@ export function TeamView({
                           return (
                             <div
                               key={project.id}
-                              className="p-3.5 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-2"
+                              className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-mono text-xs font-bold text-[#FF8C42] bg-[#FF6200]/10 px-1.5 py-0.5 rounded border border-[#FF6200]/25">
+                                    <span className="font-mono text-xs font-bold text-[#FF6200] bg-[#FF6200]/10 px-1.5 py-0.5 rounded border border-[#FF6200]/25">
                                       {project.key}
                                     </span>
-                                    <h4 className="text-xs font-bold text-white truncate">{project.name}</h4>
+                                    <h4 className="text-xs font-bold text-slate-900 truncate">{project.name}</h4>
+                                  </div>
                                 </div>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-200 text-slate-700 flex-shrink-0">
+                                  {project.status || "ACTIVE"}
+                                </span>
                               </div>
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#252525] text-slate-300 flex-shrink-0">
-                                {project.status || "ACTIVE"}
-                              </span>
-                            </div>
 
-                            <div className="text-[11px] text-[#888898] flex items-center justify-between pt-1 border-t border-[#2E2E2E]/60">
-                              <span>Role:</span>
-                              <span className="font-bold text-white">
-                                {isLeadOfProject
-                                  ? "Project Lead"
-                                  : isManagerOfProject
-                                  ? "Project Manager"
-                                  : "Team Member"}
-                              </span>
-                            </div>
+                              <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200">
+                                <span>Role:</span>
+                                <span className="font-bold text-slate-800">
+                                  {isLeadOfProject
+                                    ? "Project Lead"
+                                    : isManagerOfProject
+                                    ? "Project Manager"
+                                    : "Team Member"}
+                                </span>
+                              </div>
 
-                            <div className="text-[11px] text-[#888898] flex items-center justify-between">
-                              <span>Total Tasks:</span>
-                              <span className="font-mono font-semibold text-[#ACACB8]">
-                                {project._count?.tasks ?? 0}
-                              </span>
+                              <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                                <span>Total Tasks:</span>
+                                <span className="font-mono font-semibold text-slate-700">
+                                  {project._count?.tasks ?? 0}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
         </div>,
@@ -982,20 +982,20 @@ export function TeamView({
         showInviteModal &&
         createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowInviteModal(false);
             }}
           >
-            <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden my-auto">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+            <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50">
                 <div className="flex items-center gap-2">
                   <UserPlus className="w-4 h-4 text-[#FF6200]" />
-                  <h2 className="text-sm font-bold text-white">Invite Team Member</h2>
+                  <h2 className="text-sm font-bold text-slate-900">Invite Team Member</h2>
                 </div>
                 <button
                   onClick={() => setShowInviteModal(false)}
-                  className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1004,10 +1004,10 @@ export function TeamView({
               <form onSubmit={handleSendInvite} className="p-5 space-y-4 text-xs">
                 {statusMsg && (
                   <div
-                    className={`p-3 rounded-lg border leading-relaxed ${
+                    className={`p-3 rounded-xl border leading-relaxed ${
                       statusMsg.type === "success"
-                        ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                        : "bg-red-500/15 border-red-500/30 text-red-400"
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                        : "bg-red-50 border-red-200 text-red-700"
                     }`}
                   >
                     {statusMsg.text}
@@ -1015,33 +1015,33 @@ export function TeamView({
                 )}
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Full Name *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Full Name *</label>
                   <input
                     type="text"
                     placeholder="e.g. Rahul Sharma"
                     value={inviteName}
                     onChange={(e) => setInviteName(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Email Address *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Email Address *</label>
                   <input
                     type="email"
                     placeholder="rahul@example.com"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Invite as Role *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Invite as Role *</label>
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#FF6200]/50 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-[#FF6200]"
                   >
                     <option value="MEMBER">💻 Normal Member (Task execution & attendance)</option>
                     {(isSuper || isHR || isPM) && (
@@ -1057,22 +1057,22 @@ export function TeamView({
                   </select>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#1A1A1A] border border-[#2E2E2E] text-[11px] text-[#888898]">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500">
                   An invitation email containing a secure account setup link will be dispatched immediately.
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3 border-t border-[#2E2E2E]">
+                <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setShowInviteModal(false)}
-                    className="px-4 py-2 rounded-lg text-[#888898] hover:text-white cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 cursor-pointer"
                   >
                     Close
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)] cursor-pointer"
+                    className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)] cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{loading ? "Sending..." : "Send Invitation"}</span>

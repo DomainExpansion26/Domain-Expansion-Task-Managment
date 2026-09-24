@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Shield, Key, UserCheck, AlertCircle, Building2, Briefcase, Trash2, Eye, EyeOff } from "lucide-react";
+import { X, Shield, Key, UserCheck, AlertCircle, Building2, Briefcase, Trash2, Eye, EyeOff, Calendar, FileCheck } from "lucide-react";
 
 interface MemberManageModalProps {
   isOpen: boolean;
@@ -27,8 +27,11 @@ export function MemberManageModal({
   const [department, setDepartment] = useState(member?.department || "");
   const [managerId, setManagerId] = useState(member?.manager?.id || member?.managerId || "");
   const [teamLeadId, setTeamLeadId] = useState(member?.teamLead?.id || member?.teamLeadId || "");
-  const [isActive, setIsActive] = useState(member?.isActive ?? true);
-  const [hrmsStatus, setHrmsStatus] = useState(member?.hrmsStatus || "ACTIVE");
+  const [accountStatus, setAccountStatus] = useState(member?.accountStatus || (member?.isActive ? "ACTIVE" : "SUSPENDED"));
+  const [joiningDate, setJoiningDate] = useState(
+    member?.joiningDate ? new Date(member.joiningDate).toISOString().split("T")[0] : ""
+  );
+  const [ndaAccepted, setNdaAccepted] = useState<boolean>(member?.ndaAccepted ?? false);
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,8 +65,10 @@ export function MemberManageModal({
           department: department.trim(),
           managerId: managerId || null,
           teamLeadId: teamLeadId || null,
-          isActive,
-          status: hrmsStatus,
+          accountStatus,
+          joiningDate: joiningDate || null,
+          ndaAccepted,
+          isActive: accountStatus === "ACTIVE",
         }),
       });
 
@@ -113,20 +118,25 @@ export function MemberManageModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800">
+      <div className="relative w-full max-w-2xl max-h-[92vh] bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30">
+            <div className="p-2 rounded-xl bg-orange-100 text-[#FF6200] border border-orange-200">
               <Shield className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Super Admin — Manage Member</h2>
-              <p className="text-[11px] text-[#888898]">Assign role, configure hierarchy, reset credentials & status</p>
+              <h2 className="text-sm font-bold text-slate-900">Super Admin — Manage Member Profile</h2>
+              <p className="text-[11px] text-slate-500">
+                Full administrative control: role, manager, lead, status, joining date & password reset
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -134,14 +144,14 @@ export function MemberManageModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-2">
               <UserCheck className="w-4 h-4 flex-shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -150,79 +160,80 @@ export function MemberManageModal({
           <form onSubmit={handleUpdateDetails} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Full Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Email Address</label>
+                <label className="block text-slate-700 font-semibold mb-1">Email Address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              {/* Role Assignment */}
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Assigned Role *</label>
+                <label className="block text-slate-700 font-semibold mb-1">Assigned Role *</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#FF6200]/50 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-bold focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 >
-                  <option value="MEMBER">💻 Normal Member (Task worker & attendance)</option>
-                  <option value="TEAM_LEAD">⚡ Team Lead (Team tasks & sprint assignments)</option>
-                  <option value="MANAGER">👔 Project Manager / Manager (Projects & teams)</option>
-                  <option value="QA">🧪 QA Engineer (Defects & verification)</option>
-                  <option value="HR_ADMIN">🏢 HR Admin (Leave approvals & attendance)</option>
-                  <option value="SUPER_ADMIN">👑 Super Admin (Full system control)</option>
+                  <option value="MEMBER">Member (Standard worker)</option>
+                  <option value="TEAM_LEAD">Team Lead</option>
+                  <option value="MANAGER">Manager / Project Lead</option>
+                  <option value="QA">QA Engineer</option>
+                  <option value="HR_ADMIN">HR Administrator</option>
+                  <option value="SUPER_ADMIN">Super Admin</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Job Title</label>
+                <label className="block text-slate-700 font-semibold mb-1">Designation</label>
                 <input
                   type="text"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  placeholder="e.g. Senior Frontend Dev"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Department</label>
+                <label className="block text-slate-700 font-semibold mb-1">Department</label>
                 <input
                   type="text"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  placeholder="e.g. Engineering"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
             </div>
 
-            {/* Hierarchy Assignment (Master Prompt Section 8 & 9) */}
-            <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] space-y-3">
-              <h3 className="text-[11px] font-bold text-[#FF8C42] uppercase tracking-wider">
-                Organizational Hierarchy Mapping
+            {/* Hierarchy Assignment */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">
+                Reporting Hierarchy Assignments
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Reports to Manager</label>
+                  <label className="block text-slate-600 font-semibold mb-1">Reporting Manager</label>
                   <select
                     value={managerId}
                     onChange={(e) => setManagerId(e.target.value)}
-                    className="w-full bg-[#141414] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   >
                     <option value="">None (Top-Level / No Manager)</option>
                     {potentialManagers.map((m) => (
@@ -234,11 +245,11 @@ export function MemberManageModal({
                 </div>
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Reports to Team Lead</label>
+                  <label className="block text-slate-600 font-semibold mb-1">Team Lead</label>
                   <select
                     value={teamLeadId}
                     onChange={(e) => setTeamLeadId(e.target.value)}
-                    className="w-full bg-[#141414] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   >
                     <option value="">None (No Team Lead)</option>
                     {potentialTeamLeads.map((tl) => (
@@ -251,67 +262,76 @@ export function MemberManageModal({
               </div>
             </div>
 
-            {/* Account Status */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Status, Joining Date & NDA */}
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Account Access Status</label>
+                <label className="block text-slate-700 font-semibold mb-1">Account Status</label>
                 <select
-                  value={isActive ? "ACTIVE" : "DISABLED"}
-                  onChange={(e) => setIsActive(e.target.value === "ACTIVE")}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  value={accountStatus}
+                  onChange={(e) => setAccountStatus(e.target.value)}
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 >
-                  <option value="ACTIVE">Active (Can Login)</option>
-                  <option value="DISABLED">Disabled / Suspended</option>
+                  <option value="ACTIVE">ACTIVE (Authorized)</option>
+                  <option value="PENDING_VERIFICATION">PENDING_VERIFICATION</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                  <option value="INACTIVE">INACTIVE</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">HRMS Profile Status</label>
+                <label className="block text-slate-700 font-semibold mb-1">Joining Date</label>
+                <input
+                  type="date"
+                  value={joiningDate}
+                  onChange={(e) => setJoiningDate(e.target.value)}
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF6200]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">NDA / Compliance</label>
                 <select
-                  value={hrmsStatus}
-                  onChange={(e) => setHrmsStatus(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#FF6200]"
+                  value={ndaAccepted ? "ACCEPTED" : "PENDING"}
+                  onChange={(e) => setNdaAccepted(e.target.value === "ACCEPTED")}
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg px-3 py-2 text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 >
-                  <option value="ACTIVE">Active</option>
-                  <option value="PROBATION">Probation</option>
-                  <option value="ON_LEAVE">On Leave</option>
-                  <option value="TERMINATED">Terminated</option>
+                  <option value="ACCEPTED">Accepted / Compliant</option>
+                  <option value="PENDING">Pending Acceptance</option>
                 </select>
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2 rounded-xl bg-[#FF6200] hover:bg-[#FF8C42] text-white font-bold transition-all shadow-[0_0_15px_rgba(255,98,0,0.3)]"
+                className="px-6 py-2 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white font-bold transition-all shadow-md shadow-[#FF6200]/20 cursor-pointer disabled:opacity-50"
               >
                 {loading ? "Saving..." : "Save Member Changes"}
               </button>
             </div>
           </form>
 
-          {/* Password Reset Section */}
-          <div className="pt-4 border-t border-[#2E2E2E] space-y-3">
-            <h3 className="text-[11px] font-bold text-[#888898] uppercase tracking-wider flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5 text-[#FF8C42]" />
+          {/* Administrative Password Reset */}
+          <div className="pt-4 border-t border-slate-200 space-y-2.5">
+            <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-[#FF6200]" />
               <span>Administrative Password Reset</span>
             </h3>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <input
                   type={showNewPassword ? "text" : "password"}
-                  placeholder="Enter new password (min 6 chars)"
+                  placeholder="Enter new password (min 6 characters)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-lg pl-3 pr-9 py-2 text-white placeholder-[#666] focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-slate-50/50 border border-slate-300 rounded-lg pl-3 pr-9 py-2 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#FF6200]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none cursor-pointer"
                   tabIndex={-1}
-                  aria-label={showNewPassword ? "Hide password" : "Show password"}
                 >
                   {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -320,7 +340,7 @@ export function MemberManageModal({
                 type="button"
                 onClick={handleResetPassword}
                 disabled={loading || !newPassword}
-                className="px-4 py-2 rounded-lg bg-[#252525] hover:bg-[#303030] text-[#FF8C42] font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold transition-colors disabled:opacity-50 cursor-pointer border border-slate-200"
               >
                 Reset Password
               </button>
@@ -329,25 +349,24 @@ export function MemberManageModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-[#2E2E2E] bg-[#1A1A1A] flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
           {onDeleteMember && member.role !== "SUPER_ADMIN" ? (
             <button
               onClick={() => {
                 onDeleteMember(member.id, member.name);
                 onClose();
               }}
-              className="text-xs text-red-400 hover:text-red-300 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors cursor-pointer"
-              title="Only Super Admin has access to remove members from the portal"
+              className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Remove Member from Portal</span>
+              <span>Deactivate / Remove Member</span>
             </button>
           ) : (
             <div />
           )}
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-[#252525] hover:bg-[#303030] text-white text-xs font-semibold"
+            className="px-4 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold cursor-pointer"
           >
             Close
           </button>

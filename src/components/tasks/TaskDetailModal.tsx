@@ -587,10 +587,10 @@ export function TaskDetailModal({
 
   if (!task) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-        <div className="p-8 rounded-3xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] text-xs text-gray-500 dark:text-[#888898] flex items-center gap-3 shadow-2xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+        <div className="p-8 rounded-3xl bg-white border border-slate-200 text-xs text-slate-500 flex items-center gap-3 shadow-2xl">
           <div className="w-5 h-5 border-2 border-[#FF6200] border-t-transparent rounded-full animate-spin" />
-          <span className="font-semibold">Loading #{taskKey}...</span>
+          <span className="font-semibold text-slate-800">Loading #{taskKey}...</span>
         </div>
       </div>
     );
@@ -613,25 +613,25 @@ export function TaskDetailModal({
     task.project?.teamLeadId === currentUser?.id;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
       <div
-        className={`relative w-full bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-900 dark:text-[#F3F4F6] transition-all ${
+        className={`relative w-full bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-800 transition-all ${
           isFullscreen ? "h-[98vh] max-w-[98vw]" : "h-[92vh] max-w-6xl"
         }`}
       >
         {/* TOP BAR: Reference to OpenProject Screenshot #1 */}
-        <div className="px-6 py-3 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/70 dark:bg-[#1A1A1A] flex items-center justify-between gap-4">
+        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               onClick={onClose}
               title="Back to Task List"
-              className="p-1.5 rounded-xl hover:bg-gray-200 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             {/* Task Type Badge */}
-            <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-[#0066CC]/15 text-[#0066CC] dark:text-[#3399FF] border border-[#0066CC]/30 flex-shrink-0">
+            <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-[#0066CC]/15 text-[#0066CC] border border-[#0066CC]/30 flex-shrink-0">
               {task.taskType || "TASK"}
             </span>
 
@@ -642,7 +642,7 @@ export function TaskDetailModal({
                   type="text"
                   value={titleInput}
                   onChange={(e) => setTitleInput(e.target.value)}
-                  className="flex-1 bg-white dark:bg-[#121212] border border-[#FF6200] rounded-xl px-3 py-1 text-sm font-bold text-gray-900 dark:text-white focus:outline-none"
+                  className="flex-1 bg-white border border-[#FF6200] rounded-xl px-3 py-1 text-sm font-bold text-gray-900 focus:outline-none"
                   autoFocus
                 />
                 <button
@@ -656,7 +656,7 @@ export function TaskDetailModal({
                 </button>
                 <button
                   onClick={() => setIsEditingTitle(false)}
-                  className="p-1.5 rounded-lg bg-gray-200 dark:bg-[#252525] text-gray-500"
+                  className="p-1.5 rounded-lg bg-gray-200 text-gray-500"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -664,7 +664,7 @@ export function TaskDetailModal({
             ) : (
               <h1
                 onClick={() => setIsEditingTitle(true)}
-                className="text-base font-bold text-gray-900 dark:text-white truncate cursor-pointer hover:text-[#FF6200] transition-colors flex items-center gap-2 group"
+                className="text-base font-bold text-gray-900 truncate cursor-pointer hover:text-[#FF6200] transition-colors flex items-center gap-2 group"
                 title="Click to inline edit title"
               >
                 <span className="truncate">{task.title}</span>
@@ -678,7 +678,7 @@ export function TaskDetailModal({
             {/* Raise Bug / Defect Button */}
             <button
               onClick={() => setIsRaiseBugOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-600 dark:text-red-400 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-600 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="Log defect or QA bug against this task"
             >
               <Bug className="w-3.5 h-3.5 text-red-500" />
@@ -691,7 +691,7 @@ export function TaskDetailModal({
                 setTagPurpose("TESTING");
                 setIsShareModalOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-xs font-bold text-purple-600 dark:text-purple-400 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-xs font-bold text-purple-600 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="Tag story to any team member for testing, review, or collaboration"
             >
               <Sparkles className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
@@ -705,8 +705,8 @@ export function TaskDetailModal({
               title={isWatching ? "You are watching this task" : "Click to watch task"}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                 isWatching
-                  ? "bg-[#00875A]/15 text-[#00875A] dark:text-[#36B37E] border-[#00875A]/30 font-bold"
-                  : "bg-white dark:bg-[#1A1A1A] border-gray-200 dark:border-[#2E2E2E] text-gray-700 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white"
+                  ? "bg-[#00875A]/15 text-[#00875A]  border-[#00875A]/30 font-bold"
+                  : "bg-white  border-gray-200  text-gray-700  hover:text-gray-900 "
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -730,7 +730,7 @@ export function TaskDetailModal({
             {/* Fullscreen Toggle */}
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 rounded-xl hover:bg-gray-200 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="p-1.5 rounded-xl hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
@@ -738,7 +738,7 @@ export function TaskDetailModal({
             {/* Close Modal */}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-gray-200 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="p-1.5 rounded-xl hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -746,19 +746,19 @@ export function TaskDetailModal({
         </div>
 
         {/* STATUS & META BAR: Reference to OpenProject Screenshot #1 */}
-        <div className="px-6 py-2.5 border-b border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#141414] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-6 py-2.5 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-3">
             {/* Status Selector / Closed Task Lock */}
             {task.status === "CLOSED" && !isUserSuperAdmin ? (
               <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-sm">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 shadow-sm">
                   <Lock className="w-3.5 h-3.5" />
                   <span>Closed & Locked</span>
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsReopenModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 border border-amber-500/30 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
                   title="Request Super Admin to reopen this closed task"
                 >
                   <Unlock className="w-3.5 h-3.5 text-amber-500" />
@@ -811,12 +811,12 @@ export function TaskDetailModal({
             )}
 
             {/* ID & Real Created by & Last Updated */}
-            <span className="text-gray-500 dark:text-[#888898] text-[11px]">
-              <span className="font-mono font-bold text-gray-900 dark:text-white">
+            <span className="text-gray-500 text-[11px]">
+              <span className="font-mono font-bold text-gray-900">
                 #{task.taskKey.replace(/^[A-Za-z]+-/, "") || task.taskKey}
               </span>
               : Created by{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">{task.reporter?.name || "System"}</span> on{" "}
+              <span className="font-semibold text-gray-900">{task.reporter?.name || "System"}</span> on{" "}
               {formatDate(task.createdAt)}. Last updated on {formatDateTime(task.updatedAt)}.
             </span>
           </div>
@@ -825,13 +825,13 @@ export function TaskDetailModal({
           <div className="flex items-center gap-2">
             <button
               onClick={handleSelfAssign}
-              className="px-3 py-1 rounded-lg border border-gray-200 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-700 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 text-[11px] font-semibold transition-colors cursor-pointer"
             >
               Self-Assign
             </button>
             <button
               onClick={() => setIsRelationsOpen(true)}
-              className="px-3 py-1 rounded-lg border border-gray-200 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-700 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 text-[11px] font-semibold transition-colors cursor-pointer"
             >
               Relations ({relationsCount})
             </button>
@@ -841,7 +841,7 @@ export function TaskDetailModal({
         {/* Super Admin Reopen Banner for Closed Tasks */}
         {isUserSuperAdmin && task.status === "CLOSED" && (
           <div className="mx-6 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs animate-fade-in shadow-sm">
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+            <div className="flex items-center gap-2 text-amber-700">
               <ShieldAlert className="w-4 h-4 text-amber-500 flex-shrink-0" />
               <span>
                 <strong>Closed Ticket Protection:</strong> This ticket is locked from team members. Click to reopen and move it back to In Progress.
@@ -861,11 +861,11 @@ export function TaskDetailModal({
         {/* 2-COLUMN MAIN CONTENT (Exact OpenProject Layout) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           {/* LEFT COLUMN: Description, People, Details */}
-          <div className="w-full md:w-1/2 overflow-y-auto p-6 space-y-6 border-b md:border-b-0 md:border-r border-gray-200 dark:border-[#2E2E2E]">
+          <div className="w-full md:w-1/2 overflow-y-auto p-6 space-y-6 border-b md:border-b-0 md:border-r border-gray-200">
             {/* Description Area */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Description
                 </h3>
                 {!isEditingDesc && (
@@ -884,7 +884,7 @@ export function TaskDetailModal({
                     rows={5}
                     value={descInput}
                     onChange={(e) => setDescInput(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-[#FF6200] rounded-xl p-3 text-xs text-gray-900 dark:text-white focus:outline-none"
+                    className="w-full bg-gray-50 border border-[#FF6200] rounded-xl p-3 text-xs text-gray-900 focus:outline-none"
                     placeholder="We need to create user guide to describe OpenProject features better..."
                   />
                   <div className="flex gap-2">
@@ -899,7 +899,7 @@ export function TaskDetailModal({
                     </button>
                     <button
                       onClick={() => setIsEditingDesc(false)}
-                      className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-[#252525] text-xs text-gray-600 dark:text-[#888898]"
+                      className="px-3 py-1.5 rounded-xl bg-gray-200 text-xs text-gray-600"
                     >
                       Cancel
                     </button>
@@ -908,10 +908,10 @@ export function TaskDetailModal({
               ) : (
                 <div
                   onClick={() => setIsEditingDesc(true)}
-                  className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] text-xs text-gray-800 dark:text-[#E5E7EB] leading-relaxed cursor-pointer hover:border-[#FF6200]/40 transition-colors whitespace-pre-wrap"
+                  className="p-4 rounded-2xl bg-gray-50 border border-gray-200 text-xs text-gray-800 leading-relaxed cursor-pointer hover:border-[#FF6200]/40 transition-colors whitespace-pre-wrap"
                 >
                   {task.description || (
-                    <span className="text-gray-400 dark:text-[#666] italic">
+                    <span className="text-gray-400 italic">
                       Click to add detailed task description and context...
                     </span>
                   )}
@@ -920,15 +920,15 @@ export function TaskDetailModal({
             </div>
 
             {/* PEOPLE SECTION: Reference to OpenProject Layout */}
-            <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[#2E2E2E]">
+            <div className="space-y-4 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
                   PEOPLE & COLLABORATION
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsShareModalOpen(true)}
-                  className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-purple-600 hover:underline font-bold flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>Tag for Testing</span>
@@ -938,12 +938,12 @@ export function TaskDetailModal({
               <div className="space-y-3 text-xs">
                 {/* Assignee */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Assignee</span>
+                  <span className="w-32 text-gray-500 font-medium">Assignee</span>
                   <div className="flex-1 max-w-xs">
                     <select
                       value={firstAssignee?.id || ""}
                       onChange={(e) => handleUpdateField({ assigneeIds: e.target.value ? [e.target.value] : [] })}
-                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-xs text-gray-900 dark:text-white font-semibold focus:outline-none focus:border-[#FF6200]"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-900 font-semibold focus:outline-none focus:border-[#FF6200]"
                     >
                       <option value="">Unassigned</option>
                       {allAvailableUsers.map((m) => (
@@ -957,12 +957,12 @@ export function TaskDetailModal({
 
                 {/* Accountable */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Accountable</span>
+                  <span className="w-32 text-gray-500 font-medium">Accountable</span>
                   <div className="flex-1 max-w-xs">
                     <select
                       value={task.accountableId || ""}
                       onChange={(e) => handleUpdateField({ accountableId: e.target.value || null })}
-                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-xs text-gray-900 dark:text-white font-semibold focus:outline-none focus:border-[#FF6200]"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-900 font-semibold focus:outline-none focus:border-[#FF6200]"
                     >
                       <option value="">None</option>
                       {allAvailableUsers.map((m) => (
@@ -976,7 +976,7 @@ export function TaskDetailModal({
 
                 {/* Team Lead */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Team Lead</span>
+                  <span className="w-32 text-gray-500 font-medium">Team Lead</span>
                   <div className="flex-1 flex items-center gap-2">
                     {task.project?.teamLead || task.project?.lead ? (
                       <div className="flex items-center gap-2">
@@ -987,12 +987,12 @@ export function TaskDetailModal({
                         >
                           {getInitials((task.project.teamLead || task.project.lead).name)}
                         </div>
-                        <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-semibold text-gray-900">
                           {(task.project.teamLead || task.project.lead).name}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-gray-400 dark:text-[#666] italic">Not configured</span>
+                      <span className="text-gray-400 italic">Not configured</span>
                     )}
                   </div>
                 </div>
@@ -1000,20 +1000,20 @@ export function TaskDetailModal({
             </div>
 
             {/* DETAILS SECTION: Reference to OpenProject Screenshot #1 */}
-            <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-[#2E2E2E]">
-              <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
                 DETAILS
               </h3>
 
               <div className="space-y-3.5 text-xs">
                 {/* Priority */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Priority</span>
+                  <span className="w-32 text-gray-500 font-medium">Priority</span>
                   <div className="flex-1 max-w-xs">
                     <select
                       value={task.priority}
                       onChange={(e) => handleUpdateField({ priority: e.target.value })}
-                      className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-xs text-gray-900 dark:text-white font-semibold focus:outline-none"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-900 font-semibold focus:outline-none"
                     >
                       <option value="CRITICAL">🔴 Critical</option>
                       <option value="HIGH">🟠 High</option>
@@ -1025,7 +1025,7 @@ export function TaskDetailModal({
 
                 {/* Dates: Start Date & End Date */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Date Range</span>
+                  <span className="w-32 text-gray-500 font-medium">Date Range</span>
                   <div className="flex-1 flex items-center gap-2 max-w-xs">
                     <input
                       type="date"
@@ -1034,7 +1034,7 @@ export function TaskDetailModal({
                         setStartDateInput(e.target.value);
                         handleUpdateField({ startDate: e.target.value || null });
                       }}
-                      className="w-1/2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-2 py-1 text-xs text-gray-900 dark:text-white font-mono focus:outline-none"
+                      className="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 text-xs text-gray-900 font-mono focus:outline-none"
                       title="Start Date"
                     />
                     <span className="text-gray-400">-</span>
@@ -1045,7 +1045,7 @@ export function TaskDetailModal({
                         setEndDateInput(e.target.value);
                         handleUpdateField({ endDate: e.target.value || null, dueDate: e.target.value || null });
                       }}
-                      className="w-1/2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-2 py-1 text-xs text-gray-900 dark:text-white font-mono focus:outline-none"
+                      className="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 text-xs text-gray-900 font-mono focus:outline-none"
                       title="End Date / Finish Date"
                     />
                   </div>
@@ -1053,7 +1053,7 @@ export function TaskDetailModal({
 
                 {/* % Complete (Progress) */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium flex items-center gap-1">
+                  <span className="w-32 text-gray-500 font-medium flex items-center gap-1">
                     <span>% Complete</span>
                     <HelpCircle className="w-3 h-3 text-gray-400" />
                   </span>
@@ -1072,7 +1072,7 @@ export function TaskDetailModal({
                       onTouchEnd={() => handleUpdateField({ progress: progressInput })}
                       className="flex-1 accent-[#00875A]"
                     />
-                    <span className="w-10 font-mono font-bold text-right text-gray-900 dark:text-white">
+                    <span className="w-10 font-mono font-bold text-right text-gray-900">
                       {progressInput}%
                     </span>
                   </div>
@@ -1080,7 +1080,7 @@ export function TaskDetailModal({
 
                 {/* Category */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Category</span>
+                  <span className="w-32 text-gray-500 font-medium">Category</span>
                   <div className="flex-1 max-w-xs">
                     {isEditingCategory ? (
                       <input
@@ -1097,13 +1097,13 @@ export function TaskDetailModal({
                             setIsEditingCategory(false);
                           }
                         }}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-[#FF6200] rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white focus:outline-none"
+                        className="w-full bg-gray-50 border border-[#FF6200] rounded-xl px-3 py-1 text-xs text-gray-900 focus:outline-none"
                         autoFocus
                       />
                     ) : (
                       <span
                         onClick={() => setIsEditingCategory(true)}
-                        className="text-gray-800 dark:text-[#D1D5DB] cursor-pointer hover:underline"
+                        className="text-gray-800 cursor-pointer hover:underline"
                       >
                         {task.category || "-"}
                       </span>
@@ -1113,7 +1113,7 @@ export function TaskDetailModal({
 
                 {/* Version */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium flex items-center gap-1">
+                  <span className="w-32 text-gray-500 font-medium flex items-center gap-1">
                     <span>Version</span>
                     <HelpCircle className="w-3 h-3 text-gray-400" />
                   </span>
@@ -1133,13 +1133,13 @@ export function TaskDetailModal({
                             setIsEditingVersion(false);
                           }
                         }}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-[#FF6200] rounded-xl px-3 py-1 text-xs text-gray-900 dark:text-white focus:outline-none"
+                        className="w-full bg-gray-50 border border-[#FF6200] rounded-xl px-3 py-1 text-xs text-gray-900 focus:outline-none"
                         autoFocus
                       />
                     ) : (
                       <span
                         onClick={() => setIsEditingVersion(true)}
-                        className="text-gray-800 dark:text-[#D1D5DB] cursor-pointer hover:underline"
+                        className="text-gray-800 cursor-pointer hover:underline"
                       >
                         {task.version || task.sprint?.name || "-"}
                       </span>
@@ -1149,8 +1149,8 @@ export function TaskDetailModal({
 
                 {/* Project */}
                 <div className="flex items-center justify-between">
-                  <span className="w-32 text-gray-500 dark:text-[#888898] font-medium">Project</span>
-                  <div className="flex-1 max-w-xs font-semibold text-gray-900 dark:text-white">
+                  <span className="w-32 text-gray-500 font-medium">Project</span>
+                  <div className="flex-1 max-w-xs font-semibold text-gray-900">
                     {task.project?.name} ({task.project?.key})
                   </div>
                 </div>
@@ -1158,9 +1158,9 @@ export function TaskDetailModal({
             </div>
 
             {/* Subtasks Section */}
-            <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-[#2E2E2E]">
+            <div className="space-y-3 pt-4 border-t border-gray-100">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Subtasks / Checklist ({task.subtasks?.filter((s: any) => s.completed).length || 0}/{task.subtasks?.length || 0})
                 </h3>
               </div>
@@ -1169,16 +1169,16 @@ export function TaskDetailModal({
                 {task.subtasks?.map((st: any) => (
                   <div
                     key={st.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-200"
                   >
                     <label className="flex items-center gap-2.5 text-xs cursor-pointer flex-1">
                       <input
                         type="checkbox"
                         checked={st.completed}
                         onChange={(e) => handleToggleSubtask(st.id, e.target.checked)}
-                        className="rounded border-gray-300 dark:border-[#444] text-[#FF6200] focus:ring-[#FF6200]"
+                        className="rounded border-gray-300 text-[#FF6200] focus:ring-[#FF6200]"
                       />
-                      <span className={st.completed ? "line-through text-gray-400 dark:text-[#666]" : "text-gray-900 dark:text-white"}>
+                      <span className={st.completed ? "line-through text-gray-400 " : "text-gray-900 "}>
                         {st.title}
                       </span>
                     </label>
@@ -1191,7 +1191,7 @@ export function TaskDetailModal({
                     placeholder="+ Add subtask..."
                     value={newSubtaskTitle}
                     onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                    className="flex-1 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF6200]"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF6200]"
                   />
                   <button
                     type="submit"
@@ -1205,15 +1205,15 @@ export function TaskDetailModal({
           </div>
 
           {/* RIGHT COLUMN: Tabs (ACTIVITY, FILES, RELATIONS, WATCHERS) - Exact OpenProject Screenshot #1 */}
-          <div className="w-full md:w-1/2 flex flex-col min-w-0 bg-gray-50/30 dark:bg-[#111111]">
+          <div className="w-full md:w-1/2 flex flex-col min-w-0 bg-gray-50/30">
             {/* Tabs Header */}
-            <div className="flex border-b border-gray-200 dark:border-[#2E2E2E] px-6 bg-white dark:bg-[#141414] overflow-x-auto">
+            <div className="flex border-b border-gray-200 px-6 bg-white overflow-x-auto">
               <button
                 onClick={() => setActiveTab("ACTIVITY")}
                 className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer ${
                   activeTab === "ACTIVITY"
-                    ? "border-[#0066CC] text-[#0066CC] dark:text-[#3399FF]"
-                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                    ? "border-[#0066CC] text-[#0066CC] "
+                    : "border-transparent text-gray-500  hover:text-gray-900 "
                 }`}
               >
                 ACTIVITY ({activitiesCount})
@@ -1223,8 +1223,8 @@ export function TaskDetailModal({
                 onClick={() => setActiveTab("FILES")}
                 className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer ${
                   activeTab === "FILES"
-                    ? "border-[#0066CC] text-[#0066CC] dark:text-[#3399FF]"
-                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                    ? "border-[#0066CC] text-[#0066CC] "
+                    : "border-transparent text-gray-500  hover:text-gray-900 "
                 }`}
               >
                 FILES ({filesCount})
@@ -1234,8 +1234,8 @@ export function TaskDetailModal({
                 onClick={() => setActiveTab("RELATIONS")}
                 className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer ${
                   activeTab === "RELATIONS"
-                    ? "border-[#0066CC] text-[#0066CC] dark:text-[#3399FF]"
-                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                    ? "border-[#0066CC] text-[#0066CC] "
+                    : "border-transparent text-gray-500  hover:text-gray-900 "
                 }`}
               >
                 RELATIONS ({relationsCount})
@@ -1245,8 +1245,8 @@ export function TaskDetailModal({
                 onClick={() => setActiveTab("WATCHERS")}
                 className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer ${
                   activeTab === "WATCHERS"
-                    ? "border-[#0066CC] text-[#0066CC] dark:text-[#3399FF]"
-                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                    ? "border-[#0066CC] text-[#0066CC] "
+                    : "border-transparent text-gray-500  hover:text-gray-900 "
                 }`}
               >
                 WATCHERS ({watchersCount})
@@ -1257,7 +1257,7 @@ export function TaskDetailModal({
                 className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                   activeTab === "BUGS"
                     ? "border-red-500 text-red-500"
-                    : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                    : "border-transparent text-gray-500  hover:text-gray-900 "
                 }`}
               >
                 <Bug className="w-3.5 h-3.5" />
@@ -1278,7 +1278,7 @@ export function TaskDetailModal({
                   {/* Timeline Items */}
                   <div className="space-y-4">
                     {activitiesCount === 0 ? (
-                      <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                      <div className="text-center py-12 text-gray-400 text-xs italic">
                         No activity records or comments yet.
                       </div>
                     ) : (
@@ -1292,7 +1292,7 @@ export function TaskDetailModal({
                           return (
                             <div
                               key={comment.id}
-                              className="p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] space-y-2 shadow-sm group"
+                              className="p-4 rounded-2xl bg-white border border-gray-200 space-y-2 shadow-sm group"
                             >
                               <div className="flex items-center justify-between text-xs">
                                 <div className="flex items-center gap-2">
@@ -1303,14 +1303,14 @@ export function TaskDetailModal({
                                   >
                                     {getInitials(comment.author?.name)}
                                   </div>
-                                  <span className="font-bold text-gray-900 dark:text-white">
+                                  <span className="font-bold text-gray-900">
                                     {comment.author?.name || "Member"}
                                   </span>
-                                  <span className="text-[11px] text-gray-400 dark:text-[#888898]">
+                                  <span className="text-[11px] text-gray-400">
                                     {formatDateTime(comment.createdAt)}
                                   </span>
                                   {isEdited && (
-                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-[#252525] text-[#FF8C42] font-mono font-medium">
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 text-[#FF8C42] font-mono font-medium">
                                       (edited)
                                     </span>
                                   )}
@@ -1322,7 +1322,7 @@ export function TaskDetailModal({
                                       <button
                                         type="button"
                                         onClick={() => handleStartEditComment(comment)}
-                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500 hover:text-[#0066CC] dark:hover:text-[#3399FF] cursor-pointer"
+                                        className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-[#0066CC] cursor-pointer"
                                         title="Edit your comment"
                                       >
                                         <Edit2 className="w-3 h-3" />
@@ -1356,12 +1356,12 @@ export function TaskDetailModal({
                                         setEditingMentionQuery(null);
                                       }
                                     }}
-                                    className="w-full p-2.5 text-xs text-gray-900 dark:text-white bg-gray-50 dark:bg-[#141414] border border-[#FF6200] rounded-xl focus:outline-none resize-y"
+                                    className="w-full p-2.5 text-xs text-gray-900 bg-gray-50 border border-[#FF6200] rounded-xl focus:outline-none resize-y"
                                   />
 
                                   {/* Inline @mention dropdown while editing */}
                                   {editingMentionQuery !== null && (
-                                    <div className="p-2 border border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#161616] max-h-32 overflow-y-auto space-y-1 rounded-xl shadow-lg">
+                                    <div className="p-2 border border-gray-200 bg-white max-h-32 overflow-y-auto space-y-1 rounded-xl shadow-lg">
                                       {allAvailableUsers
                                         .filter((m) => m.name.toLowerCase().includes(editingMentionQuery.toLowerCase()))
                                         .slice(0, 5)
@@ -1398,14 +1398,14 @@ export function TaskDetailModal({
                                         setEditingCommentId(null);
                                         setEditingCommentText("");
                                       }}
-                                      className="px-3 py-1.5 rounded-xl bg-gray-200 dark:bg-[#252525] text-gray-600 dark:text-[#888898] text-xs font-semibold hover:text-gray-900 dark:hover:text-white cursor-pointer"
+                                      className="px-3 py-1.5 rounded-xl bg-gray-200 text-gray-600 text-xs font-semibold hover:text-gray-900 cursor-pointer"
                                     >
                                       Cancel
                                     </button>
                                   </div>
                                 </div>
                               ) : (
-                                <div className="text-xs text-gray-800 dark:text-[#E5E7EB] leading-relaxed pl-8 whitespace-pre-wrap">
+                                <div className="text-xs text-gray-800 leading-relaxed pl-8 whitespace-pre-wrap">
                                   {comment.content}
                                 </div>
                               )}
@@ -1415,12 +1415,12 @@ export function TaskDetailModal({
 
                         {/* Render Field Changes / Activity Audit */}
                         {task.activities?.map((act: any) => (
-                          <div key={act.id} className="flex items-start gap-3 text-xs pl-2 text-gray-600 dark:text-[#ACACB8]">
+                          <div key={act.id} className="flex items-start gap-3 text-xs pl-2 text-gray-600">
                             <div className="w-2 h-2 rounded-full bg-[#0066CC] mt-1.5 flex-shrink-0" />
                             <div className="flex-1">
-                              <span className="font-semibold text-gray-900 dark:text-white">{act.user?.name || "System"}</span>{" "}
+                              <span className="font-semibold text-gray-900">{act.user?.name || "System"}</span>{" "}
                               <span>{act.description}</span>
-                              <div className="text-[10px] text-gray-400 dark:text-[#888898] font-mono mt-0.5">
+                              <div className="text-[10px] text-gray-400 font-mono mt-0.5">
                                 {formatDateTime(act.createdAt)}
                               </div>
                             </div>
@@ -1431,14 +1431,14 @@ export function TaskDetailModal({
                   </div>
 
                   {/* OpenProject-style Comment Editor Box (Matching Screenshot #1) */}
-                  <form onSubmit={handleAddComment} className="pt-3 border-t border-gray-200 dark:border-[#2E2E2E]">
-                    <div className="rounded-2xl border border-gray-300 dark:border-[#333] bg-white dark:bg-[#1A1A1A] overflow-hidden focus-within:border-[#0066CC] transition-colors shadow-sm">
+                  <form onSubmit={handleAddComment} className="pt-3 border-t border-gray-200">
+                    <div className="rounded-2xl border border-gray-300 bg-white overflow-hidden focus-within:border-[#0066CC] transition-colors shadow-sm">
                       {/* Editor Toolbar Icons */}
-                      <div className="flex items-center gap-1 px-3 py-1.5 border-b border-gray-100 dark:border-[#2E2E2E] bg-gray-50/80 dark:bg-[#161616] text-gray-500 dark:text-[#888898]">
+                      <div className="flex items-center gap-1 px-3 py-1.5 border-b border-gray-100 bg-gray-50/80 text-gray-500">
                         <button
                           type="button"
                           onClick={() => setNewComment((prev) => prev + "**text**")}
-                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#252525]"
+                          className="p-1 rounded hover:bg-gray-200"
                           title="Bold"
                         >
                           <Bold className="w-3.5 h-3.5" />
@@ -1446,7 +1446,7 @@ export function TaskDetailModal({
                         <button
                           type="button"
                           onClick={() => setNewComment((prev) => prev + "_text_")}
-                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#252525]"
+                          className="p-1 rounded hover:bg-gray-200"
                           title="Italic"
                         >
                           <Italic className="w-3.5 h-3.5" />
@@ -1454,7 +1454,7 @@ export function TaskDetailModal({
                         <button
                           type="button"
                           onClick={() => setNewComment((prev) => prev + "~~text~~")}
-                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#252525]"
+                          className="p-1 rounded hover:bg-gray-200"
                           title="Strikethrough"
                         >
                           <Strikethrough className="w-3.5 h-3.5" />
@@ -1462,7 +1462,7 @@ export function TaskDetailModal({
                         <button
                           type="button"
                           onClick={() => setNewComment((prev) => prev + "`code`")}
-                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#252525]"
+                          className="p-1 rounded hover:bg-gray-200"
                           title="Code"
                         >
                           <Code className="w-3.5 h-3.5" />
@@ -1470,7 +1470,7 @@ export function TaskDetailModal({
                         <button
                           type="button"
                           onClick={() => setNewComment((prev) => prev + "@")}
-                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-[#252525] text-[#0066CC] font-bold"
+                          className="p-1 rounded hover:bg-gray-200 text-[#0066CC] font-bold"
                           title="Mention user"
                         >
                           <AtSign className="w-3.5 h-3.5" />
@@ -1492,12 +1492,12 @@ export function TaskDetailModal({
                             setMentionQuery(null);
                           }
                         }}
-                        className="w-full p-3 text-xs text-gray-900 dark:text-white bg-transparent focus:outline-none resize-y"
+                        className="w-full p-3 text-xs text-gray-900 bg-transparent focus:outline-none resize-y"
                       />
 
                       {/* @Mention Autocomplete Dropdown */}
                       {mentionQuery !== null && (
-                        <div className="p-2 border-t border-gray-100 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#141414] max-h-48 overflow-y-auto space-y-1 rounded-b-xl shadow-inner">
+                        <div className="p-2 border-t border-gray-100 bg-gray-50 max-h-48 overflow-y-auto space-y-1 rounded-b-xl shadow-inner">
                           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 flex items-center justify-between">
                             <span>Tag any team member (@{mentionQuery || "..."}):</span>
                             <span className="text-[#FF6200] font-mono text-[9px]">All Departments</span>
@@ -1519,7 +1519,7 @@ export function TaskDetailModal({
                                   setNewComment(newComment.substring(0, lastAt) + `@${m.name} `);
                                   setMentionQuery(null);
                                 }}
-                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#FF6200]/15 hover:text-[#FF6200] dark:hover:text-[#FF8C42] text-left cursor-pointer transition-colors group"
+                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-[#FF6200]/15 hover:text-[#FF6200] text-left cursor-pointer transition-colors group"
                               >
                                 <div className="flex items-center gap-2 min-w-0">
                                   <div
@@ -1529,7 +1529,7 @@ export function TaskDetailModal({
                                   >
                                     {getInitials(m.name)}
                                   </div>
-                                  <span className="font-bold text-gray-900 dark:text-white truncate">
+                                  <span className="font-bold text-gray-900 truncate">
                                     @{m.name}
                                   </span>
                                   <span className="text-[10px] text-gray-400 font-mono truncate">
@@ -1537,7 +1537,7 @@ export function TaskDetailModal({
                                   </span>
                                 </div>
                                 {m.department && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-[#252525] text-gray-600 dark:text-gray-300 font-semibold flex-shrink-0 ml-2">
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 font-semibold flex-shrink-0 ml-2">
                                     {m.department}
                                   </span>
                                 )}
@@ -1547,7 +1547,7 @@ export function TaskDetailModal({
                       )}
 
                       {/* Bottom Footer with Send Button */}
-                      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 dark:border-[#2E2E2E] bg-gray-50/50 dark:bg-[#161616]">
+                      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100 bg-gray-50/50">
                         <span className="text-[10px] text-gray-400 font-mono">
                           Powered by Enterprise Work Packages
                         </span>
@@ -1569,7 +1569,7 @@ export function TaskDetailModal({
               {activeTab === "FILES" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Attached Files ({filesCount})
                     </span>
                     <div>
@@ -1606,15 +1606,15 @@ export function TaskDetailModal({
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-6 border-2 border-dashed border-gray-300 dark:border-[#2E2E2E] hover:border-[#FF6200] dark:hover:border-[#FF6200] bg-gray-50/50 dark:bg-[#141414]/50 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
+                    className="p-6 border-2 border-dashed border-gray-300 hover:border-[#FF6200] bg-gray-50/50 rounded-2xl text-center cursor-pointer transition-all space-y-2 group"
                   >
                     <div className="w-10 h-10 rounded-full bg-[#FF6200]/10 text-[#FF6200] mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Upload className="w-5 h-5" />
                     </div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-white">
+                    <div className="text-xs font-bold text-gray-900">
                       Drag &amp; Drop multiple files here, or <span className="text-[#FF6200] underline">browse</span>
                     </div>
-                    <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                    <p className="text-[11px] text-gray-500">
                       Supports batch upload of images, documents, PDFs, zip archives, spreadsheets, and test artifacts
                     </p>
                   </div>
@@ -1627,20 +1627,20 @@ export function TaskDetailModal({
 
                   <div className="space-y-2">
                     {filesCount === 0 ? (
-                      <div className="text-center py-8 text-gray-400 dark:text-[#666] text-xs italic">
+                      <div className="text-center py-8 text-gray-400 text-xs italic">
                         No files attached to this task.
                       </div>
                     ) : (
                       task.attachments.map((att: any) => (
                         <div
                           key={att.id}
-                          className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] shadow-sm text-xs"
+                          className="flex items-center justify-between p-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-xs"
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <File className="w-5 h-5 text-[#FF6200] flex-shrink-0" />
                             <div className="min-w-0">
-                              <div className="font-bold text-gray-900 dark:text-white truncate">{att.fileName}</div>
-                              <div className="text-[10px] text-gray-400 dark:text-[#888898]">
+                              <div className="font-bold text-gray-900 truncate">{att.fileName}</div>
+                              <div className="text-[10px] text-gray-400">
                                 {(att.fileSize / 1024).toFixed(1)} KB &bull; Uploaded by {att.uploadedBy?.name || "Member"} on {formatDate(att.createdAt)}
                               </div>
                             </div>
@@ -1650,7 +1650,7 @@ export function TaskDetailModal({
                               href={att.fileUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8]"
+                              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-600"
                               title="Download attachment"
                             >
                               <Download className="w-4 h-4" />
@@ -1677,7 +1677,7 @@ export function TaskDetailModal({
               {activeTab === "RELATIONS" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Work Package Lineage & Relations
                     </span>
                     <button
@@ -1689,16 +1689,16 @@ export function TaskDetailModal({
                     </button>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] text-xs space-y-3">
-                    <div className="font-bold text-gray-900 dark:text-white">Subtasks ({task.subtasks?.length || 0})</div>
+                  <div className="p-4 rounded-2xl bg-white border border-gray-200 text-xs space-y-3">
+                    <div className="font-bold text-gray-900">Subtasks ({task.subtasks?.length || 0})</div>
                     {task.subtasks?.length === 0 ? (
-                      <div className="text-gray-400 dark:text-[#666] italic">No child subtasks.</div>
+                      <div className="text-gray-400 italic">No child subtasks.</div>
                     ) : (
                       <div className="space-y-1.5">
                         {task.subtasks.map((st: any) => (
-                          <div key={st.id} className="flex items-center justify-between text-xs py-1 border-b border-gray-100 dark:border-[#2E2E2E] last:border-0">
-                            <span className={st.completed ? "line-through text-gray-400" : "text-gray-800 dark:text-white"}>{st.title}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${st.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-gray-200 dark:bg-[#252525]"}`}>
+                          <div key={st.id} className="flex items-center justify-between text-xs py-1 border-b border-gray-100 last:border-0">
+                            <span className={st.completed ? "line-through text-gray-400" : "text-gray-800 "}>{st.title}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${st.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-gray-200 "}`}>
                               {st.completed ? "Done" : "Incomplete"}
                             </span>
                           </div>
@@ -1713,7 +1713,7 @@ export function TaskDetailModal({
               {activeTab === "WATCHERS" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Active Watchers ({watchersCount})
                     </span>
                     <button
@@ -1728,14 +1728,14 @@ export function TaskDetailModal({
 
                   <div className="space-y-2">
                     {watchersCount === 0 ? (
-                      <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                      <div className="text-center py-12 text-gray-400 text-xs italic">
                         No members are watching this work package yet.
                       </div>
                     ) : (
                       task.watchers.map((w: any) => (
                         <div
                           key={w.id}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] shadow-sm text-xs"
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-xs"
                         >
                           <div
                             className={`w-7 h-7 rounded-full bg-gradient-to-tr ${getAvatarGradient(
@@ -1745,7 +1745,7 @@ export function TaskDetailModal({
                             {getInitials(w.name)}
                           </div>
                           <div>
-                            <div className="font-bold text-gray-900 dark:text-white">{w.name}</div>
+                            <div className="font-bold text-gray-900">{w.name}</div>
                             <div className="text-[10px] text-gray-400 font-mono">{w.email}</div>
                           </div>
                         </div>
@@ -1760,10 +1760,10 @@ export function TaskDetailModal({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Linked QA Defects &amp; Bugs ({bugsCount})
                       </span>
-                      <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                      <p className="text-[11px] text-gray-500">
                         Log unlimited bugs against this task for testing and resolution.
                       </p>
                     </div>
@@ -1779,14 +1779,14 @@ export function TaskDetailModal({
 
                   <div className="space-y-2.5">
                     {bugsCount === 0 ? (
-                      <div className="text-center py-12 border border-dashed border-gray-300 dark:border-[#2E2E2E] rounded-2xl space-y-3 p-6">
+                      <div className="text-center py-12 border border-dashed border-gray-300 rounded-2xl space-y-3 p-6">
                         <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 mx-auto flex items-center justify-center">
                           <Bug className="w-5 h-5" />
                         </div>
-                        <div className="text-xs font-bold text-gray-900 dark:text-white">
+                        <div className="text-xs font-bold text-gray-900">
                           No defects reported on this task yet
                         </div>
-                        <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                        <p className="text-[11px] text-gray-500">
                           If issues are found during development or QA verification, log them here.
                         </p>
                         <button
@@ -1803,7 +1803,7 @@ export function TaskDetailModal({
                         <div
                           key={bug.id}
                           onClick={() => setSelectedBugKey(bug.bugKey)}
-                          className="p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] hover:border-red-500/40 transition-all cursor-pointer space-y-2 group shadow-sm"
+                          className="p-4 rounded-2xl bg-white border border-gray-200 hover:border-red-500/40 transition-all cursor-pointer space-y-2 group shadow-sm"
                         >
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
@@ -1820,7 +1820,7 @@ export function TaskDetailModal({
                             </span>
                           </div>
 
-                          <div className="font-bold text-gray-900 dark:text-white group-hover:text-red-400 transition-colors text-xs">
+                          <div className="font-bold text-gray-900 group-hover:text-red-400 transition-colors text-xs">
                             {bug.title}
                           </div>
 
@@ -1830,16 +1830,16 @@ export function TaskDetailModal({
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-[#262626] text-[10px] text-gray-500 dark:text-[#888898]">
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-[10px] text-gray-500">
                             <div className="flex items-center gap-1.5">
                               <span>Assigned to:</span>
-                              <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              <span className="font-semibold text-gray-700">
                                 {bug.assignedTo?.name || "Unassigned"}
                               </span>
                             </div>
                             <div>
                               <span>Severity: </span>
-                              <span className="font-mono font-bold text-gray-700 dark:text-gray-300">{bug.severity || "MEDIUM"}</span>
+                              <span className="font-mono font-bold text-gray-700">{bug.severity || "MEDIUM"}</span>
                             </div>
                           </div>
                         </div>
@@ -1854,22 +1854,22 @@ export function TaskDetailModal({
 
         {/* TAG FOR TESTING & STORY SHARE MODAL */}
         {isShareModalOpen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
             <form
               onSubmit={handleShareTask}
-              className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#161616] border border-gray-200 dark:border-[#2E2E2E] p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col"
+              className="w-full max-w-xl rounded-3xl bg-white border border-slate-200 p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col text-slate-800"
             >
               {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#252525]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-500">
+                  <div className="p-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-600">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-sm font-bold text-slate-900">
                       Tag Members on Story #{task.taskKey}
                     </h3>
-                    <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                    <p className="text-[11px] text-slate-500">
                       Tag anyone across all departments for testing or cross-team collaboration.
                     </p>
                   </div>
@@ -1877,14 +1877,14 @@ export function TaskDetailModal({
                 <button
                   type="button"
                   onClick={() => setIsShareModalOpen(false)}
-                  className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898]"
+                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-700"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {shareSuccessMsg && (
-                <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 text-xs font-semibold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   <span>{shareSuccessMsg}</span>
                 </div>
@@ -1893,7 +1893,7 @@ export function TaskDetailModal({
               <div className="flex-1 overflow-y-auto space-y-4 pr-1">
                 {/* 1. Tag Purpose Selection */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-gray-700 dark:text-[#ACACB8] uppercase tracking-wider">
+                  <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
                     Tag Purpose / Action:
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1910,8 +1910,8 @@ export function TaskDetailModal({
                         onClick={() => setTagPurpose(p.id as any)}
                         className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
                           tagPurpose === p.id
-                            ? "bg-purple-500/15 border-purple-500 text-purple-600 dark:text-purple-300 shadow-sm font-bold"
-                            : "bg-gray-50 dark:bg-[#1A1A1A] border-gray-200 dark:border-[#2E2E2E] text-gray-700 dark:text-[#888898] hover:border-gray-400 dark:hover:border-[#444]"
+                            ? "bg-purple-500/15 border-purple-500 text-purple-600  shadow-sm font-bold"
+                            : "bg-gray-50  border-gray-200  text-gray-700  hover:border-gray-400 "
                         }`}
                       >
                         <div className="text-xs font-bold">{p.label}</div>
@@ -1923,7 +1923,7 @@ export function TaskDetailModal({
 
                 {/* 2. Optional Note */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-gray-700 dark:text-[#ACACB8] uppercase tracking-wider">
+                  <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
                     Note / Instructions (Optional):
                   </label>
                   <input
@@ -1935,14 +1935,14 @@ export function TaskDetailModal({
                         ? "e.g., Please run regression testing on the new checkout flow..."
                         : "e.g., Please review acceptance criteria and provide feedback..."
                     }
-                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-purple-500"
                   />
                 </div>
 
                 {/* 3. Team Member Search & Department Filter */}
-                <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-[#252525]">
+                <div className="space-y-2 pt-2 border-t border-gray-100">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-gray-700 dark:text-[#ACACB8] uppercase tracking-wider">
+                    <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
                       Select Team Members to Tag ({selectedShareUserIds.length} selected):
                     </label>
                     <div className="flex items-center gap-2 text-[10px]">
@@ -1959,7 +1959,7 @@ export function TaskDetailModal({
                           );
                           setSelectedShareUserIds(Array.from(new Set([...selectedShareUserIds, ...filtered.map((m) => m.id)])));
                         }}
-                        className="text-purple-600 dark:text-purple-400 font-bold hover:underline"
+                        className="text-purple-600 font-bold hover:underline"
                       >
                         Select All Visible
                       </button>
@@ -1967,7 +1967,7 @@ export function TaskDetailModal({
                       <button
                         type="button"
                         onClick={() => setSelectedShareUserIds([])}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                        className="text-gray-400 hover:text-gray-600"
                       >
                         Clear
                       </button>
@@ -1980,7 +1980,7 @@ export function TaskDetailModal({
                     value={userSearchQuery}
                     onChange={(e) => setUserSearchQuery(e.target.value)}
                     placeholder="Search by name, department (e.g. QA, Marketing, Backend)..."
-                    className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-purple-500"
                   />
 
                   {/* Department Pills */}
@@ -1994,7 +1994,7 @@ export function TaskDetailModal({
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
                             selectedDepartmentFilter === dept
                               ? "bg-purple-600 text-white font-bold"
-                              : "bg-gray-100 dark:bg-[#222] text-gray-600 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                              : "bg-gray-100  text-gray-600  hover:text-gray-900 "
                           }`}
                         >
                           {dept}
@@ -2004,7 +2004,7 @@ export function TaskDetailModal({
                   )}
 
                   {/* Member Selection List */}
-                  <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-200 dark:border-[#2E2E2E] rounded-2xl p-2 bg-gray-50/50 dark:bg-[#121212]">
+                  <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-2xl p-2 bg-gray-50/50">
                     {allAvailableUsers
                       .filter((m) => {
                         if (selectedDepartmentFilter !== "ALL" && m.department !== selectedDepartmentFilter) {
@@ -2028,8 +2028,8 @@ export function TaskDetailModal({
                             key={m.id}
                             className={`flex items-center justify-between p-2 rounded-xl transition-colors cursor-pointer text-xs ${
                               isChecked
-                                ? "bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/30"
-                                : "hover:bg-white dark:hover:bg-[#1E1E1E] border border-transparent"
+                                ? "bg-purple-500/10  border border-purple-500/30"
+                                : "hover:bg-white  border border-transparent"
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -2053,7 +2053,7 @@ export function TaskDetailModal({
                                 {getInitials(m.name)}
                               </div>
                               <div className="min-w-0">
-                                <span className="font-semibold text-gray-900 dark:text-white truncate block">
+                                <span className="font-semibold text-gray-900 truncate block">
                                   {m.name}
                                 </span>
                                 <span className="text-[10px] text-gray-400 font-mono truncate block">
@@ -2062,7 +2062,7 @@ export function TaskDetailModal({
                               </div>
                             </div>
                             {m.department && (
-                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 dark:bg-[#252525] text-gray-600 dark:text-gray-300 font-semibold flex-shrink-0 ml-2">
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 font-semibold flex-shrink-0 ml-2">
                                 {m.department}
                               </span>
                             )}
@@ -2074,7 +2074,7 @@ export function TaskDetailModal({
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#252525]">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span className="text-[10px] text-gray-400 font-mono">
                   {selectedShareUserIds.length} member(s) will receive instant in-app notification
                 </span>
@@ -2082,7 +2082,7 @@ export function TaskDetailModal({
                   <button
                     type="button"
                     onClick={() => setIsShareModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900"
                   >
                     Cancel
                   </button>
@@ -2154,21 +2154,21 @@ export function TaskDetailModal({
 
         {/* Request Reopen Modal (Closed Task Lock) */}
         {isReopenModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in text-gray-900 dark:text-[#F3F4F6]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in text-slate-800">
             <form
               onSubmit={handleSendReopenRequest}
-              className="relative w-full max-w-md bg-white dark:bg-[#18181C] border border-gray-200 dark:border-[#2E2E36] rounded-3xl shadow-2xl p-6 space-y-4 overflow-hidden"
+              className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4 overflow-hidden"
             >
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-[#26262E] pb-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                  <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
                     <Unlock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                    <h3 className="font-bold text-sm text-slate-900">
                       Request Task Reopen
                     </h3>
-                    <p className="text-[11px] text-gray-500 dark:text-[#888898]">
+                    <p className="text-[11px] text-slate-500">
                       Super Admin authorization required
                     </p>
                   </div>
@@ -2176,21 +2176,21 @@ export function TaskDetailModal({
                 <button
                   type="button"
                   onClick={() => setIsReopenModalOpen(false)}
-                  className="p-1 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  className="p-1 rounded-lg text-slate-500 hover:text-slate-700"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {reopenSuccessMsg ? (
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{reopenSuccessMsg}</span>
                 </div>
               ) : (
                 <>
-                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#121214] border border-gray-100 dark:border-[#26262E] text-xs text-gray-600 dark:text-[#999] space-y-1">
-                    <p className="font-semibold text-gray-900 dark:text-white">
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+                    <p className="font-semibold text-slate-900">
                       Task #{task.taskKey} is currently closed.
                     </p>
                     <p>
@@ -2199,7 +2199,7 @@ export function TaskDetailModal({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-[#ACACB8] mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
                       Reason for Reopening <span className="text-[#FF6200]">*</span>
                     </label>
                     <textarea
@@ -2208,23 +2208,23 @@ export function TaskDetailModal({
                       value={reopenReason}
                       onChange={(e) => setReopenReason(e.target.value)}
                       placeholder="e.g., Regression bug found in QA testing; additional scope required..."
-                      className="w-full bg-gray-50 dark:bg-[#121214] border border-gray-200 dark:border-[#333] rounded-2xl p-3 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF6200]"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-2xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#FF6200]"
                       autoFocus
                     />
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-[#26262E]">
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={() => setIsReopenModalOpen(false)}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                      className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmittingReopen || !reopenReason.trim()}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF6200] to-[#FF8C42] hover:opacity-95 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF6200] hover:bg-[#e05600] text-white text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>{isSubmittingReopen ? "Submitting..." : "Send Request to Super Admin"}</span>

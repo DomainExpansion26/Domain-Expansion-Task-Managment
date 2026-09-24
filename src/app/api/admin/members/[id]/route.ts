@@ -56,6 +56,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.managerId !== undefined) updateData.managerId = body.managerId || null;
     if (body.teamLeadId !== undefined) updateData.teamLeadId = body.teamLeadId || null;
     if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
+    if (body.accountStatus !== undefined) {
+      updateData.accountStatus = body.accountStatus;
+      if (body.accountStatus === "DEACTIVATED" || body.accountStatus === "SUSPENDED") {
+        updateData.isActive = false;
+      } else if (body.accountStatus === "ACTIVE") {
+        updateData.isActive = true;
+      }
+    }
+    if (body.joiningDate !== undefined) updateData.joiningDate = body.joiningDate ? new Date(body.joiningDate) : null;
+    if (body.ndaAccepted !== undefined) updateData.ndaAccepted = Boolean(body.ndaAccepted);
 
     const updated = await prisma.user.update({
       where: { id },

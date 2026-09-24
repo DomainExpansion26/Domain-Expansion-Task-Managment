@@ -29,29 +29,38 @@ export function ConfirmActionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#141414] border border-[#2E2E2E] rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800">
+      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl ${isDestructive ? "bg-red-500/15 text-red-400 border border-red-500/30" : "bg-[#FF6200]/15 text-[#FF8C42] border border-[#FF6200]/30"}`}>
+            <div
+              className={`p-2 rounded-xl ${
+                isDestructive
+                  ? "bg-red-50 text-red-600 border border-red-200"
+                  : "bg-orange-50 text-[#FF6200] border border-orange-200"
+              }`}
+            >
               <AlertTriangle className="w-4 h-4" />
             </div>
-            <h2 className="text-sm font-bold text-white">{title}</h2>
+            <h2 className="text-sm font-bold text-slate-900">{title}</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 space-y-4 text-xs text-[#ACACB8] leading-relaxed">
+        <div className="p-6 space-y-4 text-xs text-slate-600 leading-relaxed">
           <p>{message}</p>
 
-          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2E2E2E]">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E] text-slate-300 hover:text-white transition-colors"
+              className="px-4 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 font-medium transition-colors"
             >
               {cancelLabel}
             </button>
@@ -61,8 +70,8 @@ export function ConfirmActionModal({
               disabled={loading}
               className={`px-5 py-2 rounded-xl text-white font-bold transition-all shadow-md ${
                 isDestructive
-                  ? "bg-red-600 hover:bg-red-500 shadow-red-900/40"
-                  : "bg-[#FF6200] hover:bg-[#FF8C42] shadow-[0_0_15px_rgba(255,98,0,0.3)]"
+                  ? "bg-red-600 hover:bg-red-700 shadow-red-500/20"
+                  : "bg-[#FF6200] hover:bg-[#e05600] shadow-[#FF6200]/20"
               }`}
             >
               {loading ? "Processing..." : confirmLabel}

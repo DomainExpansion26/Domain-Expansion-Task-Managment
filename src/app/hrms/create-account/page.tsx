@@ -68,7 +68,7 @@ export default function HRMSCreateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#0B0C0E] relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-white relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
@@ -82,7 +82,7 @@ export default function HRMSCreateAccountPage() {
           <h1 className="text-2xl font-black tracking-tight text-white">
             HRMS <span className="text-cyan-400">REGISTRATION</span>
           </h1>
-          <p className="text-xs text-[#888898] font-mono tracking-widest uppercase">
+          <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">
             Domain Expansion &bull; Employee Portal
           </p>
         </div>
@@ -100,10 +100,10 @@ export default function HRMSCreateAccountPage() {
         </div>
 
         {/* Form Card */}
-        <div className="p-8 rounded-3xl bg-[#141414] border border-cyan-500/30 shadow-[0_0_40px_rgba(6,182,212,0.12)] space-y-5">
-          <div className="border-b border-[#2E2E2E] pb-3">
+        <div className="p-8 rounded-3xl bg-white border border-cyan-500/30 shadow-[0_0_40px_rgba(6,182,212,0.12)] space-y-5">
+          <div className="border-b border-slate-200 pb-3">
             <h2 className="text-sm font-bold text-white">Employee Account Setup</h2>
-            <p className="text-[11px] text-[#888898]">
+            <p className="text-[11px] text-slate-500">
               Create account identity for HRMS and project portals.
             </p>
           </div>
@@ -117,52 +117,52 @@ export default function HRMSCreateAccountPage() {
 
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Full Name *</label>
+              <label className="block text-slate-700 font-semibold mb-1.5">Full Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
                   placeholder="e.g. Employee Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[#ACACB8] font-semibold mb-1.5">Work Email *</label>
+              <label className="block text-slate-700 font-semibold mb-1.5">Work Email *</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
                   required
                   placeholder="employee@domainexpansion.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1.5">Password *</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Password *</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="Min 6 chars"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -172,21 +172,21 @@ export default function HRMSCreateAccountPage() {
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1.5">Confirm Password *</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Confirm Password *</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-[#888898] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     required
                     placeholder="Re-enter password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888898] hover:text-white transition-colors focus:outline-none cursor-pointer"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none cursor-pointer"
                     tabIndex={-1}
                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
@@ -198,29 +198,29 @@ export default function HRMSCreateAccountPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1.5">Designation</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Designation</label>
                 <div className="relative">
-                  <Briefcase className="w-4 h-4 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Briefcase className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="e.g. Associate"
                     value={jobTitle}
                     onChange={(e) => setJobTitle(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-9 pr-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1.5">Department</label>
+                <label className="block text-slate-700 font-semibold mb-1.5">Department</label>
                 <div className="relative">
-                  <Building2 className="w-4 h-4 text-[#888898] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="e.g. Engineering"
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl pl-9 pr-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-white placeholder-[#666] focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </div>
@@ -236,16 +236,16 @@ export default function HRMSCreateAccountPage() {
             </button>
           </form>
 
-          <div className="pt-3 border-t border-[#2E2E2E] flex items-center justify-between text-xs">
-            <span className="text-[#888898]">Already registered?</span>
+          <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+            <span className="text-slate-500">Already registered?</span>
             <Link href="/hrms/login" className="text-cyan-400 font-bold hover:underline">
               Sign In to HRMS
             </Link>
           </div>
         </div>
 
-        <div className="text-center text-xs text-[#888898]">
-          <Link href="/login" className="hover:text-white underline">
+        <div className="text-center text-xs text-slate-500">
+          <Link href="/login" className="hover:text-slate-900 underline">
             &larr; Return to Main Login
           </Link>
         </div>

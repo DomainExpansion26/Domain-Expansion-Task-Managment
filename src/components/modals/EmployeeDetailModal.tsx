@@ -195,10 +195,10 @@ export function EmployeeDetailModal({
   const u = employeeData?.user;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-4xl max-h-[92vh] bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-900 dark:text-[#F3F4F6]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-4xl max-h-[92vh] bg-white border border-gray-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-gray-900">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#2E2E2E] bg-gray-50/70 dark:bg-[#1A1A1A]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/70">
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${getAvatarGradient(
@@ -209,10 +209,10 @@ export function EmployeeDetailModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-gray-900 dark:text-white">
+                <h2 className="text-base font-bold text-gray-900">
                   {u?.name || "Employee Profile"}
                 </h2>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 border border-cyan-500/30">
                   {u?.hrProfile?.employeeId || "EMP-" + (userId.slice(0, 5).toUpperCase())}
                 </span>
                 <span
@@ -225,7 +225,7 @@ export function EmployeeDetailModal({
                   {u?.hrProfile?.status || (u?.isActive ? "ACTIVE" : "INACTIVE")}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-[#888898]">
+              <p className="text-xs text-gray-500">
                 {u?.jobTitle || "Employee"} • {u?.department || "General"} • {u?.email}
               </p>
             </div>
@@ -233,7 +233,7 @@ export function EmployeeDetailModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-gray-200 dark:hover:bg-[#252525] text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="p-1.5 rounded-xl hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -252,13 +252,13 @@ export function EmployeeDetailModal({
         )}
 
         {/* Tabs Bar */}
-        <div className="flex border-b border-gray-200 dark:border-[#2E2E2E] px-6 bg-white dark:bg-[#141414] overflow-x-auto text-xs font-bold">
+        <div className="flex border-b border-gray-200 px-6 bg-white overflow-x-auto text-xs font-bold">
           <button
             onClick={() => setActiveTab("profile")}
             className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "profile"
-                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                ? "border-cyan-500 text-cyan-600 "
+                : "border-transparent text-gray-500  hover:text-gray-900 "
             }`}
           >
             👤 HR Profile
@@ -267,8 +267,8 @@ export function EmployeeDetailModal({
             onClick={() => setActiveTab("attendance")}
             className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "attendance"
-                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                ? "border-cyan-500 text-cyan-600 "
+                : "border-transparent text-gray-500  hover:text-gray-900 "
             }`}
           >
             ⏱️ Attendance Logs ({employeeData?.attendanceSummary?.recentLogs?.length || 0})
@@ -277,8 +277,8 @@ export function EmployeeDetailModal({
             onClick={() => setActiveTab("leaves")}
             className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "leaves"
-                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                ? "border-cyan-500 text-cyan-600 "
+                : "border-transparent text-gray-500  hover:text-gray-900 "
             }`}
           >
             🏖️ Leave History ({employeeData?.leaves?.history?.length || 0})
@@ -287,8 +287,8 @@ export function EmployeeDetailModal({
             onClick={() => setActiveTab("documents")}
             className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "documents"
-                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                ? "border-cyan-500 text-cyan-600 "
+                : "border-transparent text-gray-500  hover:text-gray-900 "
             }`}
           >
             📁 Documents ({employeeData?.documents?.length || 0})
@@ -297,8 +297,8 @@ export function EmployeeDetailModal({
             onClick={() => setActiveTab("payroll")}
             className={`py-3 px-3.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "payroll"
-                ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+                ? "border-cyan-500 text-cyan-600 "
+                : "border-transparent text-gray-500  hover:text-gray-900 "
             }`}
           >
             💰 Payroll & Salary Structure
@@ -308,7 +308,7 @@ export function EmployeeDetailModal({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-3 text-xs text-gray-500 dark:text-[#888898]">
+            <div className="py-20 flex flex-col items-center justify-center gap-3 text-xs text-gray-500">
               <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
               <span>Loading employee HR records...</span>
             </div>
@@ -318,13 +318,13 @@ export function EmployeeDetailModal({
               {activeTab === "profile" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Employee HR Information
                     </h3>
                     <button
                       type="button"
                       onClick={() => setIsEditing(!isEditing)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-[#2E2E2E] bg-gray-50 dark:bg-[#1A1A1A] text-xs font-semibold hover:border-cyan-500 text-gray-700 dark:text-[#ACACB8] hover:text-gray-900 dark:hover:text-white"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-semibold hover:border-cyan-500 text-gray-700 hover:text-gray-900"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>{isEditing ? "Cancel Edit" : "Edit Profile"}</span>
@@ -335,93 +335,93 @@ export function EmployeeDetailModal({
                     <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Full Name</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Full Name</label>
                           <input
                             type="text"
                             required
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Employee ID</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Employee ID</label>
                           <input
                             type="text"
                             value={editEmployeeId}
                             onChange={(e) => setEditEmployeeId(e.target.value)}
                             placeholder="e.g. EMP001"
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Designation / Job Title</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Designation / Job Title</label>
                           <input
                             type="text"
                             value={editJobTitle}
                             onChange={(e) => setEditJobTitle(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Department</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Department</label>
                           <input
                             type="text"
                             value={editDepartment}
                             onChange={(e) => setEditDepartment(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Phone Number</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Phone Number</label>
                           <input
                             type="text"
                             value={editPhone}
                             onChange={(e) => setEditPhone(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Emergency Contact</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Emergency Contact</label>
                           <input
                             type="text"
                             value={editEmergency}
                             onChange={(e) => setEditEmergency(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Date of Birth</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Date of Birth</label>
                           <input
                             type="date"
                             value={editDob}
                             onChange={(e) => setEditDob(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Joining Date</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Joining Date</label>
                           <input
                             type="date"
                             value={editJoiningDate}
                             onChange={(e) => setEditJoiningDate(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Employment Status</label>
+                          <label className="block text-gray-500 font-semibold mb-1">Employment Status</label>
                           <select
                             value={editStatus}
                             onChange={(e) => setEditStatus(e.target.value)}
-                            className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                           >
                             <option value="ACTIVE">ACTIVE</option>
                             <option value="ON_LEAVE">ON_LEAVE</option>
@@ -433,12 +433,12 @@ export function EmployeeDetailModal({
                       </div>
 
                       <div>
-                        <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Residential Address</label>
+                        <label className="block text-gray-500 font-semibold mb-1">Residential Address</label>
                         <textarea
                           rows={2}
                           value={editAddress}
                           onChange={(e) => setEditAddress(e.target.value)}
-                          className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl p-3 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-900 focus:outline-none focus:border-cyan-500"
                         />
                       </div>
 
@@ -446,7 +446,7 @@ export function EmployeeDetailModal({
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="px-4 py-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] text-gray-600 dark:text-[#888898]"
+                          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600"
                         >
                           Cancel
                         </button>
@@ -462,33 +462,33 @@ export function EmployeeDetailModal({
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                       {/* Personal Info Box */}
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] space-y-3">
-                        <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                      <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-3">
+                        <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
                           <User className="w-4 h-4 text-cyan-500" />
                           <span>Personal Details</span>
                         </h4>
-                        <div className="space-y-2 text-gray-600 dark:text-[#ACACB8]">
+                        <div className="space-y-2 text-gray-600">
                           <div className="flex justify-between">
                             <span>Date of Birth:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                            <span className="font-semibold text-gray-900 font-mono">
                               {u?.hrProfile?.dateOfBirth ? formatDate(u.hrProfile.dateOfBirth) : "-"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Phone:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                            <span className="font-semibold text-gray-900 font-mono">
                               {u?.hrProfile?.phone || "-"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Emergency Contact:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                            <span className="font-semibold text-gray-900 font-mono">
                               {u?.hrProfile?.emergencyContact || "-"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Address:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white text-right max-w-[200px]">
+                            <span className="font-semibold text-gray-900 text-right max-w-[200px]">
                               {u?.hrProfile?.address || "-"}
                             </span>
                           </div>
@@ -496,33 +496,33 @@ export function EmployeeDetailModal({
                       </div>
 
                       {/* Employment Info Box */}
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] space-y-3">
-                        <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                      <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-3">
+                        <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
                           <Briefcase className="w-4 h-4 text-cyan-500" />
                           <span>Employment Information</span>
                         </h4>
-                        <div className="space-y-2 text-gray-600 dark:text-[#ACACB8]">
+                        <div className="space-y-2 text-gray-600">
                           <div className="flex justify-between">
                             <span>Department:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white">
+                            <span className="font-semibold text-gray-900">
                               {u?.department || u?.hrProfile?.department || "General"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Designation:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white">
+                            <span className="font-semibold text-gray-900">
                               {u?.jobTitle || u?.hrProfile?.designation || "Employee"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Joining Date:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white font-mono">
+                            <span className="font-semibold text-gray-900 font-mono">
                               {u?.hrProfile?.joiningDate ? formatDate(u.hrProfile.joiningDate) : "-"}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span>Manager:</span>
-                            <span className="font-semibold text-gray-900 dark:text-white">
+                            <span className="font-semibold text-gray-900">
                               {u?.manager?.name || "-"}
                             </span>
                           </div>
@@ -537,26 +537,26 @@ export function EmployeeDetailModal({
               {activeTab === "attendance" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Present Days</div>
+                    <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                      <div className="text-[10px] text-gray-500 uppercase font-bold">Present Days</div>
                       <div className="text-lg font-black text-emerald-500 mt-1">
                         {employeeData?.attendanceSummary?.presentDays || 0}
                       </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Half Days</div>
+                    <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                      <div className="text-[10px] text-gray-500 uppercase font-bold">Half Days</div>
                       <div className="text-lg font-black text-amber-500 mt-1">
                         {employeeData?.attendanceSummary?.halfDays || 0}
                       </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Leave Days</div>
+                    <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                      <div className="text-[10px] text-gray-500 uppercase font-bold">Leave Days</div>
                       <div className="text-lg font-black text-purple-500 mt-1">
                         {employeeData?.attendanceSummary?.leaveDays || 0}
                       </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                      <div className="text-[10px] text-gray-500 dark:text-[#888898] uppercase font-bold">Total Hours</div>
+                    <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                      <div className="text-[10px] text-gray-500 uppercase font-bold">Total Hours</div>
                       <div className="text-lg font-black text-cyan-500 mt-1 font-mono">
                         {employeeData?.attendanceSummary?.totalWorkingHours || 0}h
                       </div>
@@ -564,13 +564,13 @@ export function EmployeeDetailModal({
                   </div>
 
                   {employeeData?.attendanceSummary?.recentLogs?.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                    <div className="text-center py-12 text-gray-400 text-xs italic">
                       No attendance records found for this employee.
                     </div>
                   ) : (
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase">
+                        <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase">
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Punch In</th>
                           <th className="py-2.5 px-3">Punch Out</th>
@@ -578,14 +578,14 @@ export function EmployeeDetailModal({
                           <th className="py-2.5 px-3">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                      <tbody className="divide-y divide-gray-100">
                         {employeeData.attendanceSummary.recentLogs.map((log: any) => (
-                          <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                          <tr key={log.id} className="hover:bg-gray-50">
                             <td className="py-2.5 px-3 font-mono font-semibold">{formatDate(log.date)}</td>
-                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                            <td className="py-2.5 px-3 font-mono text-gray-600">
                               {log.punchIn ? new Date(log.punchIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
                             </td>
-                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                            <td className="py-2.5 px-3 font-mono text-gray-600">
                               {log.punchOut ? new Date(log.punchOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
                             </td>
                             <td className="py-2.5 px-3 font-mono font-bold">{log.totalWorkingHours || 0}h</td>
@@ -614,13 +614,13 @@ export function EmployeeDetailModal({
               {activeTab === "leaves" && (
                 <div className="space-y-4">
                   {employeeData?.leaves?.history?.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                    <div className="text-center py-12 text-gray-400 text-xs italic">
                       No leave records found for this employee.
                     </div>
                   ) : (
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase">
+                        <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase">
                           <th className="py-2.5 px-3">Type</th>
                           <th className="py-2.5 px-3">Dates</th>
                           <th className="py-2.5 px-3">Days</th>
@@ -628,15 +628,15 @@ export function EmployeeDetailModal({
                           <th className="py-2.5 px-3">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                      <tbody className="divide-y divide-gray-100">
                         {employeeData.leaves.history.map((l: any) => (
-                          <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
+                          <tr key={l.id} className="hover:bg-gray-50">
                             <td className="py-2.5 px-3 font-bold">{l.leaveType}</td>
-                            <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                            <td className="py-2.5 px-3 font-mono text-gray-600">
                               {formatDate(l.startDate)} - {formatDate(l.endDate)}
                             </td>
                             <td className="py-2.5 px-3 font-mono font-bold">{l.daysCount}</td>
-                            <td className="py-2.5 px-3 text-gray-600 dark:text-[#ACACB8]">{l.reason}</td>
+                            <td className="py-2.5 px-3 text-gray-600">{l.reason}</td>
                             <td className="py-2.5 px-3">
                               <span
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -662,7 +662,7 @@ export function EmployeeDetailModal({
               {activeTab === "documents" && (
                 <div className="space-y-4">
                   {employeeData?.documents?.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 dark:text-[#666] text-xs italic">
+                    <div className="text-center py-12 text-gray-400 text-xs italic">
                       No documents available for this employee.
                     </div>
                   ) : (
@@ -670,12 +670,12 @@ export function EmployeeDetailModal({
                       {employeeData.documents.map((doc: any) => (
                         <div
                           key={doc.id}
-                          className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] text-xs"
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-xs"
                         >
                           <div className="flex items-center gap-3">
                             <FileText className="w-5 h-5 text-cyan-500" />
                             <div>
-                              <div className="font-bold text-gray-900 dark:text-white">{doc.fileName}</div>
+                              <div className="font-bold text-gray-900">{doc.fileName}</div>
                               <div className="text-[10px] text-gray-400">
                                 {(doc.fileSize / 1024).toFixed(1)} KB • Uploaded on {formatDate(doc.createdAt)}
                               </div>
@@ -685,7 +685,7 @@ export function EmployeeDetailModal({
                             href={doc.fileUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-2 rounded-xl border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8]"
+                            className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-600"
                           >
                             <Download className="w-4 h-4" />
                           </a>
@@ -700,70 +700,70 @@ export function EmployeeDetailModal({
               {activeTab === "payroll" && (
                 <form onSubmit={handleSaveSalary} className="space-y-4 text-xs">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Salary Structure & Compensation (INR)
                     </h3>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Basic Salary</label>
+                      <label className="block text-gray-500 font-semibold mb-1">Basic Salary</label>
                       <input
                         type="number"
                         min="0"
                         value={salaryBasic}
                         onChange={(e) => setSalaryBasic(Number(e.target.value))}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none focus:border-cyan-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">House Rent Allowance (HRA)</label>
+                      <label className="block text-gray-500 font-semibold mb-1">House Rent Allowance (HRA)</label>
                       <input
                         type="number"
                         min="0"
                         value={salaryHra}
                         onChange={(e) => setSalaryHra(Number(e.target.value))}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none focus:border-cyan-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Special Allowances</label>
+                      <label className="block text-gray-500 font-semibold mb-1">Special Allowances</label>
                       <input
                         type="number"
                         min="0"
                         value={salaryAllowances}
                         onChange={(e) => setSalaryAllowances(Number(e.target.value))}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none focus:border-cyan-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Bonus / Variable</label>
+                      <label className="block text-gray-500 font-semibold mb-1">Bonus / Variable</label>
                       <input
                         type="number"
                         min="0"
                         value={salaryBonus}
                         onChange={(e) => setSalaryBonus(Number(e.target.value))}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none focus:border-cyan-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Deductions (PF / Tax)</label>
+                      <label className="block text-gray-500 font-semibold mb-1">Deductions (PF / Tax)</label>
                       <input
                         type="number"
                         min="0"
                         value={salaryDeductions}
                         onChange={(e) => setSalaryDeductions(Number(e.target.value))}
-                        className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none focus:border-cyan-500"
                       />
                     </div>
 
                     <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex flex-col justify-center">
-                      <div className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase">Calculated Net Pay</div>
-                      <div className="text-xl font-black text-cyan-600 dark:text-cyan-400 font-mono">
+                      <div className="text-[10px] text-cyan-600 font-bold uppercase">Calculated Net Pay</div>
+                      <div className="text-xl font-black text-cyan-600 font-mono">
                         ₹{(salaryBasic + salaryHra + salaryAllowances + salaryBonus - salaryDeductions).toLocaleString()}
                       </div>
                     </div>

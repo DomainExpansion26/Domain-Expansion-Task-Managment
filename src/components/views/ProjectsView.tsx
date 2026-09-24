@@ -127,13 +127,14 @@ export function ProjectsView({
   return (
     <div className="space-y-6 max-w-6xl mx-auto animate-fade-in">
       {/* Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <FolderKanban className="w-5 h-5 text-[#FF6200]" />
             <span>Projects Directory</span>
           </h1>
-          <p className="text-xs text-[#888898] mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {isUserSuperAdmin
               ? "Global organization projects, initiatives, roadmap tracking, and member role assignment."
               : "Projects you are actively assigned to work on."}
@@ -151,17 +152,17 @@ export function ProjectsView({
         )}
       </div>
 
-      {/* Projects Grid or Empty State (Requirement #33) */}
+      {/* Projects Grid or Empty State */}
       {projects.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-[#141414] border border-[#2E2E2E] space-y-4">
+        <div className="p-12 text-center rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-[#FF6200]/10 border border-[#FF6200]/30 flex items-center justify-center text-[#FF6200] mx-auto">
             <FolderKanban className="w-7 h-7" />
           </div>
           <div className="space-y-1.5">
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-base font-bold text-slate-900">
               {isUserSuperAdmin ? "No Projects Created Yet" : "No Projects Assigned Yet"}
             </h3>
-            <p className="text-xs text-[#888898] max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               {isUserSuperAdmin
                 ? "Get started by creating your organization's first project. Projects allow you to group tasks, plan sprints, and assign team members with specific roles."
                 : "Your administrator will assign you to a project when required. Once assigned, your project workspace and tasks will appear here."}
@@ -179,48 +180,43 @@ export function ProjectsView({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {projects.map((project) => {
-            const total = project.stats?.totalTasks || 0;
-            const done = project.stats?.completedTasks || 0;
-            const inProgress = project.stats?.inProgressTasks || 0;
-            const blocked = project.stats?.blockedTasks || 0;
             const percent = project.stats?.progressPercent || 0;
-
             const myRole = project.myProjectRole;
 
             return (
               <div
                 key={project.id}
                 onClick={() => onSelectProject(project.id)}
-                className="p-5 rounded-2xl bg-[#141414] border border-[#2E2E2E] hover:border-[#FF6200]/50 hover:shadow-[0_0_25px_rgba(255,98,0,0.1)] transition-all cursor-pointer flex flex-col justify-between group space-y-4"
+                className="p-5 rounded-3xl bg-white border border-slate-200 hover:border-[#FF6200]/50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group space-y-4 shadow-xs"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-[#FF8C42] bg-[#FF6200]/10 px-2.5 py-1 rounded-lg border border-[#FF6200]/30">
+                    <span className="font-mono text-xs font-bold text-[#FF6200] bg-[#FF6200]/10 px-2.5 py-1 rounded-xl border border-[#FF6200]/25">
                       {project.key}
                     </span>
                     <div className="flex items-center gap-1.5">
                       {myRole && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
                           {PROJECT_ROLE_LABELS[myRole as ProjectRole] || myRole}
                         </span>
                       )}
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
                         {project.status}
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-white group-hover:text-[#FF8C42] transition-colors mt-3">
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-[#FF6200] transition-colors mt-3">
                     {project.name}
                   </h3>
-                  <p className="text-xs text-[#888898] line-clamp-2 mt-1.5 leading-relaxed">
+                  <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
                     {project.description || "No project description provided."}
                   </p>
                 </div>
 
                 {/* Assigned Members Section & Add Member Trigger */}
                 <div className="pt-2">
-                  <div className="text-[10px] text-[#888898] font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                     <span>Assigned Team ({project.members?.length || 0})</span>
                     <button
                       type="button"
@@ -228,7 +224,7 @@ export function ProjectsView({
                         e.stopPropagation();
                         setSelectedProjectForMembers(project);
                       }}
-                      className="inline-flex items-center gap-1 text-[10px] text-[#FF8C42] hover:text-white font-bold transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[10px] text-[#FF6200] hover:underline font-bold transition-colors cursor-pointer"
                       title="Add member to project"
                     >
                       <UserPlus className="w-3 h-3" />
@@ -240,46 +236,46 @@ export function ProjectsView({
                       {project.members.slice(0, 4).map((m: any) => (
                         <span
                           key={m.id}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#1A1A1A] border border-[#2E2E2E] text-[10px] text-white/90"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] text-slate-700 font-medium"
                           title={`${m.name} - ${m.projectRole}`}
                         >
-                          <span className="font-medium truncate max-w-[80px]">{m.name}</span>
-                          <span className="text-[9px] text-[#FF8C42] font-mono">({m.projectRole?.substring(0, 3)})</span>
+                          <span className="truncate max-w-[80px]">{m.name}</span>
+                          <span className="text-[9px] text-[#FF6200] font-mono">({m.projectRole?.substring(0, 3)})</span>
                         </span>
                       ))}
                       {project.members.length > 4 && (
-                        <span className="px-1.5 py-0.5 rounded-md bg-[#1A1A1A] text-[9px] text-[#888898]">
+                        <span className="px-1.5 py-0.5 rounded-lg bg-slate-100 text-[9px] text-slate-500 font-medium">
                           +{project.members.length - 4} more
                         </span>
                       )}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-[#666] italic">No members assigned yet &bull; Click + Add Member</p>
+                    <p className="text-[11px] text-slate-400 italic">No members assigned yet &bull; Click + Add Member</p>
                   )}
                 </div>
 
                 {/* Progress Bar */}
-                <div className="space-y-1.5 pt-2 border-t border-[#2E2E2E]/60">
+                <div className="space-y-1.5 pt-2 border-t border-slate-100">
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#888898]">Progress</span>
-                    <span className="font-bold text-white font-mono">{percent}%</span>
+                    <span className="text-slate-500">Progress</span>
+                    <span className="font-bold text-slate-900 font-mono">{percent}%</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#252525] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#FF6200] to-[#FF8C42] transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-[#FF6200] to-orange-400 transition-all duration-500"
                       style={{ width: `${percent}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Bottom Metadata & Actions */}
-                <div className="flex items-center justify-between text-[11px] text-[#888898] pt-1 gap-2 flex-wrap">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
                     {project.lead?.avatarUrl ? (
                       <img
                         src={project.lead.avatarUrl}
                         alt={project.lead.name}
-                        className="w-5 h-5 rounded-full object-cover"
+                        className="w-5 h-5 rounded-full object-cover border border-slate-200"
                       />
                     ) : (
                       <div
@@ -288,7 +284,7 @@ export function ProjectsView({
                         {getInitials(project.lead?.name)}
                       </div>
                     )}
-                    <span className="truncate max-w-[100px]">{project.lead?.name || "Project Lead"}</span>
+                    <span className="truncate max-w-[100px] text-slate-700 font-medium">{project.lead?.name || "Project Lead"}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -298,14 +294,14 @@ export function ProjectsView({
                         e.stopPropagation();
                         setSelectedProjectForMembers(project);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#252525] hover:bg-[#FF6200] text-[#E0E0E0] hover:text-white text-[11px] font-semibold transition-all border border-[#2E2E2E] cursor-pointer hover:shadow-[0_0_10px_rgba(255,98,0,0.3)]"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all border border-slate-200 cursor-pointer"
                       title="Manage Project Members"
                     >
-                      <Users className="w-3.5 h-3.5 text-[#FF8C42]" />
+                      <Users className="w-3.5 h-3.5 text-[#FF6200]" />
                       <span>Members</span>
                     </button>
-                    <div className="flex items-center gap-1 text-[#FF8C42] font-semibold group-hover:translate-x-0.5 transition-transform">
-                      <span>Board</span>
+                    <div className="flex items-center gap-1 text-[#FF6200] font-semibold group-hover:translate-x-0.5 transition-transform">
+                      <span>Tasks</span>
                       <ArrowRight className="w-3 h-3" />
                     </div>
                   </div>
@@ -331,23 +327,23 @@ export function ProjectsView({
         />
       )}
 
-      {/* Create Project Modal with Member Assignment (Requirement #10 & #11) */}
+      {/* Create Project Modal with Member Assignment */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-xl bg-[#141414] border border-[#2E2E2E] rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2E2E] bg-[#1A1A1A]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-[#FF6200]/10 text-[#FF6200]">
                   <FolderKanban className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-bold text-white">Create New Project</h2>
-                  <p className="text-[10px] text-[#888898]">Assign team members with specific project roles</p>
+                  <h2 className="text-sm font-bold text-slate-900">Create New Project</h2>
+                  <p className="text-[10px] text-slate-500">Assign team members with specific project roles</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-lg hover:bg-[#252525] text-[#888898] hover:text-white"
+                className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -355,26 +351,26 @@ export function ProjectsView({
 
             <form onSubmit={handleCreateProject} className="p-6 space-y-4 text-xs overflow-y-auto flex-1">
               {error && (
-                <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400">
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700">
                   {error}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Project Name *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Project Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Website Development"
                     value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#ACACB8] font-semibold mb-1">Project Key (Prefix) *</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Project Key (Prefix) *</label>
                   <input
                     type="text"
                     required
@@ -382,28 +378,28 @@ export function ProjectsView({
                     placeholder="e.g. WEB"
                     value={key}
                     onChange={(e) => setKey(e.target.value.toUpperCase())}
-                    className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white font-mono uppercase focus:outline-none focus:border-[#FF6200]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 font-mono uppercase focus:outline-none focus:border-[#FF6200]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Description</label>
+                <label className="block text-slate-700 font-semibold mb-1">Description</label>
                 <textarea
                   rows={2}
                   placeholder="Project goal, scope, and objectives..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl p-3 text-white focus:outline-none focus:border-[#FF6200]"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#ACACB8] font-semibold mb-1">Project Lead</label>
+                <label className="block text-slate-700 font-semibold mb-1">Project Lead</label>
                 <select
                   value={leadId}
                   onChange={(e) => setLeadId(e.target.value)}
-                  className="w-full bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3.5 py-2.5 text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                 >
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
@@ -413,13 +409,13 @@ export function ProjectsView({
                 </select>
               </div>
 
-              {/* Member & Project Role Assignment Section (Requirement #10 & #11) */}
-              <div className="space-y-2 pt-2 border-t border-[#2E2E2E]">
+              {/* Member & Project Role Assignment Section */}
+              <div className="space-y-2 pt-2 border-t border-slate-200">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[#ACACB8] font-semibold">
+                  <label className="block text-slate-700 font-semibold">
                     Assign Project Members & Roles
                   </label>
-                  <span className="text-[10px] text-[#888898]">
+                  <span className="text-[10px] text-slate-500">
                     Only assigned members will see this project
                   </span>
                 </div>
@@ -428,7 +424,7 @@ export function ProjectsView({
                   <select
                     value={selectedAddUserId}
                     onChange={(e) => setSelectedAddUserId(e.target.value)}
-                    className="flex-1 bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   >
                     <option value="">-- Select Member to Add --</option>
                     {users
@@ -443,7 +439,7 @@ export function ProjectsView({
                   <select
                     value={selectedAddRole}
                     onChange={(e) => setSelectedAddRole(e.target.value as ProjectRole)}
-                    className="w-full sm:w-44 bg-[#1A1A1A] border border-[#2E2E2E] rounded-xl px-3 py-2 text-white focus:outline-none"
+                    className="w-full sm:w-44 bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-[#FF6200]"
                   >
                     {PROJECT_ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -456,7 +452,7 @@ export function ProjectsView({
                     type="button"
                     onClick={handleAddMemberToProject}
                     disabled={!selectedAddUserId}
-                    className="px-4 py-2 rounded-xl bg-[#252525] hover:bg-[#FF6200] disabled:opacity-50 text-white font-semibold flex items-center justify-center gap-1 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-[#FF6200] hover:text-white disabled:opacity-50 text-slate-700 font-semibold flex items-center justify-center gap-1 transition-colors border border-slate-200"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>Add</span>
@@ -471,18 +467,18 @@ export function ProjectsView({
                       return (
                         <div
                           key={m.userId}
-                          className="flex items-center justify-between p-2 rounded-xl bg-[#1A1A1A] border border-[#2E2E2E]"
+                          className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200"
                         >
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-white">{userObj?.name || "Member"}</span>
-                            <span className="text-[10px] text-[#888898]">({userObj?.email})</span>
+                            <span className="font-semibold text-slate-800">{userObj?.name || "Member"}</span>
+                            <span className="text-[10px] text-slate-500">({userObj?.email})</span>
                           </div>
 
                           <div className="flex items-center gap-2">
                             <select
                               value={m.role}
                               onChange={(e) => handleUpdateMemberRole(m.userId, e.target.value as ProjectRole)}
-                              className="bg-[#252525] border border-[#333] rounded-lg px-2 py-1 text-[11px] text-[#FF8C42] font-semibold focus:outline-none"
+                              className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] text-[#FF6200] font-semibold focus:outline-none"
                             >
                               {PROJECT_ROLES.map((r) => (
                                 <option key={r} value={r}>
@@ -494,7 +490,7 @@ export function ProjectsView({
                             <button
                               type="button"
                               onClick={() => handleRemoveMemberFromProject(m.userId)}
-                              className="p-1 rounded text-[#888898] hover:text-red-400"
+                              className="p-1 rounded text-slate-400 hover:text-rose-600"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -506,11 +502,11 @@ export function ProjectsView({
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#2E2E2E]">
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl text-[#888898] hover:text-white"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900"
                 >
                   Cancel
                 </button>

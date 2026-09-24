@@ -278,12 +278,12 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
   if (!isAuthorized) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[450px] text-center p-8 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-[450px] text-center p-8 bg-white border border-gray-200 rounded-3xl space-y-4">
         <div className="p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
           <ShieldAlert className="w-10 h-10" />
         </div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">HR Admin & Super Admin Access Required</h2>
-        <p className="text-xs text-gray-500 dark:text-[#888898] max-w-md">
+        <h2 className="text-lg font-bold text-gray-900">HR Admin & Super Admin Access Required</h2>
+        <p className="text-xs text-gray-500 max-w-md">
           You do not have administrative privileges to access the HR Management Portal. Only HR Admins and Super Admins can manage workforce records and approve leaves.
         </p>
       </div>
@@ -291,18 +291,18 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-gray-900 dark:text-[#F3F4F6]">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-gray-900">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] p-6 rounded-3xl shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-gray-200 p-6 rounded-3xl shadow-sm">
         <div>
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-[#888898] mb-1 font-semibold uppercase tracking-wider">
-            <Building2 className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wider">
+            <Building2 className="w-4 h-4 text-cyan-600" />
             <span>HRMS Workforce Administration</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-black tracking-tight text-gray-900">
             Human Resources Management Portal
           </h1>
-          <p className="text-xs text-gray-500 dark:text-[#888898] mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Manage real employee records, attendance monitoring, leave approvals, payroll, and organizational structures.
           </p>
         </div>
@@ -319,7 +319,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           <button
             onClick={fetchHRData}
             title="Refresh records"
-            className="p-2.5 rounded-2xl border border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-600 dark:text-[#ACACB8] transition-colors"
+            className="p-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -327,13 +327,13 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
       </div>
 
       {/* Main Tabs Navigation */}
-      <div className="flex border-b border-gray-200 dark:border-[#2E2E2E] bg-white dark:bg-[#141414] rounded-2xl px-4 overflow-x-auto shadow-sm text-xs font-bold">
+      <div className="flex border-b border-gray-200 bg-white rounded-2xl px-4 overflow-x-auto shadow-sm text-xs font-bold">
         <button
           onClick={() => setActiveTab("directory")}
           className={`py-3.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "directory"
-              ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-              : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+              ? "border-cyan-500 text-cyan-600 "
+              : "border-transparent text-gray-500  hover:text-gray-900 "
           }`}
         >
           👥 Employee Directory ({employees.length})
@@ -343,8 +343,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           onClick={() => setActiveTab("attendance")}
           className={`py-3.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "attendance"
-              ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-              : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+              ? "border-cyan-500 text-cyan-600 "
+              : "border-transparent text-gray-500  hover:text-gray-900 "
           }`}
         >
           ⏱️ Attendance Monitoring ({attendanceRecords.length})
@@ -354,8 +354,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           onClick={() => setActiveTab("leaves")}
           className={`py-3.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             activeTab === "leaves"
-              ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-              : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+              ? "border-cyan-500 text-cyan-600 "
+              : "border-transparent text-gray-500  hover:text-gray-900 "
           }`}
         >
           <span>🏖️ Leave Approvals</span>
@@ -370,8 +370,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           onClick={() => setActiveTab("payroll")}
           className={`py-3.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "payroll"
-              ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-              : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+              ? "border-cyan-500 text-cyan-600 "
+              : "border-transparent text-gray-500  hover:text-gray-900 "
           }`}
         >
           💰 Payroll & Compensation
@@ -381,8 +381,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           onClick={() => setActiveTab("organization")}
           className={`py-3.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "organization"
-              ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
-              : "border-transparent text-gray-500 dark:text-[#888898] hover:text-gray-900 dark:hover:text-white"
+              ? "border-cyan-500 text-cyan-600 "
+              : "border-transparent text-gray-500  hover:text-gray-900 "
           }`}
         >
           🏢 Departments & Designations
@@ -391,7 +391,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
       {/* TAB 1: EMPLOYEE DIRECTORY */}
       {activeTab === "directory" && (
-        <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-5 shadow-sm">
           {/* Filter Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="relative flex-1 min-w-[240px] max-w-md">
@@ -401,7 +401,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                 placeholder="Search by Employee ID, Name, Email, Department..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl pl-9 pr-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-cyan-500"
               />
             </div>
 
@@ -409,7 +409,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
               <select
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 font-semibold text-gray-700 dark:text-[#ACACB8] focus:outline-none focus:border-cyan-500"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-700 focus:outline-none focus:border-cyan-500"
               >
                 <option value="ALL">Department: All</option>
                 {departments.map((d) => (
@@ -422,7 +422,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 font-semibold text-gray-700 dark:text-[#ACACB8] focus:outline-none focus:border-cyan-500"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-700 focus:outline-none focus:border-cyan-500"
               >
                 <option value="ALL">Status: All</option>
                 <option value="ACTIVE">Active</option>
@@ -435,14 +435,14 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
           {/* Employees Table */}
           {filteredEmployees.length === 0 ? (
-            <div className="py-20 text-center text-gray-400 dark:text-[#666] text-xs italic">
+            <div className="py-20 text-center text-gray-400 text-xs italic">
               No employees found matching the filter criteria.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase tracking-wider bg-gray-50/50 dark:bg-[#181818]">
+                  <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase tracking-wider bg-gray-50/50">
                     <th className="py-3 px-4">EMPLOYEE ID</th>
                     <th className="py-3 px-4">EMPLOYEE NAME</th>
                     <th className="py-3 px-3">DEPARTMENT</th>
@@ -452,7 +452,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                     <th className="py-3 px-4 text-right">ACTION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                <tbody className="divide-y divide-gray-100">
                   {filteredEmployees.map((emp) => {
                     const empId = emp.hrProfile?.employeeId || "EMP-" + emp.id.slice(0, 5).toUpperCase();
                     const status = emp.hrProfile?.status || (emp.isActive ? "ACTIVE" : "INACTIVE");
@@ -461,9 +461,9 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                       <tr
                         key={emp.id}
                         onClick={() => setSelectedEmployeeId(emp.id)}
-                        className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer group"
+                        className="hover:bg-gray-50 transition-colors cursor-pointer group"
                       >
-                        <td className="py-3 px-4 font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                        <td className="py-3 px-4 font-mono font-bold text-cyan-600">
                           {empId}
                         </td>
                         <td className="py-3 px-4">
@@ -476,20 +476,20 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                               {getInitials(emp.name)}
                             </div>
                             <div>
-                              <div className="font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
+                              <div className="font-bold text-gray-900 group-hover:text-cyan-500 transition-colors">
                                 {emp.name}
                               </div>
                               <div className="text-[10px] text-gray-400">{emp.email}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3 font-semibold text-gray-700 dark:text-[#D1D5DB]">
+                        <td className="py-3 px-3 font-semibold text-gray-700">
                           {emp.department || emp.hrProfile?.department || "General"}
                         </td>
-                        <td className="py-3 px-3 text-gray-600 dark:text-[#ACACB8]">
+                        <td className="py-3 px-3 text-gray-600">
                           {emp.jobTitle || emp.hrProfile?.designation || "Employee"}
                         </td>
-                        <td className="py-3 px-3 font-mono text-gray-500 dark:text-[#888898]">
+                        <td className="py-3 px-3 font-mono text-gray-500">
                           {emp.hrProfile?.joiningDate ? formatDate(emp.hrProfile.joiningDate) : "-"}
                         </td>
                         <td className="py-3 px-3">
@@ -512,7 +512,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                               e.stopPropagation();
                               setSelectedEmployeeId(emp.id);
                             }}
-                            className="px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#252525] hover:bg-cyan-600 hover:text-white text-gray-700 dark:text-[#ACACB8] font-bold text-[11px] transition-colors"
+                            className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-cyan-600 hover:text-slate-900 text-gray-700 font-bold text-[11px] transition-colors"
                           >
                             Manage Profile
                           </button>
@@ -529,34 +529,34 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
       {/* TAB 2: ATTENDANCE MONITORING */}
       {activeTab === "attendance" && (
-        <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-5 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
-              <label className="font-bold text-gray-500 dark:text-[#888898] uppercase tracking-wider text-[11px]">
+              <label className="font-bold text-gray-500 uppercase tracking-wider text-[11px]">
                 Date:
               </label>
               <input
                 type="date"
                 value={attendanceDate}
                 onChange={(e) => setAttendanceDate(e.target.value)}
-                className="bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 font-mono text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 font-mono text-gray-900 focus:outline-none focus:border-cyan-500"
               />
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-[#888898]">
-              Total Records on {attendanceDate}: <span className="font-bold text-gray-900 dark:text-white">{attendanceRecords.length}</span>
+            <div className="text-xs text-gray-500">
+              Total Records on {attendanceDate}: <span className="font-bold text-gray-900">{attendanceRecords.length}</span>
             </div>
           </div>
 
           {attendanceRecords.length === 0 ? (
-            <div className="py-20 text-center text-gray-400 dark:text-[#666] text-xs italic">
+            <div className="py-20 text-center text-gray-400 text-xs italic">
               No attendance records recorded on {attendanceDate}.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase tracking-wider bg-gray-50/50 dark:bg-[#181818]">
+                  <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase tracking-wider bg-gray-50/50">
                     <th className="py-3 px-4">EMPLOYEE</th>
                     <th className="py-3 px-3">DEPARTMENT</th>
                     <th className="py-3 px-3">PUNCH IN</th>
@@ -567,32 +567,32 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                     <th className="py-3 px-4 text-right">ACTION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                <tbody className="divide-y divide-gray-100">
                   {attendanceRecords.map((rec) => (
                     <tr
                       key={rec.id}
                       onClick={() => setSelectedAttendanceRecord(rec)}
-                      className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer group"
+                      className="hover:bg-gray-50 transition-colors cursor-pointer group"
                     >
                       <td className="py-3 px-4">
-                        <div className="font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
+                        <div className="font-bold text-gray-900 group-hover:text-cyan-500 transition-colors">
                           {rec.user?.name || "Employee"}
                         </div>
                         <div className="text-[10px] text-gray-400 font-mono">
                           {rec.user?.hrProfile?.employeeId || rec.user?.email}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-gray-600 dark:text-[#ACACB8]">
+                      <td className="py-3 px-3 text-gray-600">
                         {rec.user?.department || "General"}
                       </td>
-                      <td className="py-3 px-3 font-mono text-gray-700 dark:text-[#D1D5DB]">
+                      <td className="py-3 px-3 font-mono text-gray-700">
                         {rec.punchIn ? new Date(rec.punchIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
                       </td>
-                      <td className="py-3 px-3 font-mono text-gray-700 dark:text-[#D1D5DB]">
+                      <td className="py-3 px-3 font-mono text-gray-700">
                         {rec.punchOut ? new Date(rec.punchOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-"}
                       </td>
                       <td className="py-3 px-3 font-mono text-gray-500">{rec.breakDurationMinutes || 0}m</td>
-                      <td className="py-3 px-3 font-mono font-bold text-gray-900 dark:text-white">
+                      <td className="py-3 px-3 font-mono font-bold text-gray-900">
                         {rec.totalWorkingHours || 0}h
                       </td>
                       <td className="py-3 px-3">
@@ -615,7 +615,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                             e.stopPropagation();
                             setSelectedAttendanceRecord(rec);
                           }}
-                          className="px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#252525] hover:bg-cyan-600 hover:text-white text-gray-700 dark:text-[#ACACB8] font-bold text-[11px] transition-colors cursor-pointer"
+                          className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-cyan-600 hover:text-slate-900 text-gray-700 font-bold text-[11px] transition-colors cursor-pointer"
                         >
                           View / Correct
                         </button>
@@ -633,47 +633,47 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
       {activeTab === "leaves" && (
         <div className="space-y-6">
           {/* Corporate Policy Specification Reference */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 dark:from-[#161616] dark:via-[#141414] dark:to-[#1A1A1A] border border-cyan-200/80 dark:border-[#2E2E2E] shadow-sm space-y-3 text-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-100 dark:border-[#282828] pb-2.5">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 border border-cyan-200/80 shadow-sm space-y-3 text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                <h3 className="font-bold text-gray-900 dark:text-white">
+                <ShieldCheck className="w-4 h-4 text-cyan-600" />
+                <h3 className="font-bold text-gray-900">
                   Corporate Leave Policy: 24 Days / Year (2 Leaves Accrued Monthly on 1st)
                 </h3>
               </div>
-              <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+              <span className="font-mono text-[10px] text-emerald-600 font-bold">
                 Dec Year-End Carry Forward Enabled
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-[11px]">
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
-                <strong className="text-cyan-600 dark:text-cyan-400 block">Casual/Sick (CL/SL): 12 Days</strong>
+              <div className="p-2.5 rounded-xl bg-white/80 border border-gray-200">
+                <strong className="text-cyan-600 block">Casual/Sick (CL/SL): 12 Days</strong>
                 <span className="text-gray-500 text-[10px]">1 day/month on 1st &bull; Carry forward active</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
-                <strong className="text-emerald-600 dark:text-emerald-400 block">Privilege (PL/EL): 12 Days</strong>
+              <div className="p-2.5 rounded-xl bg-white/80 border border-gray-200">
+                <strong className="text-emerald-600 block">Privilege (PL/EL): 12 Days</strong>
                 <span className="text-gray-500 text-[10px]">1 day/month on 1st &bull; Carry forward active</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
-                <strong className="text-pink-600 dark:text-pink-400 block">Maternity: 26 Weeks (182d)</strong>
+              <div className="p-2.5 rounded-xl bg-white/80 border border-gray-200">
+                <strong className="text-pink-600 block">Maternity: 26 Weeks (182d)</strong>
                 <span className="text-gray-500 text-[10px]">Maternity Benefit Act 2017</span>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#282828]">
-                <strong className="text-blue-600 dark:text-blue-400 block">Paternity: 10 Days Paid</strong>
+              <div className="p-2.5 rounded-xl bg-white/80 border border-gray-200">
+                <strong className="text-blue-600 block">Paternity: 10 Days Paid</strong>
                 <span className="text-gray-500 text-[10px]">Company Paternity Policy</span>
               </div>
             </div>
           </div>
 
           {/* Pending Approvals Section */}
-          <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-sm">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-4 shadow-sm">
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               <span>Pending Leave Applications ({pendingLeaves.length})</span>
             </h2>
 
             {pendingLeaves.length === 0 ? (
-              <div className="py-12 text-center text-gray-400 dark:text-[#666] text-xs italic">
+              <div className="py-12 text-center text-gray-400 text-xs italic">
                 No pending leave applications requiring approval.
               </div>
             ) : (
@@ -681,15 +681,15 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                 {pendingLeaves.map((l) => (
                   <div
                     key={l.id}
-                    className="p-4 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs"
+                    className="p-4 rounded-2xl bg-gray-50 border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-gray-900 dark:text-white text-sm">{l.user?.name}</span>
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-gray-200 dark:bg-[#252525] text-gray-600 dark:text-[#AAA]">
+                        <span className="font-bold text-gray-900 text-sm">{l.user?.name}</span>
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-gray-200 text-gray-600">
                           {l.user?.role}
                         </span>
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-bold">
+                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-600 font-bold">
                           {l.leaveType}
                         </span>
                         <span className="font-mono font-bold text-gray-500">
@@ -704,7 +704,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                       <div className="text-gray-500 font-mono text-[11px]">
                         Period: {formatDate(l.startDate)}{l.daysCount > 0.5 ? ` - ${formatDate(l.endDate)}` : ""}
                       </div>
-                      <div className="text-gray-700 dark:text-[#D1D5DB] italic">"{l.reason}"</div>
+                      <div className="text-gray-700 italic">"{l.reason}"</div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -732,20 +732,20 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           </div>
 
           {/* Complete Leave History */}
-          <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-sm">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-4 shadow-sm">
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
               All Leave Records & History ({allLeaves.length})
             </h2>
 
             {allLeaves.length === 0 ? (
-              <div className="py-12 text-center text-gray-400 dark:text-[#666] text-xs italic">
+              <div className="py-12 text-center text-gray-400 text-xs italic">
                 No leave records found in database.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase">
+                    <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase">
                       <th className="py-2.5 px-3">APPLICANT</th>
                       <th className="py-2.5 px-3">TYPE</th>
                       <th className="py-2.5 px-3">DATES</th>
@@ -754,12 +754,12 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                       <th className="py-2.5 px-3">STATUS</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+                  <tbody className="divide-y divide-gray-100">
                     {allLeaves.map((l) => (
-                      <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
-                        <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">{l.user?.name}</td>
+                      <tr key={l.id} className="hover:bg-gray-50">
+                        <td className="py-2.5 px-3 font-bold text-gray-900">{l.user?.name}</td>
                         <td className="py-2.5 px-3 font-semibold">{l.leaveType}</td>
-                        <td className="py-2.5 px-3 font-mono text-gray-600 dark:text-[#ACACB8]">
+                        <td className="py-2.5 px-3 font-mono text-gray-600">
                           {formatDate(l.startDate)}{l.daysCount > 0.5 ? ` - ${formatDate(l.endDate)}` : ""}
                         </td>
                         <td className="py-2.5 px-3 font-mono font-bold">
@@ -771,7 +771,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                             l.daysCount
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-gray-600 dark:text-[#ACACB8]">{l.reason}</td>
+                        <td className="py-2.5 px-3 text-gray-600">{l.reason}</td>
                         <td className="py-2.5 px-3">
                           <span
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -797,13 +797,13 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
       {/* TAB 4: PAYROLL */}
       {activeTab === "payroll" && (
-        <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-6 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">
+              <h2 className="text-base font-bold text-gray-900">
                 Employee Compensation & Payroll Management
               </h2>
-              <p className="text-xs text-gray-500 dark:text-[#888898]">
+              <p className="text-xs text-gray-500">
                 Configure individual salary structures and generate monthly employee payslips.
               </p>
             </div>
@@ -820,7 +820,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-[#2E2E2E] text-gray-500 dark:text-[#888898] font-bold text-[10px] uppercase bg-gray-50/50 dark:bg-[#181818]">
+                <tr className="border-b border-gray-200 text-gray-500 font-bold text-[10px] uppercase bg-gray-50/50">
                   <th className="py-3 px-4">EMPLOYEE</th>
                   <th className="py-3 px-3">BASIC (₹)</th>
                   <th className="py-3 px-3">HRA (₹)</th>
@@ -830,13 +830,13 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                   <th className="py-3 px-4 text-right">ACTION</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-[#252525]">
+              <tbody className="divide-y divide-gray-100">
                 {employees.map((emp) => {
                   const s = payrollList.find((p) => p.userId === emp.id);
 
                   return (
-                    <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-[#1A1A1A]">
-                      <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
+                    <tr key={emp.id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 font-bold text-gray-900">
                         {emp.name}
                         <div className="text-[10px] text-gray-400 font-mono">
                           {emp.hrProfile?.employeeId || emp.email}
@@ -853,7 +853,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                         <button
                           type="button"
                           onClick={() => setSelectedEmployeeId(emp.id)}
-                          className="px-3 py-1 rounded-xl bg-gray-100 dark:bg-[#252525] hover:bg-cyan-600 hover:text-white text-gray-700 dark:text-[#ACACB8] font-bold text-[11px]"
+                          className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-cyan-600 hover:text-slate-900 text-gray-700 font-bold text-[11px]"
                         >
                           Configure Salary
                         </button>
@@ -871,8 +871,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
       {activeTab === "organization" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Departments Box */}
-          <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-sm text-xs">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-4 shadow-sm text-xs">
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
               Departments ({departments.length})
             </h2>
 
@@ -882,14 +882,14 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                 placeholder="Name (e.g. Finance)"
                 value={newDeptName}
                 onChange={(e) => setNewDeptName(e.target.value)}
-                className="flex-1 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-gray-900 dark:text-white focus:outline-none"
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-900 focus:outline-none"
               />
               <input
                 type="text"
                 placeholder="Code (e.g. FIN)"
                 value={newDeptCode}
                 onChange={(e) => setNewDeptCode(e.target.value)}
-                className="w-24 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-gray-900 dark:text-white focus:outline-none uppercase font-mono"
+                className="w-24 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-900 focus:outline-none uppercase font-mono"
               />
               <button type="submit" className="px-3 py-1.5 rounded-xl bg-cyan-600 text-white font-bold">
                 Add
@@ -898,8 +898,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
             <div className="space-y-2">
               {departments.map((d) => (
-                <div key={d.id} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                  <span className="font-bold text-gray-900 dark:text-white">{d.name}</span>
+                <div key={d.id} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                  <span className="font-bold text-gray-900">{d.name}</span>
                   <span className="font-mono text-gray-400 font-bold">{d.code}</span>
                 </div>
               ))}
@@ -907,8 +907,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
           </div>
 
           {/* Designations Box */}
-          <div className="bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-3xl p-6 space-y-4 shadow-sm text-xs">
-            <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 space-y-4 shadow-sm text-xs">
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
               Designations ({designations.length})
             </h2>
 
@@ -918,7 +918,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                 placeholder="Title (e.g. Senior Frontend Engineer)"
                 value={newDesigTitle}
                 onChange={(e) => setNewDesigTitle(e.target.value)}
-                className="flex-1 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-1.5 text-gray-900 dark:text-white focus:outline-none"
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-gray-900 focus:outline-none"
               />
               <button type="submit" className="px-3 py-1.5 rounded-xl bg-cyan-600 text-white font-bold">
                 Add
@@ -927,8 +927,8 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
             <div className="space-y-2">
               {designations.map((des) => (
-                <div key={des.id} className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E]">
-                  <span className="font-bold text-gray-900 dark:text-white">{des.title}</span>
+                <div key={des.id} className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                  <span className="font-bold text-gray-900">{des.title}</span>
                 </div>
               ))}
             </div>
@@ -938,20 +938,20 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
       {/* ADD EMPLOYEE MODAL */}
       {isAddEmployeeOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <form
             onSubmit={handleAddEmployee}
-            className="w-full max-w-lg rounded-3xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] p-6 space-y-4 shadow-2xl text-xs"
+            className="w-full max-w-lg rounded-3xl bg-white border border-gray-200 p-6 space-y-4 shadow-2xl text-xs"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <Users className="w-4 h-4 text-cyan-600" />
                 <span>Add New Employee</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddEmployeeOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500"
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -965,71 +965,71 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Full Name *</label>
+                <label className="block text-gray-500 font-semibold mb-1">Full Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="John Doe"
                   value={empName}
                   onChange={(e) => setEmpName(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Email Address *</label>
+                <label className="block text-gray-500 font-semibold mb-1">Email Address *</label>
                 <input
                   type="email"
                   required
                   placeholder="john@example.com"
                   value={empEmail}
                   onChange={(e) => setEmpEmail(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Initial Password *</label>
+                <label className="block text-gray-500 font-semibold mb-1">Initial Password *</label>
                 <input
                   type="password"
                   required
                   placeholder="Min. 6 characters"
                   value={empPassword}
                   onChange={(e) => setEmpPassword(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Employee ID</label>
+                <label className="block text-gray-500 font-semibold mb-1">Employee ID</label>
                 <input
                   type="text"
                   placeholder="e.g. EMP004"
                   value={empEmployeeId}
                   onChange={(e) => setEmpEmployeeId(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Designation</label>
+                <label className="block text-gray-500 font-semibold mb-1">Designation</label>
                 <input
                   type="text"
                   placeholder="Software Engineer"
                   value={empJobTitle}
                   onChange={(e) => setEmpJobTitle(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Department</label>
+                <label className="block text-gray-500 font-semibold mb-1">Department</label>
                 <input
                   type="text"
                   placeholder="Engineering"
                   value={empDepartment}
                   onChange={(e) => setEmpDepartment(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </div>
@@ -1056,20 +1056,20 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
       {/* GENERATE PAYSLIPS MODAL */}
       {isGeneratePayslipOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <form
             onSubmit={handleGeneratePayslips}
-            className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] p-6 space-y-4 shadow-2xl text-xs"
+            className="w-full max-w-sm rounded-3xl bg-white border border-gray-200 p-6 space-y-4 shadow-2xl text-xs"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-cyan-600" />
                 <span>Generate Monthly Payslips</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsGeneratePayslipOpen(false)}
-                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-500"
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1083,7 +1083,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Month (1 - 12)</label>
+                <label className="block text-gray-500 font-semibold mb-1">Month (1 - 12)</label>
                 <input
                   type="number"
                   min="1"
@@ -1091,12 +1091,12 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                   required
                   value={payslipMonth}
                   onChange={(e) => setPayslipMonth(Number(e.target.value))}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 dark:text-[#888898] font-semibold mb-1">Year</label>
+                <label className="block text-gray-500 font-semibold mb-1">Year</label>
                 <input
                   type="number"
                   min="2020"
@@ -1104,7 +1104,7 @@ export function HRAdminView({ currentUser }: HRAdminViewProps) {
                   required
                   value={payslipYear}
                   onChange={(e) => setPayslipYear(Number(e.target.value))}
-                  className="w-full bg-gray-50 dark:bg-[#141414] border border-gray-200 dark:border-[#2E2E2E] rounded-xl px-3 py-2 text-gray-900 dark:text-white font-mono focus:outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-900 font-mono focus:outline-none"
                 />
               </div>
             </div>

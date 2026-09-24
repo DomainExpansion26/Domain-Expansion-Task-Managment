@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, role, jobTitle, department, name, avatarUrl, phone, newPassword, currentPassword } = body;
+    const { id, role, jobTitle, department, name, avatarUrl, phone, newPassword, currentPassword, managerId, teamLeadId } = body;
 
     const targetUserId = id || currentUser.id;
     const isSuper = currentUser.role === "SUPER_ADMIN";
@@ -144,6 +144,42 @@ export async function PATCH(request: NextRequest) {
     if (department !== undefined) updateData.department = department.trim();
     if (name !== undefined && name.trim()) updateData.name = name.trim();
     if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+
+    // Reporting Manager rule: member cannot assign themselves; non-superadmins can only set if not yet assigned
+    if (managerId !== undefined) {
+      if (managerId && managerId === targetUserId) {
+        return NextResponse.json(
+          { success: false, error: { code: "INVALID_ASSIGNMENT", message: "You cannot assign yourself as your own Reporting Manager." } },
+          { status: 400 }
+        );
+      }
+      const currentTarget = await prisma.user.findUnique({ where: { id: targetUserId }, select: { managerId: true } });
+      if (!isSuper && currentTarget?.managerId && managerId && currentTarget.managerId !== managerId) {
+        return NextResponse.json(
+          { success: false, error: { code: "FORBIDDEN", message: "Reporting Manager already assigned. Contact Super Admin to request a transfer." } },
+          { status: 403 }
+        );
+      }
+      updateData.managerId = managerId || null;
+    }
+
+    // Team Lead rule: member cannot assign themselves; non-superadmins can only set if not yet assigned
+    if (teamLeadId !== undefined) {
+      if (teamLeadId && teamLeadId === targetUserId) {
+        return NextResponse.json(
+          { success: false, error: { code: "INVALID_ASSIGNMENT", message: "You cannot assign yourself as your own Team Lead." } },
+          { status: 400 }
+        );
+      }
+      const currentTarget = await prisma.user.findUnique({ where: { id: targetUserId }, select: { teamLeadId: true } });
+      if (!isSuper && currentTarget?.teamLeadId && teamLeadId && currentTarget.teamLeadId !== teamLeadId) {
+        return NextResponse.json(
+          { success: false, error: { code: "FORBIDDEN", message: "Team Lead already assigned. Contact Super Admin to request a transfer." } },
+          { status: 403 }
+        );
+      }
+      updateData.teamLeadId = teamLeadId || null;
+    }
 
     // Handle password update
     if (newPassword) {

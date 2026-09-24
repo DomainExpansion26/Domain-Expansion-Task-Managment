@@ -13,6 +13,7 @@ export interface UserSession {
   email: string;
   name: string;
   role: string;
+  ndaAccepted?: boolean;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -23,13 +24,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function signSessionToken(user: { id: string; email: string; name: string; role: string }): string {
+export function signSessionToken(user: { id: string; email: string; name: string; role: string; ndaAccepted?: boolean }): string {
   return jwt.sign(
     {
       userId: user.id,
       email: user.email,
       name: user.name,
       role: normalizeRole(user.role),
+      ndaAccepted: Boolean(user.ndaAccepted),
     },
     JWT_SECRET,
     { expiresIn: "7d" }
@@ -109,8 +111,8 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
   if (!session) return null;
 
   try {
-    const user = await withDbRetry(() =>
-      prisma.user.findUnique({
+    const user: any = await withDbRetry(() =>
+      (prisma.user as any).findUnique({
         where: { id: session.userId },
         select: {
           id: true,
@@ -121,6 +123,11 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
           department: true,
           avatarUrl: true,
           isActive: true,
+          accountStatus: true,
+          joiningDate: true,
+          ndaAccepted: true,
+          ndaAcceptedAt: true,
+          ndaVersionAccepted: true,
           isEmailVerified: true,
           managerId: true,
           teamLeadId: true,
@@ -132,7 +139,10 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
       })
     );
 
-    if (!user || !user.isActive) return null;
+    if (!user || !user.isActive || user.accountStatus === "SUSPENDED" || user.accountStatus === "DISABLED") {
+      return null;
+    }
+
     return {
       ...user,
       role: normalizeRole(user.role),
@@ -143,10 +153,15 @@ export async function getCurrentUserFromRequest(request?: NextRequest) {
   }
 }
 
-export async function requireAuth(request?: NextRequest) {
+export async function requireAuth(request?: NextRequest, options?: { allowPendingNDA?: boolean }) {
   const user = await getCurrentUserFromRequest(request);
   if (!user) {
     throw new Error("UNAUTHORIZED");
+  }
+  if (!options?.allowPendingNDA && !user.ndaAccepted && user.role !== "SUPER_ADMIN") {
+    const error: any = new Error("NDA_REQUIRED");
+    error.code = "NDA_REQUIRED";
+    throw error;
   }
   return user;
 }

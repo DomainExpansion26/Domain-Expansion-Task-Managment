@@ -12,13 +12,25 @@ function ThemeInitializer() {
     if (typeof document !== "undefined") {
       const root = document.documentElement;
       const body = document.body;
-      root.classList.add("dark");
-      root.classList.remove("light");
-      root.setAttribute("data-theme", "dark");
+      root.classList.remove("dark");
+      root.classList.add("light");
+      root.setAttribute("data-theme", "light");
       if (body) {
-        body.classList.add("dark");
-        body.classList.remove("light");
-        body.setAttribute("data-theme", "dark");
+        body.classList.remove("dark");
+        body.classList.add("light");
+        body.setAttribute("data-theme", "light");
+      }
+      try {
+        const saved = localStorage.getItem("dx_ui");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.theme !== "light") {
+            parsed.theme = "light";
+            localStorage.setItem("dx_ui", JSON.stringify(parsed));
+          }
+        }
+      } catch {
+        // ignore
       }
     }
   }, []);

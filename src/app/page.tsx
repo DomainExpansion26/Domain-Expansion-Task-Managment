@@ -25,10 +25,11 @@ import { AdminSettingsView } from "@/components/views/AdminSettingsView";
 import { ProfileSettingsView } from "@/components/views/ProfileSettingsView";
 import { DocumentsView } from "@/components/views/DocumentsView";
 import { MandatoryHierarchyModal } from "@/components/modals/MandatoryHierarchyModal";
+import { MandatoryNdaModal } from "@/components/modals/MandatoryNdaModal";
 import { isSuperAdmin, isHRAdmin } from "@/lib/permissions";
 
 import { useAppDispatch, useAppSelector, useAuth, useUI, useTasks, useNotifications } from "@/store/hooks";
-import { setCredentials, logout as reduxLogout } from "@/store/slices/authSlice";
+import { setCredentials, updateUser, logout as reduxLogout } from "@/store/slices/authSlice";
 import { setActiveTab as setReduxTab } from "@/store/slices/uiSlice";
 import { setTasks as setReduxTasks, updateTaskStatus as updateReduxTaskStatus } from "@/store/slices/tasksSlice";
 import { setNotifications as setReduxNotifications, markAsRead as markReduxRead, markAllAsRead as markReduxAllRead } from "@/store/slices/notificationsSlice";
@@ -231,10 +232,10 @@ export default function Home() {
 
   if (!mounted || authLoading || !currentUser) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0D0D0D] text-white text-xs">
+      <div className="h-screen w-screen flex items-center justify-center bg-[#F8FAFC] text-slate-800 text-xs">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-[#FF6200] border-t-transparent rounded-full animate-spin" />
-          <span>Connecting to Domain Expansion workspace...</span>
+          <span className="font-medium text-slate-600">Connecting to Domain Expansion workspace...</span>
         </div>
       </div>
     );
@@ -323,19 +324,20 @@ export default function Home() {
           projects={projects}
           users={users}
           currentUser={currentUser}
-          onSelectProject={(id) => setCurrentTab("kanban")}
+          onSelectProject={(id) => setCurrentTab("work-packages")}
           onRefreshData={fetchAppData}
         />
       )}
 
       {currentTab === "kanban" && (
-        <KanbanView
+        <WorkPackagesView
           tasks={tasks}
           projects={projects}
+          users={users}
           currentUser={currentUser}
           onSelectTask={(key) => setSelectedTaskKey(key)}
-          onStatusChange={handleStatusChange}
-          onOpenCreateTask={(defaultStatus) => {
+          onOpenCreateTask={(defaultProjectId, defaultStatus) => {
+            setCreateTaskProjectId(defaultProjectId);
             setCreateTaskStatus(defaultStatus || "TODO");
             setIsCreateTaskOpen(true);
           }}
@@ -405,11 +407,11 @@ export default function Home() {
 
       {currentTab === "notifications" && (
         <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-white">Notifications Feed</h1>
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h1 className="text-xl font-bold text-slate-900">Notifications Feed</h1>
             <button
               onClick={() => handleMarkNotificationsRead(undefined, true)}
-              className="text-xs text-[#FF8C42] hover:underline font-bold"
+              className="text-xs text-[#FF6200] hover:underline font-bold"
             >
               Mark all as read
             </button>
@@ -444,14 +446,14 @@ export default function Home() {
                   }
                 }}
                 className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                  n.isRead ? "bg-[#141414] border-[#2E2E2E]" : "bg-[#1A1A1A] border-[#FF6200]/40 shadow-sm"
+                  n.isRead ? "bg-white border-slate-200" : "bg-orange-50/60 border-orange-200 shadow-sm"
                 }`}
               >
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-white">{n.title}</span>
-                  <span className="text-[10px] text-[#888898]">{new Date(n.createdAt).toLocaleString()}</span>
+                  <span className="font-bold text-slate-900">{n.title}</span>
+                  <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleString()}</span>
                 </div>
-                <div className="text-xs text-[#ACACB8] mt-1">{n.message}</div>
+                <div className="text-xs text-slate-600 mt-1">{n.message}</div>
               </div>
             ))}
           </div>
@@ -535,11 +537,28 @@ export default function Home() {
         />
       )}
 
+      {/* Mandatory NDA & Corporate Policies Acceptance Modal */}
+      <MandatoryNdaModal
+        isOpen={Boolean(
+          !authLoading &&
+          currentUser &&
+          !currentUser.ndaAccepted
+        )}
+        currentUser={currentUser}
+        onAccepted={(updatedUser) => {
+          setCurrentUser(updatedUser);
+          dispatch(updateUser({ ndaAccepted: true, ndaAcceptedAt: new Date().toISOString() }));
+          fetchAppData();
+        }}
+        onLogout={handleLogout}
+      />
+
       {/* Mandatory Hierarchy Setup modal for members without Reporting Manager or Team Lead */}
       <MandatoryHierarchyModal
         isOpen={Boolean(
           !authLoading &&
           currentUser &&
+          (currentUser.ndaAccepted || currentUser.role === "SUPER_ADMIN") &&
           currentUser.role !== "SUPER_ADMIN" &&
           !currentUser.managerId &&
           !currentUser.teamLeadId
